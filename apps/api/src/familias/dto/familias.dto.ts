@@ -74,6 +74,33 @@ export class PessoaDto {
   @IsOptional()
   @IsBoolean()
   deficiencia?: boolean;
+
+  @IsOptional() @IsString() nomeMae?: string;
+  @IsOptional() @IsString() nomePai?: string;
+  @IsOptional() @IsBoolean() nomePaiNaoInformado?: boolean;
+  @IsOptional() @IsString() estadoCivil?: string;
+  @IsOptional() @IsString() regimeBens?: string;
+  @IsOptional() @IsString() rg?: string;
+  @IsOptional() @IsString() orgaoExpedidor?: string;
+  @IsOptional() @IsString() rgUf?: string;
+  @IsOptional() @IsBoolean() rgAusente?: boolean;
+  @IsOptional() @IsString() nacionalidade?: string;
+  @IsOptional() @IsString() naturalidade?: string;
+  @IsOptional() @IsString() profissao?: string;
+  @IsOptional() @IsString() escolaridade?: string;
+  @IsOptional() @IsString() situacaoTrabalho?: string;
+  @IsOptional() @IsArray() @IsString({ each: true }) tiposDeficiencia?: string[];
+  @IsOptional() @IsBoolean() usaCadeiraDeRodas?: boolean;
+  @IsOptional() @IsBoolean() necessitaCuidador?: boolean;
+  @IsOptional() @IsString() telefoneAlternativo?: string;
+  @IsOptional() @IsString() cep?: string;
+  @IsOptional() @IsString() logradouro?: string;
+  @IsOptional() @IsString() numero?: string;
+  @IsOptional() @IsString() complemento?: string;
+  @IsOptional() @IsString() bairro?: string;
+  @IsOptional() @IsString() municipio?: string;
+  @IsOptional() @IsString() uf?: string;
+  @IsOptional() @IsString() referencia?: string;
 }
 
 export class FichaSocialDto {
@@ -140,6 +167,29 @@ export class FichaSocialDto {
   @IsOptional()
   @IsString()
   origemProcessoExterno?: string;
+
+  @IsOptional() @IsString() fonteRenda?: string;
+  @IsOptional() @IsString() regimeRenda?: string;
+  @IsOptional() @IsBoolean() rendaComplementar?: boolean;
+  @IsOptional() @IsString() rendaComplementarDesc?: string;
+  @IsOptional() @IsBoolean() inscritoCadUnico?: boolean;
+  @IsOptional() @IsArray() @IsString({ each: true }) beneficios?: string[];
+  @IsOptional() @IsString() estruturaFamiliar?: string;
+  @IsOptional() @IsArray() @IsString({ each: true }) vulnerabilidades?: string[];
+  @IsOptional() @IsString() nivelVulnerabilidade?: string;
+  @IsOptional() @IsString() parecerTecnico?: string;
+  @IsOptional() @IsString() situacaoHabitacional?: string;
+  @IsOptional() @IsInt() @Min(0) comodos?: number;
+  @IsOptional() @IsInt() @Min(0) banheiros?: number;
+  @IsOptional() @IsString() abastecimentoAgua?: string;
+  @IsOptional() @IsString() energiaEletrica?: string;
+  @IsOptional() @IsString() coletaLixo?: string;
+  @IsOptional() @IsString() pavimentacao?: string;
+  @IsOptional() @IsBoolean() iluminacaoPublica?: boolean;
+  @IsOptional() @IsBoolean() drenagemPluvial?: boolean;
+  @IsOptional() @IsBoolean() acessoEscolaProxima?: boolean;
+  @IsOptional() @IsBoolean() acessoSaudeProxima?: boolean;
+  @IsOptional() @IsBoolean() acessoTransportePublico?: boolean;
 }
 
 export class CadastrarFamiliaDto {

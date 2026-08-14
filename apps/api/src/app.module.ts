@@ -20,6 +20,7 @@ import { FamiliasModule } from './familias/familias.module';
 import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
 import { IndicadoresModule } from './indicadores/indicadores.module';
+import { IntegracoesModule } from './integracoes/integracoes.controller';
 import { MunicipeModule } from './municipe/municipe.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PdfModule } from './pdf/pdf.module';
@@ -61,6 +62,7 @@ import { StorageModule } from './storage/storage.module';
     FamiliasModule,
     FilaModule,
     IndicadoresModule,
+    IntegracoesModule,
     MunicipeModule,
     PdfModule,
     ProgramasModule,

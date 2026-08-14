@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
 import { EncaminharFamilia } from '@/components/domain/encaminhar-familia';
+import { PainelDiagnostico, type ItemDiagnostico } from '@/components/domain/painel-diagnostico';
 import { InscreverEmPrograma } from '@/components/domain/inscrever-em-programa';
 import { apiFetch } from '@/lib/api/server';
 import { formatarNota, formatarReais, statusInscricao } from '@/lib/status';
@@ -39,6 +40,7 @@ interface Familia360 {
     itensPontuacao: { rotulo: string; pontos: number; peso: number; observacao?: string }[];
   }[];
   linhaDoTempo: { quando: string; titulo: string; detalhe: string }[];
+  diagnostico: ItemDiagnostico[];
 }
 
 /**
@@ -84,6 +86,23 @@ export default async function PaginaFamilia({ params }: { params: Promise<{ id: 
         >
           Nova apuração da ficha
         </Link>
+      </div>
+
+      <div className="mt-6">
+        <PainelDiagnostico
+          itens={familia.diagnostico}
+          acoes={{
+            SEM_FICHA: `/familias/${familia.id}/ficha`,
+            FICHA_VENCIDA: `/familias/${familia.id}/ficha`,
+            FICHA_VENCENDO: `/familias/${familia.id}/ficha`,
+            SEM_FONTE_RENDA: `/familias/${familia.id}/ficha`,
+            ENDERECO_INCOMPLETO: `/familias/${familia.id}/ficha`,
+            COMPOSICAO_INCOMPLETA: `/familias/${familia.id}/ficha`,
+            PENDENCIA_ABERTA: familia.inscricoes[0] ? `/inscricoes/${familia.inscricoes[0].id}` : '/pendencias',
+            PONTUACAO_DESATUALIZADA: familia.inscricoes[0] ? `/inscricoes/${familia.inscricoes[0].id}` : '/familias',
+            SEM_PONTUACAO: familia.inscricoes[0] ? `/inscricoes/${familia.inscricoes[0].id}` : '/familias',
+          }}
+        />
       </div>
 
       {ficha?.vencida && (

@@ -10,6 +10,7 @@ export function CampoTexto({
   autoComplete,
   obrigatorio = false,
   ajuda,
+  valorInicial,
 }: {
   nome: string;
   rotulo: string;
@@ -18,6 +19,7 @@ export function CampoTexto({
   autoComplete?: string;
   obrigatorio?: boolean;
   ajuda?: string;
+  valorInicial?: string;
 }) {
   const idAjuda = ajuda ? `${nome}-ajuda` : undefined;
 
@@ -32,6 +34,7 @@ export function CampoTexto({
         type={tipo}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        defaultValue={valorInicial}
         required={obrigatorio}
         aria-describedby={idAjuda}
         className={cn(

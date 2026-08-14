@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuditOperation } from '@prisma/client';
-import { br } from '@habita/shared';
+import { br, habitacao } from '@habita/shared';
 import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -58,6 +58,7 @@ export interface Familia360 {
     itensPontuacao: { rotulo: string; pontos: number; peso: number; observacao?: string }[];
   }[];
   linhaDoTempo: EventoLinhaDoTempo[];
+  diagnostico: habitacao.ItemDiagnostico[];
 }
 
 /**
@@ -133,7 +134,17 @@ export class FamiliasQueryService {
       select: {
         id: true,
         codigo: true,
-        responsavel: { select: { nome: true, cpf: true, nis: true } },
+        responsavel: {
+          select: {
+            nome: true,
+            cpf: true,
+            nis: true,
+            logradouro: true,
+            numero: true,
+            bairro: true,
+            municipio: true,
+          },
+        },
         fichas: { where: { vigente: true }, take: 1 },
         membros: {
           where: { saiuEm: null },
@@ -158,6 +169,7 @@ export class FamiliasQueryService {
               take: 1,
               select: { total: true, itens: true, calculadoEm: true },
             },
+            pendencias: { where: { situacao: { in: ['ABERTA', 'VENCIDA'] } }, select: { id: true } },
             recursos: { select: { protocolo: true, apresentadoEm: true, decisao: true } },
             convocacoes: { select: { numeroOficio: true, emitidaEm: true, foraDeOrdem: true } },
           },
@@ -174,6 +186,9 @@ export class FamiliasQueryService {
     });
 
     const ficha = familia.fichas[0];
+    const programasAbertos = await this.prisma.tx.programaHabitacional.count({
+      where: { situacao: 'INSCRICOES_ABERTAS', deletedAt: null },
+    });
 
     return {
       id: familia.id,
@@ -221,8 +236,47 @@ export class FamiliasQueryService {
         itensPontuacao: (inscricao.snapshots[0]?.itens ?? []) as Familia360['inscricoes'][number]['itensPontuacao'],
       })),
       linhaDoTempo: montarLinhaDoTempo(familia),
+      diagnostico: habitacao.diagnosticarCadastro({
+        temFichaVigente: Boolean(ficha),
+        fichaVencida: ficha ? ficha.validaAte < new Date() : false,
+        fichaVenceEmDias: ficha ? diasAte(ficha.validaAte) : null,
+        quantidadePessoas: ficha?.quantidadePessoas ?? 0,
+        membrosCadastrados: familia.membros.length,
+        rendaFamiliar: ficha ? Number(ficha.rendaFamiliar) : 0,
+        fonteRendaInformada: Boolean(ficha?.fonteRenda ?? ficha?.fonteRendaPrincipal),
+        nisInformado: Boolean(ficha?.nis ?? familia.responsavel.nis),
+        nisVerificado: ficha?.nisVerificado ?? false,
+        enderecoCompleto: Boolean(
+          familia.responsavel.logradouro &&
+            familia.responsavel.numero &&
+            familia.responsavel.bairro &&
+            familia.responsavel.municipio,
+        ),
+        situacaoRisco: ficha?.situacaoRisco ?? false,
+        temLaudoRisco: Boolean(ficha?.laudoRiscoKey),
+        vulnerabilidadesMarcadas: ficha?.vulnerabilidades.length ?? 0,
+        inscricoes: familia.inscricoes.map((inscricao) => {
+          const snapshot = inscricao.snapshots[0];
+          return {
+            situacao: inscricao.situacao,
+            pendenciasAbertas: inscricao.pendencias.length,
+            temSnapshot: Boolean(snapshot),
+            // A ficha mudou depois do último cálculo: a nota no ar já não reflete os fatos.
+            pontuacaoDesatualizada: Boolean(
+              snapshot && ficha && snapshot.calculadoEm < ficha.apuradaEm,
+            ),
+          };
+        }),
+        programasComInscricaoAberta: programasAbertos,
+      }),
     };
   }
+}
+
+/** Dias até a data, negativo se já passou. */
+function diasAte(data: Date): number {
+  const umDia = 24 * 60 * 60 * 1000;
+  return Math.ceil((data.getTime() - Date.now()) / umDia);
 }
 
 type FamiliaComHistorico = {
