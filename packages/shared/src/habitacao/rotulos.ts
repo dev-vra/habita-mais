@@ -247,6 +247,65 @@ export const TIPO_SOLICITACAO = {
   OUTRO: 'Outro',
 } as const;
 
+export const ORIGEM_RECURSO = {
+  FEDERAL: 'Federal',
+  ESTADUAL: 'Estadual',
+  MUNICIPAL: 'Municipal',
+  FGTS: 'FGTS',
+  FINANCIAMENTO: 'Financiamento',
+  EMENDA_PARLAMENTAR: 'Emenda parlamentar',
+  OUTRA: 'Outra',
+} as const;
+
+export const SITUACAO_CONVENIO = {
+  EM_ELABORACAO: 'Em elaboração',
+  VIGENTE: 'Vigente',
+  SUSPENSO: 'Suspenso',
+  ENCERRADO: 'Encerrado',
+  CANCELADO: 'Cancelado',
+} as const;
+
+export const SITUACAO_EMPREENDIMENTO = {
+  PLANEJAMENTO: 'Em planejamento',
+  EM_OBRA: 'Em obra',
+  CONCLUIDO: 'Concluído',
+  ENTREGUE: 'Entregue',
+  CANCELADO: 'Cancelado',
+} as const;
+
+export const SITUACAO_OBRA = {
+  NAO_INICIADA: 'Não iniciada',
+  EM_EXECUCAO: 'Em execução',
+  PARALISADA: 'Paralisada',
+  CONCLUIDA: 'Concluída',
+  RESCINDIDA: 'Rescindida',
+} as const;
+
+export const SITUACAO_MEDICAO = {
+  RASCUNHO: 'Aguardando aprovação',
+  APROVADA: 'Aprovada',
+  REJEITADA: 'Rejeitada',
+  CANCELADA: 'Cancelada',
+} as const;
+
+export const SITUACAO_UNIDADE = {
+  PLANEJADA: 'Planejada',
+  EM_OBRA: 'Em obra',
+  PRONTA: 'Pronta para entrega',
+  ENTREGUE: 'Entregue',
+  DESOCUPADA: 'Desocupada',
+  EM_LITIGIO: 'Em litígio',
+  RETOMADA: 'Retomada',
+  CANCELADA: 'Cancelada',
+} as const;
+
+export const SITUACAO_ETAPA = {
+  CONCLUIDA: 'Concluída',
+  NO_PRAZO: 'No prazo',
+  PROXIMA_DO_PRAZO: 'Vence em breve',
+  ATRASADA: 'Atrasada',
+} as const;
+
 export const rotuloSexo = rotulador(SEXO);
 export const rotuloEstadoCivil = rotulador(ESTADO_CIVIL);
 export const rotuloRegimeBens = rotulador(REGIME_BENS);
@@ -273,6 +332,14 @@ export const rotuloTurnoEscola = rotulador(TURNO_ESCOLA);
 export const rotuloPerfil = rotulador(PERFIL_USUARIO);
 export const rotuloTipoSetor = rotulador(TIPO_SETOR);
 export const rotuloTipoSolicitacao = rotulador(TIPO_SOLICITACAO);
+export const rotuloOrigemRecurso = rotulador(ORIGEM_RECURSO);
+export const rotuloSituacaoConvenio = rotulador(SITUACAO_CONVENIO);
+export const rotuloSituacaoEmpreendimento = rotulador(SITUACAO_EMPREENDIMENTO);
+export const rotuloSituacaoObra = rotulador(SITUACAO_OBRA);
+export const rotuloSituacaoMedicao = rotulador(SITUACAO_MEDICAO);
+export const rotuloSituacaoUnidade = rotulador(SITUACAO_UNIDADE);
+export const rotuloSituacaoEtapa = rotulador(SITUACAO_ETAPA);
+
 
 /** Converte o mapa em opções de `<select>`, na ordem em que foi declarado. */
 export function opcoes(mapa: Record<string, string>): { valor: string; rotulo: string }[] {

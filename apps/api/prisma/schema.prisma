@@ -77,6 +77,11 @@ enum SerieProtocolo {
   DOC
   /// Pilha documental montada para entrega externa.
   PIL
+  /// Produção habitacional: convênio, empreendimento, medição e unidade.
+  CNV
+  EMP
+  MED
+  UNI
 }
 
 /// Tipo do setor — o município nomeia como quiser, mas a integração precisa saber o papel.
@@ -187,6 +192,10 @@ model Tenant {
   familias    Familia[]
   pessoas     Pessoa[]
   programas   ProgramaHabitacional[]
+  convenios       Convenio[]
+  empreendimentos Empreendimento[]
+  obras           Obra[]
+  unidades        UnidadeHabitacional[]
 
   @@index([ativo])
   @@map("tenant")
@@ -884,6 +893,7 @@ model Familia {
   inscricoes   InscricaoFila[]
   consentimentos ConsentimentoDado[]
   consultas    ConsultaExterna[]
+  unidades     UnidadeHabitacional[]
 
   @@unique([tenantId, codigo])
   @@index([tenantId, situacao])
@@ -1144,6 +1154,7 @@ model ProgramaHabitacional {
   inscricoes InscricaoFila[]
   rankings   RankingPublicacao[]
   exigencias ExigenciaDocumental[]
+  empreendimentos Empreendimento[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, situacao])
@@ -1381,4 +1392,292 @@ model Pendencia {
   @@index([tenantId, inscricaoId, situacao])
   @@index([tenantId, prazoAte])
   @@map("pendencia")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Produção habitacional (spec §10): convênio → empreendimento → obra → medição → unidade.
+//
+// A separação entre empreendimento e obra não é burocracia: o conjunto é o que a prefeitura
+// entrega às famílias, e a obra é o contrato com quem constrói. Um empreendimento pode ser
+// executado em lotes, por empresas diferentes, e o cronograma de cada um vive por si.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum SituacaoConvenio {
+  EM_ELABORACAO
+  VIGENTE
+  SUSPENSO
+  ENCERRADO
+  CANCELADO
+}
+
+enum SituacaoEmpreendimento {
+  PLANEJAMENTO
+  EM_OBRA
+  CONCLUIDO
+  ENTREGUE
+  CANCELADO
+}
+
+enum SituacaoObra {
+  NAO_INICIADA
+  EM_EXECUCAO
+  PARALISADA
+  CONCLUIDA
+  RESCINDIDA
+}
+
+enum SituacaoMedicao {
+  RASCUNHO
+  APROVADA
+  REJEITADA
+  CANCELADA
+}
+
+enum SituacaoUnidade {
+  PLANEJADA
+  EM_OBRA
+  PRONTA
+  ENTREGUE
+  DESOCUPADA
+  EM_LITIGIO
+  RETOMADA
+  CANCELADA
+}
+
+/// De onde vem o dinheiro. Determina a prestação de contas e, por consequência, a pilha documental
+/// que precisa existir ao fim da obra.
+enum OrigemRecurso {
+  FEDERAL
+  ESTADUAL
+  MUNICIPAL
+  FGTS
+  FINANCIAMENTO
+  EMENDA_PARLAMENTAR
+  OUTRA
+}
+
+/// Convênio ou fonte de recurso. Existe separado do empreendimento porque um convênio costuma
+/// financiar mais de um conjunto — e a prestação de contas é do convênio, não da obra.
+model Convenio {
+  id             String           @id @default(cuid())
+  tenantId       String
+  protocolo      String
+  /// Número no órgão repassador (Caixa, ministério, estado). É por ele que o convênio é
+  /// procurado do lado de fora, e é ele que vai no ofício.
+  numeroExterno  String?
+  objeto         String
+  origem         OrigemRecurso
+  orgaoRepassador String
+  valorRepasse   Decimal          @db.Decimal(14, 2)
+  valorContrapartida Decimal      @default(0) @db.Decimal(14, 2)
+  vigenciaInicio DateTime
+  vigenciaFim    DateTime
+  situacao       SituacaoConvenio @default(EM_ELABORACAO)
+  observacao     String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant          Tenant             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  empreendimentos Empreendimento[]
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, situacao])
+  @@index([tenantId, vigenciaFim])
+  @@map("convenio")
+}
+
+/// O conjunto habitacional. É o que se entrega às famílias e o que a fila enxerga.
+model Empreendimento {
+  id            String                 @id @default(cuid())
+  tenantId      String
+  protocolo     String
+  nome          String
+  slug          String
+  convenioId    String?
+  programaId    String?
+  endereco      String
+  bairro        String
+  cep           String?                @db.Char(8)
+  latitude      Decimal?               @db.Decimal(10, 7)
+  longitude     Decimal?               @db.Decimal(10, 7)
+  unidadesPrevistas Int
+  situacao      SituacaoEmpreendimento @default(PLANEJAMENTO)
+  previsaoEntrega DateTime?
+  entregueEm    DateTime?
+  observacao    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant    Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  convenio  Convenio?             @relation(fields: [convenioId], references: [id], onDelete: Restrict)
+  programa  ProgramaHabitacional? @relation(fields: [programaId], references: [id], onDelete: Restrict)
+  obras     Obra[]
+  unidades  UnidadeHabitacional[]
+
+  @@unique([tenantId, slug])
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, situacao])
+  @@map("empreendimento")
+}
+
+/// O contrato de execução. Guarda quem constrói, por quanto e até quando — e é contra ele que a
+/// medição é conferida.
+model Obra {
+  id               String       @id @default(cuid())
+  tenantId         String
+  empreendimentoId String
+  descricao        String
+  /// Empresa executora. CNPJ alfanumérico (regra que vale a partir de julho/2026).
+  executoraNome    String
+  executoraCnpj    String       @db.VarChar(14)
+  numeroContrato   String
+  /// Anotação de responsabilidade técnica — sem ela a obra não tem responsável identificado.
+  artRrt           String?
+  valorContrato    Decimal      @db.Decimal(14, 2)
+  /// Somatório das medições aprovadas. Materializado para não recalcular a cada leitura da lista.
+  valorMedido      Decimal      @default(0) @db.Decimal(14, 2)
+  percentualExecutado Decimal   @default(0) @db.Decimal(5, 2)
+  inicioPrevisto   DateTime
+  terminoPrevisto  DateTime
+  inicioReal       DateTime?
+  terminoReal      DateTime?
+  situacao         SituacaoObra @default(NAO_INICIADA)
+  motivoParalisacao String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  empreendimento Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Restrict)
+  etapas         EtapaObra[]
+  medicoes       Medicao[]
+
+  @@unique([tenantId, numeroContrato])
+  @@index([tenantId, empreendimentoId])
+  @@index([tenantId, situacao])
+  @@map("obra")
+}
+
+/// Etapa do cronograma físico. O peso é o que impede a barra de progresso de mentir: fundação
+/// pronta não é "um quarto da obra" só por ser uma de quatro etapas.
+model EtapaObra {
+  id          String    @id @default(cuid())
+  tenantId    String
+  obraId      String
+  ordem       Int
+  codigo      String
+  nome        String
+  peso        Decimal   @db.Decimal(5, 2)
+  executado   Decimal   @default(0) @db.Decimal(5, 2)
+  previstaAte DateTime
+  concluidaEm DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@unique([obraId, codigo])
+  @@index([tenantId, obraId])
+  @@map("etapa_obra")
+}
+
+/// Medição — ordem de pagamento com outro nome. Nasce com protocolo, guarda quem mediu e quem
+/// aprovou, e não pode ser editada depois de aprovada: para mudar, cancela-se com motivo.
+model Medicao {
+  id          String          @id @default(cuid())
+  tenantId    String
+  obraId      String
+  protocolo   String
+  numero      Int
+  periodoInicio DateTime
+  periodoFim  DateTime
+  percentualAcumulado Decimal @db.Decimal(5, 2)
+  valor       Decimal         @db.Decimal(14, 2)
+  situacao    SituacaoMedicao @default(RASCUNHO)
+  /// Fiscal que mediu. Guardado como texto além do id porque o servidor sai da prefeitura e o
+  /// documento continua precisando dizer quem assinou.
+  fiscalNome  String
+  fiscalId    String?
+  aprovadaEm  DateTime?
+  aprovadaPor String?
+  /// Obrigatório em rejeição e cancelamento: medição desfeita sem motivo é buraco na prestação
+  /// de contas.
+  motivo      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  obra Obra @relation(fields: [obraId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, protocolo])
+  @@unique([obraId, numero])
+  @@index([tenantId, obraId, situacao])
+  @@map("medicao")
+}
+
+/// A casa. Vive além da obra: depois de entregue, é ela que responde por titular, uso, visita de
+/// acompanhamento e eventual retomada.
+model UnidadeHabitacional {
+  id               String          @id @default(cuid())
+  tenantId         String
+  empreendimentoId String
+  protocolo        String
+  /// Identificação no conjunto (quadra/lote/número). É como a prefeitura chama a casa no dia a dia.
+  identificacao    String
+  quadra           String?
+  lote             String?
+  endereco         String
+  cep              String?         @db.Char(8)
+  tipologia        String?
+  areaConstruida   Decimal?        @db.Decimal(8, 2)
+  areaTerreno      Decimal?        @db.Decimal(10, 2)
+  /// Matrícula no cartório de registro de imóveis — o que o registro exige e o que prova a
+  /// individualização do lote.
+  matricula        String?
+  cartorio         String?
+  inscricaoImobiliaria String?
+  valorAvaliado    Decimal?        @db.Decimal(14, 2)
+  situacao         SituacaoUnidade @default(PLANEJADA)
+  /// Preenchido na entrega. Aponta para a família, não para a pessoa: a titularidade é do núcleo.
+  familiaId        String?
+  entregueEm       DateTime?
+  /// Motivo da última mudança de situação. Retrocesso sem motivo é decisão que ninguém explica
+  /// depois (§9).
+  motivoSituacao   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  empreendimento Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Restrict)
+  familia        Familia?       @relation(fields: [familiaId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, protocolo])
+  @@unique([empreendimentoId, identificacao])
+  @@index([tenantId, situacao])
+  @@index([tenantId, familiaId])
+  @@map("unidade_habitacional")
 }

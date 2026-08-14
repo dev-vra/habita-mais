@@ -90,10 +90,12 @@ export function CampoData({
   nome,
   rotulo,
   valorInicial,
+  obrigatorio = true,
 }: {
   nome: string;
   rotulo: string;
   valorInicial?: string;
+  obrigatorio?: boolean;
 }) {
   return (
     <div>
@@ -105,7 +107,7 @@ export function CampoData({
         name={nome}
         type="date"
         defaultValue={valorInicial}
-        required
+        required={obrigatorio}
         className="mt-1.5 w-full rounded-md border border-borda bg-surface px-3 py-2.5 text-base outline-none transition focus:border-institucional focus:ring-2 focus:ring-institucional/30"
       />
     </div>

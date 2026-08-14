@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { br } from '@habita/shared';
 import { TRILHA_AUDITORIA, type TrilhaAuditoria } from '../../common/ports';
 import {
   PROGRAMAS_ESCRITA_REPOSITORY,
@@ -104,12 +105,7 @@ export class ProgramasUseCase {
 
   /** Slug do nome; colisão ganha sufixo numérico em vez de falhar no rosto do usuário. */
   private async slugDisponivel(nome: string): Promise<string> {
-    const base = nome
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
+    const base = br.slugify(nome);
 
     let candidato = base;
     let sufixo = 2;

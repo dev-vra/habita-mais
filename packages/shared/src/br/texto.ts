@@ -23,6 +23,20 @@ export function tituloCaso(v: string): string {
     .join(' ');
 }
 
+/**
+ * Slug de URL a partir de um nome em PT-BR.
+ *
+ * Mora aqui porque o slug é identidade pública — o endereço do programa e o do empreendimento
+ * precisam ser gerados pela mesma regra. Duas cópias divergindo produziriam dois links para o
+ * mesmo nome, e um deles quebraria.
+ */
+export function slugify(v: string): string {
+  return semAcento(v)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 /** Chave estável de município p/ casar fontes diferentes: sem acento, maiúsculo, sem espaços extras. */
 export function normalizarMunicipio(v: string): string {
   return semAcento(v).toUpperCase().replace(/\s+/g, ' ').trim();

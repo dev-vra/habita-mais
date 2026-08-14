@@ -9,3 +9,4 @@ export * from './capacidades.js';
 export * from './rotulos.js';
 export * from './diagnostico.js';
 export * from './documental.js';
+export * from './producao.js';

@@ -14,13 +14,20 @@ export const SERIES_PROTOCOLO = {
   ENC: 'Encaminhamento entre setores',
   DOC: 'Documento juntado ao processo',
   PIL: 'Pilha documental',
+  CNV: 'Convênio de repasse',
+  EMP: 'Empreendimento habitacional',
+  /// Medição de obra — é ordem de pagamento com outro nome, e por isso tem número desde o rascunho.
+  MED: 'Medição de obra',
+  /// Número público da casa: acompanha do registro em cartório à eventual retomada.
+  UNI: 'Unidade habitacional',
 } as const;
 
 export type SerieProtocolo = keyof typeof SERIES_PROTOCOLO;
 
 const DIGITOS_SEQUENCIAL = 5;
 
-const PADRAO_PROTOCOLO = /^(HAB|AUX|MUT|REA|FIS|OFC|REC|FAM|ENC|DOC|PIL)-(\d{4})\/(\d{5})$/;
+const PADRAO_PROTOCOLO =
+  /^(HAB|AUX|MUT|REA|FIS|OFC|REC|FAM|ENC|DOC|PIL|CNV|EMP|MED|UNI)-(\d{4})\/(\d{5})$/;
 
 export interface ProtocoloPartes {
   serie: SerieProtocolo;

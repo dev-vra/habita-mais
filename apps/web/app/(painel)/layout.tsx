@@ -90,6 +90,10 @@ export default async function LayoutPainel({ children }: { children: React.React
                 <ItemNavegacao href="/programas" rotulo="Programas e critérios" />
               </Grupo>
 
+              <Grupo titulo="Produção">
+                <ItemNavegacao href="/producao" rotulo="Empreendimentos e obras" />
+              </Grupo>
+
               <Grupo titulo="Gestão">
                 <ItemNavegacao href="/indicadores" rotulo="Indicadores" />
                 {podeEncaminhar && (
