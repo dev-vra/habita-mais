@@ -68,10 +68,24 @@ fora de ordem, cortar auxílio, transferir titularidade) só existem com concess
 
 ## Estado
 
-Fase 1 (MVP "a fila em pé") em construção. O que já roda ponta a ponta: fundação multi-tenant,
-autenticação, cadastro de famílias e ficha social, programa com critério versionado, inscrição com
-pontuação congelada, ranking publicado, convocação (com a exceção auditada), desfecho e recurso.
-Web com entrada, painel e a tela da fila.
+**Fase 1 (MVP "a fila em pé") completa.** Roda ponta a ponta:
 
-Pendente da fase 1: central do munícipe, pendências documentais na interface, ofício de convocação
-em PDF, trilha de auditoria filtrável na tela e o CRUD de famílias/programas pela interface.
+| Módulo | O que faz |
+| --- | --- |
+| Fundação | multi-tenant com RLS provada por teste, auditoria append-only, autenticação com lockout |
+| Famílias | cadastro, ficha social versionada, membros, visita domiciliar, visão 360° |
+| Programas | criação, critérios versionados (rascunho → publicada → substituída) |
+| Fila | inscrição, pontuação congelada, ranking publicado, convocação com exceção auditada, recurso |
+| Pendências | suspensão com prazo e retorno automático à fila quando saneadas |
+| Documentos | storage S3-compatível e ofício em PDF com QR de validação pública |
+| Central do munícipe | posição, nota explicada, documentos e recurso, em esfera isolada |
+| Administração | usuários, capacidades nominais, parâmetros e signatários |
+| Trilha | consulta filtrável por entidade, operação e período |
+| Painel | contadores, decisões com prazo correndo, busca por CPF/nome/protocolo |
+| Recadastramento | baixa por ficha vencida, sempre confirmada pelo gestor |
+
+Fora do MVP, conforme o roadmap da spec: produção habitacional (convênio, obra, medição,
+unidades), mutuários e parcelas, aluguel social, reassentamento, PLHIS, fiscalização e a
+integração por API com o Regulariza+.
+
+Infra pendente: fontes embarcadas, CI, imagem de produção e deploy.

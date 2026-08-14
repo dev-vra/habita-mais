@@ -48,3 +48,9 @@ cobre só o que muda a forma de trabalhar aqui dentro.
   do Regulariza+ — embarcar em `public/fontes` com `@font-face`.
 - Envio de documento pelo munícipe ainda não tem policy de escrita: a central hoje é leitura mais
   interposição de recurso.
+- A validação pública de documento não consulta o banco de propósito — o QR carrega um payload
+  assinado (HMAC). Consultar exigiria abrir policy pública em dado de família.
+- Não há job agendado: recadastramento e vencimento de pendência são ações confirmadas por
+  alguém, nunca rotina silenciosa.
+- Puppeteer usa o Chrome do sistema (`PUPPETEER_EXECUTABLE_PATH`); a imagem de produção precisa
+  trazer um chromium.
