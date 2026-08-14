@@ -1,0 +1,16 @@
+{
+  "name": "@habita/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint.config.js",
+    "./prettier": "./prettier.config.js",
+    "./tsconfig": "./tsconfig.json"
+  },
+  "dependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.5.0",
+    "typescript-eslint": "8.62.0"
+  }
+}

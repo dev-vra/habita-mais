@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marca Habita+</title>
+
+<style>
+/* ============================================================
+   DOCUMENTO — mesma linguagem do caderno de especificação,
+   para os dois se lerem como par.
+   ============================================================ */
+:root {
+  --ground:      #F1F2EF;
+  --surface:     #FBFBFA;
+  --surface-2:   #E7EAE4;
+  --ink:         #1B2320;
+  --ink-2:       #4C554F;
+  --ink-3:       #79837C;
+  --line:        #D2D7CF;
+  --line-2:      #BFC6BC;
+  --accent:      #9A6210;
+  --accent-soft: #F0E4CD;
+  --struct:      #22423A;
+  --struct-soft: #DCE6E1;
+  --herdado:     #2A5580;
+  --herdado-soft:#DDE6EF;
+  --risco:       #973325;
+
+  --font-body: Charter, "Bitstream Charter", "Iowan Old Style", "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+
+  --shell: 1060px;
+  --read: 68ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131714; --surface: #1A201C; --surface-2: #232B26;
+    --ink: #E7EBE6; --ink-2: #A8B1AA; --ink-3: #7B857E;
+    --line: #313A34; --line-2: #414B44;
+    --accent: #DDA84E; --accent-soft: #33291A;
+    --struct: #86BAA8; --struct-soft: #1E2C27;
+    --herdado: #82ACD8; --herdado-soft: #1B2530;
+    --risco: #DC8171;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131714; --surface: #1A201C; --surface-2: #232B26;
+  --ink: #E7EBE6; --ink-2: #A8B1AA; --ink-3: #7B857E;
+  --line: #313A34; --line-2: #414B44;
+  --accent: #DDA84E; --accent-soft: #33291A;
+  --struct: #86BAA8; --struct-soft: #1E2C27;
+  --herdado: #82ACD8; --herdado-soft: #1B2530;
+  --risco: #DC8171;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4 { font-family: var(--font-body); text-wrap: balance; margin: 0; }
+p, ul, ol { margin: 0; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.eyebrow {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
+}
+code, .mono { font-family: var(--font-mono); font-size: .86em; }
+code {
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 3px; padding: .08em .34em; color: var(--ink);
+}
+
+/* ---------- cabeçalho ---------- */
+.masthead {
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(to right, var(--line) 1px, transparent 1px) 0 0 / 46px 46px,
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px) 0 0 / 46px 46px,
+    var(--surface);
+  position: relative;
+}
+.masthead::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 25%, var(--ground) 100%);
+  pointer-events: none;
+}
+.masthead-inner { max-width: var(--shell); margin: 0 auto; padding: 46px 28px 40px; position: relative; z-index: 1; }
+.brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
+.wordmark { font-family: var(--font-ui); font-weight: 650; font-size: 19px; letter-spacing: -.015em; }
+.wordmark .plus { color: var(--accent); }
+.brand-sep { width: 1px; height: 20px; background: var(--line-2); }
+.brand-note { font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-3); }
+
+h1 { font-size: clamp(34px, 5.4vw, 55px); line-height: 1.06; letter-spacing: -.022em; font-weight: 600; max-width: 19ch; }
+.deck { margin-top: 20px; max-width: 60ch; font-size: clamp(17px, 2.1vw, 20px); line-height: 1.55; color: var(--ink-2); }
+.meta-strip {
+  margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 10px 34px;
+  font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-3);
+}
+.meta-strip b { color: var(--ink-2); font-weight: 600; }
+
+/* ---------- shell ---------- */
+.shell { max-width: var(--shell); margin: 0 auto; padding: 0 28px 100px; display: grid; grid-template-columns: 1fr; }
+@media (min-width: 1180px) { .shell { grid-template-columns: 186px 1fr; gap: 48px; max-width: 1340px; } }
+.rail { display: none; }
+@media (min-width: 1180px) {
+  .rail { display: block; position: sticky; top: 0; align-self: start; padding-top: 54px; font-family: var(--font-ui); max-height: 100vh; overflow-y: auto; }
+  .rail ol { list-style: none; padding: 0; margin: 10px 0 0; }
+  .rail a { display: grid; grid-template-columns: 22px 1fr; gap: 7px; padding: 5px 0 5px 11px; font-size: 12.5px; line-height: 1.35; color: var(--ink-3); text-decoration: none; border-left: 2px solid transparent; }
+  .rail a:hover { color: var(--ink); }
+  .rail a .n { font-variant-numeric: tabular-nums; color: var(--line-2); }
+  .rail a[aria-current="true"] { color: var(--ink); border-left-color: var(--accent); }
+  .rail a[aria-current="true"] .n { color: var(--accent); }
+}
+main { min-width: 0; padding-top: 54px; }
+.prose { max-width: var(--read); }
+.prose > * + * { margin-top: 18px; }
+section { scroll-margin-top: 22px; }
+section + section { margin-top: 76px; }
+h2 { font-size: clamp(25px, 3.4vw, 33px); line-height: 1.16; letter-spacing: -.018em; font-weight: 600; }
+.h2-wrap { margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.h2-wrap .eyebrow { display: block; margin-bottom: 9px; }
+h3 { font-size: 20px; font-weight: 600; letter-spacing: -.012em; margin: 40px 0 12px; }
+h4 { font-family: var(--font-ui); font-size: 12px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin: 30px 0 10px; }
+.lede { font-size: 19px; line-height: 1.55; color: var(--ink-2); }
+ul.list { padding-left: 1.15em; }
+ul.list li { margin-top: 7px; }
+
+.pull { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 18px 22px; margin-top: 26px; max-width: var(--read); }
+.pull .eyebrow { display: block; margin-bottom: 7px; color: var(--accent); }
+.note { border: 1px solid var(--line); background: var(--surface); padding: 16px 20px; font-size: 15.5px; color: var(--ink-2); max-width: var(--read); margin-top: 24px; }
+.note b { color: var(--ink); }
+
+figure { margin: 34px 0 0; }
+figcaption { font-family: var(--font-ui); font-size: 13px; line-height: 1.5; color: var(--ink-3); margin-top: 11px; max-width: 76ch; }
+figcaption b { color: var(--ink-2); font-weight: 600; }
+.figscroll { overflow-x: auto; }
+
+/* ============================================================
+   §1 — CONSTRUÇÃO DA MARCA
+   ============================================================ */
+.logo-hero {
+  margin-top: 28px; border: 1px solid var(--line); background: var(--surface);
+  display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--line);
+}
+@media (min-width: 820px) { .logo-hero { grid-template-columns: 1.1fr 1fr; } }
+/* Demonstração de assinatura: os fundos são FIXOS nos dois temas do documento —
+   a célula clara precisa continuar clara mesmo com a página em escuro, senão a
+   wordmark verde-escura some. */
+.logo-cell { background: #FBFBFA; padding: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; min-height: 300px; }
+.logo-cell.dark { background: #14332B; }
+.logo-cell .cap { font-family: var(--font-ui); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: #79837C; }
+.logo-cell.dark .cap { color: rgba(255,255,255,.5); }
+.lockup { display: flex; align-items: center; gap: 14px; }
+.lockup .txt { font-family: var(--font-ui); font-weight: 800; font-size: 34px; letter-spacing: -.025em; color: #14332B; }
+.lockup .txt .p { color: #B07514; }
+.logo-cell.dark .lockup .txt { color: #fff; }
+.logo-cell.dark .lockup .txt .p { color: #E0A340; }
+
+.sizes { margin-top: 26px; border: 1px solid var(--line); background: var(--surface); padding: 26px 30px; display: flex; align-items: flex-end; gap: 34px; flex-wrap: wrap; }
+.size-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.size-item .lbl { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+
+.pair { margin-top: 26px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); grid-template-columns: 1fr; }
+@media (min-width: 720px) { .pair { grid-template-columns: 1fr 1fr; } }
+.pair > div { background: var(--surface); padding: 26px 28px 30px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.pair h4 { margin: 0; }
+.pair p { font-family: var(--font-ui); font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+/* Amostra sobre fundo claro fixo — a assinatura se avalia contra o fundo dela,
+   não contra o tema em que o caderno está sendo lido. */
+.on-light { background: #FBFBFA; border: 1px solid #E2E6DF; border-radius: 6px; padding: 14px 18px; width: 100%; }
+.on-light .txt { color: #14332B; }
+
+/* ============================================================
+   PALETA
+   ============================================================ */
+.swatches { margin-top: 24px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); grid-template-columns: 1fr; }
+@media (min-width: 620px) { .swatches { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 980px) { .swatches { grid-template-columns: repeat(3, 1fr); } }
+.sw { background: var(--surface); padding-bottom: 16px; }
+.sw .chip { height: 70px; display: flex; align-items: flex-end; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.sw .chip span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .04em; }
+.sw .body { padding: 12px 16px 0; }
+.sw .nm { font-family: var(--font-ui); font-size: 13.5px; font-weight: 650; }
+.sw .hx { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
+.sw .ds { font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.45; }
+
+.typescale { margin-top: 24px; border: 1px solid var(--line); background: var(--surface); }
+.typescale > div { padding: 15px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.typescale > div:last-child { border-bottom: none; }
+.typescale .spec { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.ts-sample { font-family: var(--font-ui); color: var(--ink); }
+
+/* ============================================================
+   MOCKUPS — tokens FIXOS (o produto é light-only, como o irmão)
+   ============================================================ */
+.mock {
+  --m-brand:      #14332B;
+  --m-brand-2:    #1E4A3E;
+  --m-brand-3:    #2B6353;
+  --m-accent:     #97620F;
+  --m-accent-2:   #B07514;
+  --m-accent-3:   #F5EBD8;
+  --m-blue:       #1351B4;
+  --m-blue-soft:  #E4ECF9;
+  --m-ok:         #168821;
+  --m-ok-soft:    #E3F2E4;
+  --m-warn:       #8A6100;
+  --m-warn-soft:  #FCF3D8;
+  --m-dang:       #C4230A;
+  --m-dang-soft:  #FBE4E0;
+  --m-bg:         #EEF1F0;
+  --m-surf:       #FFFFFF;
+  --m-surf-2:     #F6F8F7;
+  --m-ink:        #1A211E;
+  --m-ink-2:      #5A6560;
+  --m-ink-3:      #8A938E;
+  --m-line:       #DDE3E0;
+  --m-line-2:     #C6CFCA;
+
+  font-family: var(--font-ui);
+  color: var(--m-ink);
+  line-height: 1.45;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+.mock *, .mock *::before, .mock *::after { box-sizing: border-box; }
+
+.screen {
+  margin-top: 30px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  overflow-x: auto;
+}
+.screen-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  position: sticky; left: 0;
+}
+.screen-bar .dots { display: flex; gap: 5px; }
+.screen-bar .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line-2); display: block; }
+.screen-bar .url {
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 3px; padding: 3px 10px; margin-left: 6px;
+}
+.canvas { min-width: 1160px; background: var(--m-bg); }
+.canvas.narrow { min-width: 900px; }
+
+/* ---- primitivos do mockup ---- */
+.mbtn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 16px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 600; border: 1px solid transparent;
+  white-space: nowrap;
+}
+.mbtn-pri { background: var(--m-accent); color: #fff; }
+.mbtn-sec { background: var(--m-surf); color: var(--m-brand); border-color: var(--m-line-2); }
+.mbtn-ghost { background: transparent; color: var(--m-ink-2); }
+.mbtn-sm { height: 32px; padding: 0 12px; font-size: 12.5px; border-radius: 6px; }
+
+.mbadge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 650; letter-spacing: .01em; white-space: nowrap;
+}
+.mbadge i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+.b-ok   { background: var(--m-ok-soft);   color: #10651A; }
+.b-ok i { background: var(--m-ok); }
+.b-warn { background: var(--m-warn-soft); color: var(--m-warn); }
+.b-warn i { background: #C79800; }
+.b-dang { background: var(--m-dang-soft); color: var(--m-dang); }
+.b-dang i { background: var(--m-dang); }
+.b-info { background: var(--m-blue-soft); color: #0E3F8C; }
+.b-info i { background: var(--m-blue); }
+.b-neut { background: #EAEEEC; color: var(--m-ink-2); }
+.b-neut i { background: var(--m-ink-3); }
+
+.mcard { background: var(--m-surf); border: 1px solid var(--m-line); border-radius: 12px; }
+
+/* ---- shell da aplicação ---- */
+.app { display: grid; grid-template-columns: 244px 1fr; min-height: 660px; }
+.side { background: var(--m-brand); padding: 0 0 18px; display: flex; flex-direction: column; }
+.side-top { padding: 18px 18px 16px; display: flex; align-items: center; gap: 11px; }
+.side-top .nm { font-weight: 800; font-size: 18px; letter-spacing: -.02em; color: #fff; }
+.side-top .nm span { color: #E0A340; }
+.side-org {
+  margin: 0 12px 14px; padding: 10px 12px; border-radius: 9px;
+  background: rgba(255,255,255,.07); display: flex; align-items: center; gap: 10px;
+}
+.side-org .crest {
+  width: 30px; height: 30px; border-radius: 6px; flex: 0 0 auto;
+  background: #fff; display: grid; place-items: center;
+  font-size: 9px; font-weight: 800; color: var(--m-brand); letter-spacing: -.02em;
+}
+.side-org .t { min-width: 0; }
+.side-org .t b { display: block; font-size: 12.5px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-org .t span { font-size: 10.5px; color: rgba(255,255,255,.55); }
+.side-grp { padding: 12px 20px 6px; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.38); }
+.side a, .side .navitem {
+  display: flex; align-items: center; gap: 11px;
+  margin: 1px 10px; padding: 9px 12px; border-radius: 8px;
+  font-size: 13.5px; color: rgba(255,255,255,.78); text-decoration: none;
+}
+.side .navitem.on { background: rgba(255,255,255,.12); color: #fff; font-weight: 600; box-shadow: inset 2px 0 0 #E0A340; }
+.side .navitem .ct { margin-left: auto; font-size: 11px; font-variant-numeric: tabular-nums; color: rgba(255,255,255,.5); }
+.side .navitem.on .ct { color: #E0A340; }
+.side .ico { width: 17px; height: 17px; flex: 0 0 auto; }
+
+.body-col { display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+  height: 58px; background: var(--m-surf); border-bottom: 1px solid var(--m-line);
+  display: flex; align-items: center; gap: 14px; padding: 0 22px;
+}
+.search {
+  flex: 1; max-width: 380px; height: 36px; border: 1px solid var(--m-line-2);
+  border-radius: 8px; background: var(--m-surf-2);
+  display: flex; align-items: center; gap: 9px; padding: 0 12px;
+  font-size: 13px; color: var(--m-ink-3);
+}
+.topbar .spacer { flex: 1; }
+.iconbtn { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: var(--m-ink-2); position: relative; }
+.iconbtn .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--m-dang); border: 1.5px solid var(--m-surf); }
+.avatar {
+  display: flex; align-items: center; gap: 9px; padding-left: 14px; margin-left: 4px;
+  border-left: 1px solid var(--m-line);
+}
+.avatar .ini { width: 32px; height: 32px; border-radius: 50%; background: var(--m-brand-3); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.avatar .who b { display: block; font-size: 12.5px; font-weight: 600; }
+.avatar .who span { font-size: 10.5px; color: var(--m-ink-3); }
+
+.content { padding: 24px 26px 34px; }
+.crumb { font-size: 12px; color: var(--m-ink-3); display: flex; gap: 7px; align-items: center; }
+.crumb b { color: var(--m-ink-2); font-weight: 500; }
+.phead { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin: 10px 0 22px; flex-wrap: wrap; }
+.phead h1 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; margin: 0; font-family: var(--font-ui); color: var(--m-ink); }
+.phead p { font-size: 13.5px; color: var(--m-ink-2); margin-top: 5px; }
+.phead .acts { display: flex; gap: 9px; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.kpi { padding: 16px 18px; }
+.kpi .k { font-size: 11px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; color: var(--m-ink-3); }
+.kpi .v { font-size: 30px; font-weight: 700; letter-spacing: -.025em; margin-top: 7px; font-variant-numeric: tabular-nums; }
+.kpi .d { font-size: 12px; color: var(--m-ink-2); margin-top: 4px; }
+.kpi .d.up { color: #10651A; }
+.kpi .d.warn { color: var(--m-warn); }
+.kpi.hl { border-color: var(--m-accent); box-shadow: inset 3px 0 0 var(--m-accent); }
+
+.grid2 { display: grid; grid-template-columns: 1.62fr 1fr; gap: 16px; margin-top: 16px; }
+.panel-h { padding: 15px 18px; border-bottom: 1px solid var(--m-line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.panel-h h3 { font-size: 14.5px; font-weight: 650; margin: 0; font-family: var(--font-ui); }
+.panel-h a { font-size: 12.5px; color: var(--m-accent); text-decoration: none; font-weight: 600; }
+
+table.mt { width: 100%; border-collapse: collapse; }
+table.mt th {
+  text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--m-ink-3); padding: 10px 18px; background: var(--m-surf-2); border-bottom: 1px solid var(--m-line);
+  white-space: nowrap;
+}
+table.mt td { padding: 12px 18px; border-bottom: 1px solid var(--m-line); font-size: 13.5px; vertical-align: middle; }
+table.mt tr:last-child td { border-bottom: none; }
+table.mt td.n { font-variant-numeric: tabular-nums; }
+table.mt .pos { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--m-brand); font-variant-numeric: tabular-nums; }
+table.mt .who b { display: block; font-weight: 600; }
+table.mt .who span { font-size: 11.5px; color: var(--m-ink-3); }
+table.mt tr.hi td { background: var(--m-accent-3); }
+
+.score { display: flex; align-items: center; gap: 9px; }
+.score .bar { width: 74px; height: 6px; border-radius: 3px; background: #E6EAE8; overflow: hidden; }
+.score .bar i { display: block; height: 100%; background: var(--m-accent); border-radius: 3px; }
+.score .v { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; min-width: 34px; }
+
+.tl { padding: 6px 18px 16px; }
+.tl-i { display: grid; grid-template-columns: 15px 1fr; gap: 12px; padding: 11px 0; position: relative; }
+.tl-i::before { content: ""; position: absolute; left: 7px; top: 26px; bottom: -11px; width: 1px; background: var(--m-line); }
+.tl-i:last-child::before { display: none; }
+.tl-i .pt { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--m-line-2); background: var(--m-surf); margin-top: 3px; }
+.tl-i.on .pt { border-color: var(--m-accent); background: var(--m-accent); }
+.tl-i .tx b { display: block; font-size: 13px; font-weight: 600; }
+.tl-i .tx span { font-size: 11.5px; color: var(--m-ink-3); }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--m-line); align-items: center; }
+.chip {
+  height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--m-line-2);
+  background: var(--m-surf); font-size: 12.5px; color: var(--m-ink-2);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.chip.on { background: var(--m-brand); border-color: var(--m-brand); color: #fff; font-weight: 600; }
+.chip .x { opacity: .6; }
+
+/* ---- login ---- */
+.login { display: grid; grid-template-columns: 1.35fr 1fr; min-height: 620px; }
+.login-art {
+  background: var(--m-brand); position: relative; overflow: hidden;
+  padding: 44px; display: flex; flex-direction: column; justify-content: space-between;
+}
+.login-art .photo {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 78% 22%, rgba(224,163,64,.30), transparent 58%),
+    radial-gradient(100% 80% at 92% 88%, rgba(43,99,83,.85), transparent 60%),
+    linear-gradient(105deg, #14332B 30%, #1E4A3E 62%, #2B6353 100%);
+}
+.login-art .roofs { position: absolute; right: -20px; bottom: -10px; opacity: .16; }
+.login-art .veil { position: absolute; inset: 0; background: linear-gradient(100deg, #14332B 18%, rgba(20,51,43,.72) 55%, rgba(20,51,43,.18) 100%); }
+.login-art > * { position: relative; z-index: 1; }
+.login-art .lg { display: flex; align-items: center; gap: 12px; }
+.login-art .lg b { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+.login-art .lg b span { color: #E0A340; }
+.login-tag {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;
+  background: rgba(255,255,255,.14); border-radius: 999px; padding: 6px 14px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.92);
+}
+.login-tag i { width: 6px; height: 6px; border-radius: 50%; background: #6FCF97; display: block; }
+.login-art h2 { font-family: var(--font-ui); font-size: 37px; line-height: 1.14; font-weight: 800; color: #fff; letter-spacing: -.028em; max-width: 15ch; margin: 0; }
+.login-art .sub { margin-top: 16px; max-width: 40ch; font-size: 14.5px; line-height: 1.6; color: rgba(255,255,255,.76); }
+.login-art .lgpd { display: flex; gap: 11px; align-items: flex-start; max-width: 46ch; }
+.login-art .lgpd p { font-size: 11.5px; line-height: 1.6; color: rgba(255,255,255,.62); }
+.login-art .lgpd strong { color: rgba(255,255,255,.86); }
+
+.login-form { background: var(--m-surf); padding: 44px 46px; display: flex; flex-direction: column; justify-content: center; }
+.login-form .head { text-align: center; margin-bottom: 26px; display: flex; flex-direction: column; align-items: center; gap: 11px; }
+.login-form .head h3 { font-family: var(--font-ui); font-size: 23px; font-weight: 800; letter-spacing: -.02em; margin: 0; color: var(--m-brand); }
+.login-form .head h3 span { color: var(--m-accent); }
+.login-form .head p { font-size: 13px; color: var(--m-ink-3); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--m-line); margin-bottom: 22px; }
+.tabs div { padding: 11px 4px; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--m-ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs div.on { color: var(--m-brand); border-bottom-color: var(--m-accent); }
+.fld { margin-bottom: 15px; }
+.fld label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--m-ink-2); }
+.fld .inp {
+  height: 44px; border: 1px solid var(--m-line-2); border-radius: 8px; background: var(--m-surf);
+  display: flex; align-items: center; padding: 0 13px; gap: 9px; font-size: 14px; color: var(--m-ink);
+}
+.fld .inp.focus { border-color: var(--m-accent); box-shadow: 0 0 0 3px rgba(151,98,15,.14); }
+.fld .inp .ph { color: var(--m-ink-3); }
+.fld .hint { font-size: 11.5px; color: var(--m-ink-3); margin-top: 6px; }
+.login-form .mbtn-pri { width: 100%; justify-content: center; height: 44px; font-size: 14.5px; margin-top: 6px; }
+.login-alt { margin-top: 18px; text-align: center; font-size: 12.5px; color: var(--m-ink-3); }
+.login-alt a { color: var(--m-accent); font-weight: 600; text-decoration: none; }
+.gov-row { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--m-line); display: flex; align-items: center; gap: 10px; justify-content: center; font-size: 12px; color: var(--m-ink-3); }
+
+/* ---- ficha da família ---- */
+.split { display: grid; grid-template-columns: 1fr 320px; gap: 16px; margin-top: 16px; }
+.idcard { padding: 20px; display: flex; gap: 16px; align-items: flex-start; }
+.idcard .ph { width: 58px; height: 58px; border-radius: 12px; background: var(--m-brand-3); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 19px; flex: 0 0 auto; }
+.idcard .meta h2 { font-family: var(--font-ui); font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -.015em; }
+.idcard .meta .sub { font-size: 12.5px; color: var(--m-ink-3); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.idcard .meta .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+.dl { display: grid; grid-template-columns: repeat(3, 1fr); }
+.dl > div { padding: 14px 18px; border-top: 1px solid var(--m-line); border-right: 1px solid var(--m-line); }
+.dl > div:nth-child(3n) { border-right: none; }
+.dl dt { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--m-ink-3); }
+.dl dd { margin: 5px 0 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.scorebox { padding: 18px; }
+.scorebox .tot { display: flex; align-items: baseline; gap: 8px; }
+.scorebox .tot b { font-size: 38px; font-weight: 800; letter-spacing: -.03em; color: var(--m-accent); font-variant-numeric: tabular-nums; }
+.scorebox .tot span { font-size: 13px; color: var(--m-ink-3); }
+.scorebox .snap { margin-top: 6px; font-size: 11.5px; color: var(--m-ink-3); font-family: var(--font-mono); }
+.crit { margin-top: 16px; }
+.crit-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--m-line); font-size: 12.5px; }
+.crit-row:first-child { border-top: none; }
+.crit-row .lb { flex: 1; color: var(--m-ink-2); }
+.crit-row .pt { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 30px; text-align: right; }
+.crit-row .pt.z { color: var(--m-ink-3); font-weight: 500; }
+
+.alertbox { padding: 14px 16px; border-radius: 10px; border: 1px solid; display: flex; gap: 11px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+.alertbox.info { background: var(--m-blue-soft); border-color: #B7CDEE; color: #0E3F8C; }
+.alertbox.warn { background: var(--m-warn-soft); border-color: #EBD48A; color: var(--m-warn); }
+.alertbox b { font-weight: 700; }
+
+/* ---- central do munícipe ---- */
+.pub { background: var(--m-surf-2); padding: 0; }
+.pub-top { background: var(--m-brand); padding: 13px 26px; display: flex; align-items: center; gap: 12px; }
+.pub-top b { color: #fff; font-weight: 800; font-size: 16px; letter-spacing: -.02em; }
+.pub-top b span { color: #E0A340; }
+.pub-top .r { margin-left: auto; font-size: 12.5px; color: rgba(255,255,255,.7); }
+.pub-body { padding: 28px 26px 34px; max-width: 860px; margin: 0 auto; }
+.pub-hero { padding: 24px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.pub-hero .big { font-size: 52px; font-weight: 800; letter-spacing: -.04em; color: var(--m-brand); font-variant-numeric: tabular-nums; line-height: 1; }
+.pub-hero .lb { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--m-ink-3); }
+.pub-hero .of { font-size: 13.5px; color: var(--m-ink-2); margin-top: 6px; }
+.pub-hero .rt { margin-left: auto; text-align: right; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+
+/* ============================================================
+   IMPRESSÃO / PDF — A4 PAISAGEM. As maquetes têm 1160 px de
+   largura; em retrato elas cairiam para ~8 px de corpo de fonte.
+   ============================================================ */
+@media print {
+  @page { size: A4 landscape; margin: 8mm 12mm; }
+
+  :root,
+  :root:not([data-theme="light"]),
+  :root[data-theme="dark"] {
+    --ground: #FFFFFF; --surface: #FFFFFF; --surface-2: #F2F4F1;
+    --ink: #1B2320; --ink-2: #4C554F; --ink-3: #6E7872;
+    --line: #D2D7CF; --line-2: #BFC6BC;
+    --accent: #8A5810; --accent-soft: #F6EEDF;
+    --struct: #22423A; --struct-soft: #E6EDE9;
+    --herdado: #24507A; --herdado-soft: #E6EDF5;
+    --risco: #8C2E21;
+  }
+
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; font-size: 10.5pt; line-height: 1.52; }
+
+  .rail { display: none !important; }
+  .shell { display: block; max-width: 100%; padding: 0; }
+  main { padding-top: 0; }
+  .masthead { border-bottom: 1px solid var(--line); background: #fff; }
+  .masthead::after { display: none; }
+  .masthead-inner { padding: 0 0 20px; max-width: 100%; }
+  h1 { font-size: 30pt; }
+  .deck { font-size: 12pt; }
+
+  /* Só as seções de fundamentos abrem página. As de tela (§4–§8) fluem: a maquete
+     não cabe junto da própria intro, então forçar quebra deixaria meia página branca
+     atrás dela — melhor a intro fechar a página anterior. */
+  #m1, #m2, #m3 { break-before: page; }
+  section, section + section { margin-top: 22px; }
+  h2 { font-size: 17pt; }
+  h3, h4 { break-after: avoid; }
+  .h2-wrap { break-after: avoid; break-inside: avoid; margin-bottom: 16px; padding-bottom: 10px; }
+  .lede { font-size: 11pt; }
+
+  figure, .note, .pull, .logo-hero, .sizes, .pair, .swatches, .typescale, .screen { break-inside: avoid; }
+  .figscroll { overflow: visible; }
+  .figscroll svg { min-width: 0; }
+
+  /* Uma tela por página: intro + maquete + legenda formam um bloco indivisível.
+     A faixa útil da paisagem tem ~733 px; a intro come ~150 e a legenda ~70, então
+     o zoom precisa deixar a maquete abaixo de ~500 px. `zoom` reflui de verdade,
+     ao contrário de `transform: scale`. */
+  .screen { border-color: var(--line); margin-top: 12px; }
+  .screen-bar { position: static; }
+  .canvas { zoom: .62; }
+  .canvas.narrow { zoom: .68; }
+  figcaption { font-size: 9pt; margin-top: 8px; }
+  #m4, #m5, #m6, #m7, #m8 { break-inside: avoid; }
+  section > .prose { break-inside: avoid; break-after: avoid; }
+  .screen { break-after: avoid; }
+
+  a { color: var(--ink); text-decoration: none; }
+  footer { break-before: avoid; }
+}
+
+footer { border-top: 1px solid var(--line); margin-top: 84px; padding-top: 26px; font-family: var(--font-ui); font-size: 13px; color: var(--ink-3); max-width: var(--read); }
+footer p + p { margin-top: 9px; }
+</style>
+
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brandline">
+      <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><clipPath id="hm-t"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs>
+        <g clip-path="url(#hm-t)">
+          <rect x="8" y="8" width="84" height="84" fill="#1B4D40"/>
+          <path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/>
+          <path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/>
+          <rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/>
+          <rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/>
+        </g>
+      </svg>
+      <span class="wordmark">Habita<span class="plus">+</span></span>
+      <span class="brand-sep"></span>
+      <span class="brand-note">Marca e interface · GeoGis</span>
+    </div>
+
+    <h1>A mesma quadra do irmão, com a casa em cima do lote.</h1>
+
+    <p class="deck">
+      Marca, sistema de cor, tipografia e as cinco telas que definem o produto.
+      Construído sobre a mesma fundação gov.br do Regulariza+ — para que uma
+      prefeitura que usa os dois reconheça na hora que são da mesma família.
+    </p>
+
+    <div class="meta-strip">
+      <span><b>Documento</b> Identidade visual e telas de referência</span>
+      <span><b>Versão</b> Rascunho 0.1 · 13 ago 2026</span>
+      <span><b>Fundação</b> gov.br-DS v3 · Rawline + Raleway</span>
+      <span><b>Par</b> Caderno de especificação Habita+</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sumário">
+    <span class="eyebrow">Sumário</span>
+    <ol>
+      <li><a href="#m1"><span class="n">1</span><span>A marca</span></a></li>
+      <li><a href="#m2"><span class="n">2</span><span>Cor</span></a></li>
+      <li><a href="#m3"><span class="n">3</span><span>Tipografia</span></a></li>
+      <li><a href="#m4"><span class="n">4</span><span>Entrar</span></a></li>
+      <li><a href="#m5"><span class="n">5</span><span>Painel</span></a></li>
+      <li><a href="#m6"><span class="n">6</span><span>A fila</span></a></li>
+      <li><a href="#m7"><span class="n">7</span><span>Ficha da família</span></a></li>
+      <li><a href="#m8"><span class="n">8</span><span>Central do munícipe</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ================= 1 · MARCA ================= -->
+    <section id="m1">
+      <div class="h2-wrap"><span class="eyebrow">§1</span><h2>A marca</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          O símbolo do Regulariza+ é uma quadra cadastral: um quadrado partido por
+          arruamento branco em quatro lotes, com um lote escuro — a parcela regularizada.
+          O “+” da marca <b>é</b> o cruzamento das ruas.
+        </p>
+        <p>
+          O Habita+ herda a quadra inteira e muda uma coisa só: naquele lote escuro,
+          agora há um teto. A leitura fica óbvia quando os dois aparecem lado a lado —
+          um entrega o lote, o outro entrega a casa em cima dele.
+        </p>
+      </div>
+
+      <div class="logo-hero">
+        <div class="logo-cell">
+          <div class="lockup">
+            <svg width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="Símbolo do Habita+: quadra cadastral com quatro lotes, o lote superior direito ocupado por um telhado.">
+              <defs><clipPath id="l1"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs>
+              <g clip-path="url(#l1)">
+                <rect x="8" y="8" width="84" height="84" fill="#1B4D40"/>
+                <path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/>
+                <path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/>
+                <rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/>
+                <rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/>
+              </g>
+            </svg>
+            <span class="txt">Habita<span class="p">+</span></span>
+          </div>
+          <span class="cap">Assinatura principal · fundo claro</span>
+        </div>
+
+        <div class="logo-cell dark">
+          <div class="lockup">
+            <svg width="76" height="76" viewBox="0 0 100 100" aria-hidden="true">
+              <defs><clipPath id="l2"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs>
+              <g clip-path="url(#l2)">
+                <rect x="8" y="8" width="84" height="84" fill="#2B6353"/>
+                <path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#14332B"/>
+                <path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/>
+                <rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/>
+                <rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/>
+              </g>
+            </svg>
+            <span class="txt">Habita<span class="p">+</span></span>
+          </div>
+          <span class="cap">Assinatura sobre fundo escuro</span>
+        </div>
+      </div>
+
+      <figure class="figscroll">
+        <svg viewBox="0 0 760 250" role="img" aria-label="Comparação: o símbolo do Regulariza+ tem um lote escuro cheio; o do Habita+ tem um telhado nesse mesmo lote. Ambos partem da mesma malha de quadra." style="width:100%;height:auto;background:var(--surface);border:1px solid var(--line)">
+          <!-- REGULARIZA -->
+          <g transform="translate(120,40)">
+            <g transform="scale(1.2)">
+              <defs><clipPath id="cr"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs>
+              <g clip-path="url(#cr)">
+                <rect x="8" y="8" width="84" height="84" fill="#1351B4"/>
+                <rect x="50" y="8" width="42" height="42" fill="#071D41"/>
+                <rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/>
+                <rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/>
+              </g>
+            </g>
+          </g>
+          <text x="180" y="205" text-anchor="middle" style="font-family:var(--font-ui);font-size:13px;font-weight:650;fill:var(--ink)">Regulariza+</text>
+          <text x="180" y="224" text-anchor="middle" style="font-family:var(--font-ui);font-size:11.5px;fill:var(--ink-3)">o lote regularizado</text>
+
+          <!-- seta -->
+          <line x1="300" y1="112" x2="440" y2="112" stroke="var(--line-2)" stroke-width="1.4" stroke-dasharray="5 5"/>
+          <text x="370" y="102" text-anchor="middle" style="font-family:var(--font-ui);font-size:11px;fill:var(--ink-3)">mesma malha</text>
+
+          <!-- HABITA -->
+          <g transform="translate(480,40)">
+            <g transform="scale(1.2)">
+              <defs><clipPath id="ch"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs>
+              <g clip-path="url(#ch)">
+                <rect x="8" y="8" width="84" height="84" fill="#1B4D40"/>
+                <path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/>
+                <path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/>
+                <rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/>
+                <rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/>
+              </g>
+            </g>
+          </g>
+          <text x="540" y="205" text-anchor="middle" style="font-family:var(--font-ui);font-size:13px;font-weight:650;fill:var(--ink)">Habita+</text>
+          <text x="540" y="224" text-anchor="middle" style="font-family:var(--font-ui);font-size:11.5px;fill:var(--ink-3)">a casa sobre o lote</text>
+        </svg>
+        <figcaption>
+          <b>A geometria é literalmente a mesma.</b> Quadrado de 84 com raio 16,8; arruamento
+          branco de 17,64 cruzando no centro; lote destacado no quadrante superior direito.
+          Só a cor da base e o recorte do telhado mudam — quem conhece um reconhece o outro
+          sem precisar ler o nome.
+        </figcaption>
+      </figure>
+
+      <h3>Comportamento em escala</h3>
+      <div class="sizes">
+        <div class="size-item">
+          <svg width="64" height="64" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="s64"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#s64)"><rect x="8" y="8" width="84" height="84" fill="#1B4D40"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+          <span class="lbl">64 px</span>
+        </div>
+        <div class="size-item">
+          <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="s40"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#s40)"><rect x="8" y="8" width="84" height="84" fill="#1B4D40"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+          <span class="lbl">40 px</span>
+        </div>
+        <div class="size-item">
+          <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="s24"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#s24)"><rect x="8" y="8" width="84" height="84" fill="#1B4D40"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+          <span class="lbl">24 px</span>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="s16"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#s16)"><rect x="8" y="8" width="84" height="84" fill="#1B4D40"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="19.5" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="19.5" fill="#fff"/></g></svg>
+          <span class="lbl">16 px · favicon</span>
+        </div>
+        <div class="size-item">
+          <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="smono"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#smono)"><rect x="8" y="8" width="84" height="84" fill="currentColor"/><path d="M50 50 L71 26 L92 50 Z" fill="var(--surface)" opacity=".55"/><rect x="41.18" y="8" width="17.64" height="84" fill="var(--surface)"/><rect x="8" y="41.18" width="84" height="17.64" fill="var(--surface)"/></g></svg>
+          <span class="lbl">monocromático</span>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>No favicon, o arruamento engorda.</b> A 16 px, a faixa branca de 17,64 fecha e a
+        quadra vira um bloco chapado — a versão pequena usa 19,5 e dispensa o quadrante
+        escuro, mantendo só o telhado âmbar. É o mesmo cuidado que o gov.br pede para
+        símbolos institucionais reduzidos.
+      </div>
+
+      <div class="pair">
+        <div>
+          <h4 style="color: var(--struct)">Faça</h4>
+          <div class="on-light"><div class="lockup" style="transform: scale(.62); transform-origin: left center; height: 48px">
+            <svg width="52" height="52" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="ok1"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#ok1)"><rect x="8" y="8" width="84" height="84" fill="#1B4D40"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+            <span class="txt">Habita<span class="p">+</span></span>
+          </div></div>
+          <p>Símbolo e palavra com respiro de meia-quadra entre eles. O “+” sempre em âmbar, nunca na cor do texto.</p>
+        </div>
+        <div>
+          <h4 style="color: var(--risco)">Não faça</h4>
+          <div class="on-light"><div class="lockup" style="transform: scale(.62); transform-origin: left center; height: 48px; opacity: .75">
+            <svg width="52" height="52" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="no1"><rect x="8" y="8" width="84" height="84" rx="42"/></clipPath></defs><g clip-path="url(#no1)"><rect x="8" y="8" width="84" height="84" fill="#B07514"/><path d="M50 50 L71 26 L92 50 Z" fill="#fff"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+            <span class="txt" style="font-weight: 400; letter-spacing: .08em">Habita<span class="p">+</span></span>
+          </div></div>
+          <p>Sem símbolo circular, sem base âmbar, sem palavra em peso leve ou espaçada. A quadra é quadrada porque lote é quadrado.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 2 · COR ================= -->
+    <section id="m2">
+      <div class="h2-wrap"><span class="eyebrow">§2</span><h2>Cor</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          Três decisões estruturam a paleta, e nenhuma delas é estética.
+        </p>
+        <ul class="list">
+          <li><b>Verde-eucalipto é a cor institucional</b> — sidebar, painel de entrada, cabeçalhos. Ocupa o lugar que o azul gov.br ocupa no Regulariza+, e é o que separa os dois de relance.</li>
+          <li><b>Âmbar-mel é a cor da ação</b> — botão primário, marco alcançado, item ativo. Não é decoração: se está âmbar, é clicável ou é conquista.</li>
+          <li><b>Azul continua significando Regulariza+</b> — dentro do Habita+, azul marca o que veio do produto irmão. Nunca é usado para ação própria.</li>
+        </ul>
+        <p>
+          Os tokens semânticos de status vêm do gov.br sem alteração. Como o eucalipto é
+          escuro e dessaturado e o verde de sucesso é vivo, não se confundem — e status
+          nunca aparece só como cor, sempre com ponto e rótulo.
+        </p>
+      </div>
+
+      <div class="swatches">
+        <div class="sw">
+          <span class="chip" style="background:#1B4D40"><span style="color:rgba(255,255,255,.65)">AAA sobre branco</span></span>
+          <div class="body"><div class="nm">Eucalipto</div><div class="hx">#1B4D40 · escuro #14332B</div><div class="ds">Institucional. Navegação, painel de entrada, superfície profunda.</div></div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background:#97620F"><span style="color:rgba(255,255,255,.7)">AA sobre branco</span></span>
+          <div class="body"><div class="nm">Âmbar-mel</div><div class="hx">#97620F · claro #E0A340</div><div class="ds">Ação e marca. Botão primário, item ativo, o “+” da assinatura.</div></div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background:#1351B4"><span style="color:rgba(255,255,255,.7)">token gov.br</span></span>
+          <div class="body"><div class="nm">Azul gov.br</div><div class="ds" style="margin-top:14px">Reservado. Marca dado ou vínculo vindo do Regulariza+.</div><div class="hx">#1351B4</div></div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background:#168821"><span style="color:rgba(255,255,255,.7)">success</span></span>
+          <div class="body"><div class="nm">Verde sucesso</div><div class="hx">#168821</div><div class="ds">Deferido, contemplado, quitado, documento aprovado.</div></div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background:#FFCD07"><span style="color:rgba(0,0,0,.55)">warning · texto #8A6100</span></span>
+          <div class="body"><div class="nm">Âmbar de alerta</div><div class="hx">#FFCD07 · texto #8A6100</div><div class="ds">Pendência, prazo correndo, aguardando parecer.</div></div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background:#E52207"><span style="color:rgba(255,255,255,.75)">danger</span></span>
+          <div class="body"><div class="nm">Vermelho</div><div class="hx">#E52207</div><div class="ds">Indeferido, inadimplente, prazo vencido, área interditada.</div></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>O amarelo gov.br não passa em contraste sobre branco.</b> O irmão já resolveu isso
+        com um token de tinta separado (<code>#8A6100</code>) para o texto de alerta. O Habita+
+        herda a solução em vez de repetir o erro — e o âmbar de marca (<code>#97620F</code>)
+        é distinto o bastante do âmbar de alerta para não gerar leitura ambígua.
+      </div>
+    </section>
+
+    <!-- ================= 3 · TIPOGRAFIA ================= -->
+    <section id="m3">
+      <div class="h2-wrap"><span class="eyebrow">§3</span><h2>Tipografia</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          Rawline no corpo e na interface, Raleway nos títulos — as duas fontes oficiais que
+          vêm no pacote do gov.br. Poucos tamanhos, hierarquia por peso, corpo em 16 px.
+        </p>
+      </div>
+
+      <div class="typescale">
+        <div><span class="ts-sample" style="font-size:30px;font-weight:800;letter-spacing:-.025em">Fila do programa</span><span class="spec">Raleway 800 · 30/34</span></div>
+        <div><span class="ts-sample" style="font-size:23px;font-weight:700;letter-spacing:-.02em">Famílias inscritas</span><span class="spec">Raleway 700 · 23/28</span></div>
+        <div><span class="ts-sample" style="font-size:18px;font-weight:650">Composição familiar</span><span class="spec">Rawline 600 · 18/26</span></div>
+        <div><span class="ts-sample" style="font-size:16px">Renda per capita apurada na última visita domiciliar.</span><span class="spec">Rawline 400 · 16/24</span></div>
+        <div><span class="ts-sample" style="font-size:14px;color:var(--ink-2)">Ficha social válida até 12/2026.</span><span class="spec">Rawline 400 · 14/21</span></div>
+        <div><span class="ts-sample" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)">Pontuação congelada</span><span class="spec">Rawline 700 · 11 · +0,1em</span></div>
+        <div><span class="ts-sample mono" style="font-size:14px;font-variant-numeric:tabular-nums">HAB-2026/00418 · 87,5 pts · R$ 412,00</span><span class="spec">tabular · protocolo, nota, valor</span></div>
+      </div>
+
+      <div class="note">
+        <b>Número que empilha, empilha alinhado.</b> Protocolo, pontuação, parcela e posição
+        na fila usam variante tabular sem exceção — numa tabela de fila com 800 linhas, dígito
+        desalinhado é o que faz a leitura conferir errado.
+      </div>
+    </section>
+
+    <!-- ================= 4 · LOGIN ================= -->
+    <section id="m4">
+      <div class="h2-wrap"><span class="eyebrow">§4</span><h2>Entrar</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          Mesma arquitetura do Regulariza+: painel de imagem à esquerda com a promessa do
+          produto, formulário à direita. Abaixo de 1024 px o painel some e o formulário
+          fica sozinho — quem cadastra em campo entra pelo celular.
+        </p>
+      </div>
+
+      <div class="screen mock">
+        <div class="screen-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">habita.tangaradaserra.mt.gov.br/entrar</span></div>
+        <div class="canvas narrow">
+          <div class="login">
+
+            <div class="login-art">
+              <div class="photo"></div>
+              <svg class="roofs" width="420" height="300" viewBox="0 0 420 300" aria-hidden="true">
+                <g fill="none" stroke="#fff" stroke-width="2">
+                  <path d="M20 240 L20 170 L70 130 L120 170 L120 240 Z"/>
+                  <path d="M140 240 L140 190 L185 155 L230 190 L230 240 Z"/>
+                  <path d="M250 240 L250 160 L305 118 L360 160 L360 240 Z"/>
+                  <path d="M60 240 L60 205 L82 205 L82 240"/>
+                  <path d="M175 240 L175 212 L196 212 L196 240"/>
+                  <path d="M296 240 L296 200 L320 200 L320 240"/>
+                  <line x1="0" y1="240" x2="420" y2="240"/>
+                </g>
+              </svg>
+              <div class="veil"></div>
+
+              <div class="lg">
+                <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="lgm"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#lgm)"><rect x="8" y="8" width="84" height="84" fill="#2B6353"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#14332B"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+                <b>Habita<span>+</span></b>
+              </div>
+
+              <div>
+                <span class="login-tag"><i></i> Cada família, uma vez só</span>
+                <h2>A fila da casa própria, com nome, nota e data.</h2>
+                <p class="sub">
+                  Critério publicado antes da inscrição, pontuação congelada no cálculo e
+                  cada convocação com ofício. É assim que a prefeitura consegue explicar
+                  a escolha — inclusive anos depois.
+                </p>
+              </div>
+
+              <div class="lgpd">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                <p>
+                  Ambiente protegido. Dados tratados conforme a <strong>LGPD</strong>
+                  (Lei 13.709/2018); todo acesso e alteração são <strong>registrados e
+                  auditados</strong>, com rastreabilidade por usuário.
+                </p>
+              </div>
+            </div>
+
+            <div class="login-form">
+              <div class="head">
+                <svg width="52" height="52" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="lgf"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#lgf)"><rect x="8" y="8" width="84" height="84" fill="#1B4D40"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#0E2B24"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+                <h3>Habita<span>+</span></h3>
+                <p>Gestão Habitacional de Interesse Social</p>
+              </div>
+
+              <div class="tabs">
+                <div class="on">Sou do município</div>
+                <div>Sou morador</div>
+              </div>
+
+              <div class="fld">
+                <label>E-mail funcional</label>
+                <div class="inp"><span>bianka@tangaradaserra.mt.gov.br</span></div>
+              </div>
+
+              <div class="fld">
+                <label>Senha</label>
+                <div class="inp focus">
+                  <span class="ph">••••••••••••</span>
+                  <svg style="margin-left:auto" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A938E" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+                <div class="hint">Primeiro acesso pede a troca da senha temporária.</div>
+              </div>
+
+              <div class="mbtn mbtn-pri">
+                Entrar
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+
+              <div class="login-alt">Esqueceu a senha? <a href="#m4">Falar com o administrador</a></div>
+
+              <div class="gov-row">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Padrão Digital de Governo · acesso auditado
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <figcaption>
+        <b>A frase do painel não vende software, vende defesa.</b> No Regulariza+ ela fala de
+        dignidade e escritura, porque lá o produto entrega documento. Aqui ela fala de
+        critério, nota e data, porque o que o gestor de Habitação teme é não conseguir
+        justificar a fila.
+      </figcaption>
+    </section>
+
+    <!-- ================= 5 · PAINEL ================= -->
+    <section id="m5">
+      <div class="h2-wrap"><span class="eyebrow">§5</span><h2>Painel</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          A primeira tela responde o que o gestor pergunta na segunda-feira: quantos esperam,
+          quantas casas estão saindo, quem precisa de decisão hoje.
+        </p>
+      </div>
+
+      <div class="screen mock">
+        <div class="screen-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">habita.tangaradaserra.mt.gov.br/painel</span></div>
+        <div class="canvas">
+          <div class="app">
+
+            <!-- SIDEBAR -->
+            <aside class="side">
+              <div class="side-top">
+                <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="sb1"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#sb1)"><rect x="8" y="8" width="84" height="84" fill="#2B6353"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#14332B"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+                <span class="nm">Habita<span>+</span></span>
+              </div>
+
+              <div class="side-org">
+                <span class="crest">TS</span>
+                <span class="t"><b>Tangará da Serra</b><span>Secretaria de Habitação</span></span>
+              </div>
+
+              <div class="side-grp">Atendimento</div>
+              <div class="navitem on">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                Painel
+              </div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                Famílias <span class="ct">2.184</span>
+              </div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Fila <span class="ct">1.402</span>
+              </div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                Aluguel social <span class="ct">64</span>
+              </div>
+
+              <div class="side-grp">Produção</div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Empreendimentos
+              </div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Mutuários <span class="ct">318</span>
+              </div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Áreas de risco <span class="ct">7</span>
+              </div>
+
+              <div class="side-grp">Gestão</div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                PLHIS e indicadores
+              </div>
+              <div class="navitem">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                Trilha de auditoria
+              </div>
+            </aside>
+
+            <!-- CORPO -->
+            <div class="body-col">
+              <div class="topbar">
+                <div class="search">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  Buscar por CPF, nome ou protocolo
+                </div>
+                <span class="spacer"></span>
+                <span class="iconbtn">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                  <span class="dot"></span>
+                </span>
+                <span class="avatar">
+                  <span class="ini">BM</span>
+                  <span class="who"><b>Bianka Moreira</b><span>Gestora de Habitação</span></span>
+                </span>
+              </div>
+
+              <div class="content">
+                <div class="crumb">Início <span>›</span> <b>Painel</b></div>
+                <div class="phead">
+                  <div>
+                    <h1>Bom dia, Bianka.</h1>
+                    <p>Terça, 13 de agosto de 2026 · três decisões esperam por você.</p>
+                  </div>
+                  <div class="acts">
+                    <span class="mbtn mbtn-sec">Exportar</span>
+                    <span class="mbtn mbtn-pri">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                      Nova convocação
+                    </span>
+                  </div>
+                </div>
+
+                <div class="kpis">
+                  <div class="mcard kpi">
+                    <div class="k">Na fila</div>
+                    <div class="v">1.402</div>
+                    <div class="d">em 3 programas ativos</div>
+                  </div>
+                  <div class="mcard kpi hl">
+                    <div class="k">Aguardam convocação</div>
+                    <div class="v">48</div>
+                    <div class="d up">↑ 12 unidades liberadas ontem</div>
+                  </div>
+                  <div class="mcard kpi">
+                    <div class="k">Unidades em obra</div>
+                    <div class="v">214</div>
+                    <div class="d">72% do cronograma físico</div>
+                  </div>
+                  <div class="mcard kpi">
+                    <div class="k">Aluguel social ativo</div>
+                    <div class="v">64</div>
+                    <div class="d warn">9 sem revisão há 6 meses</div>
+                  </div>
+                </div>
+
+                <div class="grid2">
+                  <div class="mcard">
+                    <div class="panel-h">
+                      <h3>Precisa de decisão</h3>
+                      <a href="#m5">Ver todas as 17</a>
+                    </div>
+                    <table class="mt">
+                      <thead><tr><th>Assunto</th><th>Família</th><th>Prazo</th><th>Situação</th></tr></thead>
+                      <tbody>
+                        <tr>
+                          <td>Recurso contra classificação</td>
+                          <td class="who"><b>Marlene A. dos Santos</b><span>HAB-2026/00418</span></td>
+                          <td class="n">2 dias</td>
+                          <td><span class="mbadge b-dang"><i></i> Vence em 48h</span></td>
+                        </tr>
+                        <tr>
+                          <td>Convocação sem resposta</td>
+                          <td class="who"><b>Josefa Ribeiro da Cruz</b><span>HAB-2026/00219</span></td>
+                          <td class="n">Hoje</td>
+                          <td><span class="mbadge b-warn"><i></i> Último dia</span></td>
+                        </tr>
+                        <tr>
+                          <td>Renovação de aluguel social</td>
+                          <td class="who"><b>Edinalva Pereira Lima</b><span>AUX-2026/00087</span></td>
+                          <td class="n">5 dias</td>
+                          <td><span class="mbadge b-warn"><i></i> Parecer pendente</span></td>
+                        </tr>
+                        <tr>
+                          <td>Laudo de risco recebido</td>
+                          <td class="who"><b>4 famílias · Córrego Formoso</b><span>Defesa Civil</span></td>
+                          <td class="n">Imediato</td>
+                          <td><span class="mbadge b-dang"><i></i> Remoção</span></td>
+                        </tr>
+                        <tr>
+                          <td>Transferência de titularidade</td>
+                          <td class="who"><b>Espólio de Antônio B. Nunes</b><span>MUT-2024/00133</span></td>
+                          <td class="n">12 dias</td>
+                          <td><span class="mbadge b-info"><i></i> No jurídico</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="mcard">
+                    <div class="panel-h"><h3>Residencial Bela Vista</h3><span class="mbadge b-ok"><i></i> No prazo</span></div>
+                    <div class="tl">
+                      <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Convênio assinado</b><span>Caixa · 12/03/2026 · R$ 18,4 mi</span></span></div>
+                      <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Fundação concluída</b><span>Medição 3 · 28/05/2026 · 100%</span></span></div>
+                      <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Alvenaria em execução</b><span>Medição 7 · 05/08/2026 · 72%</span></span></div>
+                      <div class="tl-i"><span class="pt"></span><span class="tx"><b>Habite-se previsto</b><span>11/2026 · 120 unidades</span></span></div>
+                      <div class="tl-i"><span class="pt"></span><span class="tx"><b>Entrega de chaves</b><span>12/2026</span></span></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption>
+        <b>Contadores na navegação não são enfeite.</b> Fila, aluguel social e áreas de risco
+        carregam o número porque são as três coisas que mudam sozinhas entre uma sessão e
+        outra — o gestor precisa ver crescimento sem abrir a tela.
+      </figcaption>
+    </section>
+
+    <!-- ================= 6 · FILA ================= -->
+    <section id="m6">
+      <div class="h2-wrap"><span class="eyebrow">§6</span><h2>A fila</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          A tela-âncora do produto. Tudo o que ela mostra precisa ser defensável em auditoria:
+          posição, pontuação, quando foi calculada e sob qual versão do critério.
+        </p>
+      </div>
+
+      <div class="screen mock">
+        <div class="screen-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">habita.tangaradaserra.mt.gov.br/fila/residencial-bela-vista</span></div>
+        <div class="canvas">
+          <div class="app">
+
+            <aside class="side">
+              <div class="side-top">
+                <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="sb2"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#sb2)"><rect x="8" y="8" width="84" height="84" fill="#2B6353"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#14332B"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+                <span class="nm">Habita<span>+</span></span>
+              </div>
+              <div class="side-org">
+                <span class="crest">TS</span>
+                <span class="t"><b>Tangará da Serra</b><span>Secretaria de Habitação</span></span>
+              </div>
+              <div class="side-grp">Atendimento</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Painel</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Famílias <span class="ct">2.184</span></div>
+              <div class="navitem on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Fila <span class="ct">1.402</span></div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>Aluguel social <span class="ct">64</span></div>
+              <div class="side-grp">Produção</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Empreendimentos</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Mutuários <span class="ct">318</span></div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>Áreas de risco <span class="ct">7</span></div>
+              <div class="side-grp">Gestão</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>PLHIS e indicadores</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Trilha de auditoria</div>
+            </aside>
+
+            <div class="body-col">
+              <div class="topbar">
+                <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Buscar por CPF, nome ou protocolo</div>
+                <span class="spacer"></span>
+                <span class="iconbtn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></span>
+                <span class="avatar"><span class="ini">BM</span><span class="who"><b>Bianka Moreira</b><span>Gestora de Habitação</span></span></span>
+              </div>
+
+              <div class="content">
+                <div class="crumb">Início <span>›</span> Fila <span>›</span> <b>Residencial Bela Vista</b></div>
+                <div class="phead">
+                  <div>
+                    <h1>Residencial Bela Vista</h1>
+                    <p>120 unidades · inscrições encerradas em 30/06/2026 · <span style="color:var(--m-accent);font-weight:600">critério v3 vigente</span></p>
+                  </div>
+                  <div class="acts">
+                    <span class="mbtn mbtn-sec">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Ranking em PDF
+                    </span>
+                    <span class="mbtn mbtn-pri">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v5H4z"/><path d="M4 13h16v7H4z"/><path d="M8 17h8"/></svg>
+                      Convocar próximos 12
+                    </span>
+                  </div>
+                </div>
+
+                <div class="alertbox info" style="margin-bottom:16px">
+                  <svg width="17" height="17" style="flex:0 0 auto;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  <span>
+                    Pontuação recalculada em <b>05/08/2026 às 09:14</b> por Bianka Moreira, sob o critério
+                    <b>v3</b>. As 12 famílias já convocadas mantêm a nota da <b>v2</b> — recálculo não
+                    reordena quem já foi chamado.
+                  </span>
+                </div>
+
+                <div class="mcard">
+                  <div class="chips">
+                    <span class="chip on">Aptas <span class="x">✕</span></span>
+                    <span class="chip">Com pendência</span>
+                    <span class="chip">Convocadas</span>
+                    <span class="chip">Prioridade de risco</span>
+                    <span class="chip" style="margin-left:auto;border-style:dashed">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"/></svg>
+                      Mais filtros
+                    </span>
+                  </div>
+
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:64px">Posição</th>
+                        <th>Família</th>
+                        <th>Composição</th>
+                        <th>Renda per capita</th>
+                        <th>Pontuação</th>
+                        <th>Situação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="hi">
+                        <td class="pos">001</td>
+                        <td class="who"><b>Marlene A. dos Santos</b><span>HAB-2026/00418 · desde 03/2023</span></td>
+                        <td class="n">5 pessoas · 3 menores</td>
+                        <td class="n">R$ 218,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:97%"></i></span><span class="v">97,0</span></span></td>
+                        <td><span class="mbadge b-warn"><i></i> Em recurso</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">002</td>
+                        <td class="who"><b>Josefa Ribeiro da Cruz</b><span>HAB-2026/00219 · desde 08/2022</span></td>
+                        <td class="n">4 pessoas · 1 PCD</td>
+                        <td class="n">R$ 264,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:94%"></i></span><span class="v">94,5</span></span></td>
+                        <td><span class="mbadge b-info"><i></i> Convocada</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">003</td>
+                        <td class="who"><b>Edinalva Pereira Lima</b><span>HAB-2026/00512 · desde 01/2024</span></td>
+                        <td class="n">6 pessoas · 4 menores</td>
+                        <td class="n">R$ 191,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:92%"></i></span><span class="v">92,0</span></span></td>
+                        <td><span class="mbadge b-dang"><i></i> Risco · Córrego Formoso</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">004</td>
+                        <td class="who"><b>Sebastiana Alves Ferreira</b><span>HAB-2026/00087 · desde 11/2021</span></td>
+                        <td class="n">3 pessoas · 1 idoso</td>
+                        <td class="n">R$ 305,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:88%"></i></span><span class="v">88,0</span></span></td>
+                        <td><span class="mbadge b-ok"><i></i> Apta</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">005</td>
+                        <td class="who"><b>Rosimeire da Silva Nunes</b><span>HAB-2026/00644 · desde 05/2024</span></td>
+                        <td class="n">4 pessoas · 2 menores</td>
+                        <td class="n">R$ 340,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:85%"></i></span><span class="v">85,5</span></span></td>
+                        <td><span class="mbadge b-ok"><i></i> Apta</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">006</td>
+                        <td class="who"><b>Antônia Gomes de Souza</b><span>HAB-2026/00301 · desde 02/2023</span></td>
+                        <td class="n">5 pessoas</td>
+                        <td class="n">R$ 366,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:82%"></i></span><span class="v">82,0</span></span></td>
+                        <td><span class="mbadge b-warn"><i></i> Comprovante vencido</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">007</td>
+                        <td class="who"><b>Cleuza Martins de Oliveira</b><span>HAB-2026/00158 · desde 09/2022</span></td>
+                        <td class="n">2 pessoas · 1 idoso</td>
+                        <td class="n">R$ 402,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:79%"></i></span><span class="v">79,5</span></span></td>
+                        <td><span class="mbadge b-ok"><i></i> Apta</span></td>
+                      </tr>
+                      <tr>
+                        <td class="pos">008</td>
+                        <td class="who"><b>Vanderleia Costa Batista</b><span>HAB-2026/00727 · desde 07/2024</span></td>
+                        <td class="n">3 pessoas · 2 menores</td>
+                        <td class="n">R$ 428,00</td>
+                        <td><span class="score"><span class="bar"><i style="width:76%"></i></span><span class="v">76,0</span></span></td>
+                        <td><span class="mbadge b-neut"><i></i> Aguardando visita</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--m-line);font-size:12.5px;color:var(--m-ink-2)">
+                    <span>Mostrando <b>1–8</b> de <b>1.402</b> famílias aptas</span>
+                    <span style="display:flex;gap:6px;align-items:center">
+                      <span class="mbtn mbtn-sec mbtn-sm">Anterior</span>
+                      <span class="mbtn mbtn-sm" style="background:var(--m-brand);color:#fff">1</span>
+                      <span class="mbtn mbtn-sec mbtn-sm">2</span>
+                      <span class="mbtn mbtn-sec mbtn-sm">3</span>
+                      <span style="color:var(--m-ink-3)">…</span>
+                      <span class="mbtn mbtn-sec mbtn-sm">176</span>
+                      <span class="mbtn mbtn-sec mbtn-sm">Próxima</span>
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption>
+        <b>O aviso azul no topo é a tela inteira em uma frase.</b> Quem recalculou, quando,
+        sob qual versão do critério, e o que aconteceu com quem já tinha sido convocado.
+        Sem essa linha, a mesma tabela vira exatamente a planilha que o produto veio
+        substituir — bonita, mas indefensável.
+      </figcaption>
+    </section>
+
+    <!-- ================= 7 · FICHA ================= -->
+    <section id="m7">
+      <div class="h2-wrap"><span class="eyebrow">§7</span><h2>Ficha da família</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          A visão 360°: onde a família está em todos os módulos ao mesmo tempo, incluindo
+          o que existe sobre ela no Regulariza+. É a tela que impede benefício duplicado
+          por falta de visão cruzada.
+        </p>
+      </div>
+
+      <div class="screen mock">
+        <div class="screen-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">habita.tangaradaserra.mt.gov.br/familias/HAB-2026-00418</span></div>
+        <div class="canvas">
+          <div class="app">
+
+            <aside class="side">
+              <div class="side-top">
+                <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="sb3"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#sb3)"><rect x="8" y="8" width="84" height="84" fill="#2B6353"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#14332B"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+                <span class="nm">Habita<span>+</span></span>
+              </div>
+              <div class="side-org"><span class="crest">TS</span><span class="t"><b>Tangará da Serra</b><span>Secretaria de Habitação</span></span></div>
+              <div class="side-grp">Atendimento</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Painel</div>
+              <div class="navitem on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Famílias <span class="ct">2.184</span></div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Fila <span class="ct">1.402</span></div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>Aluguel social <span class="ct">64</span></div>
+              <div class="side-grp">Produção</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Empreendimentos</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Mutuários <span class="ct">318</span></div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>Áreas de risco <span class="ct">7</span></div>
+              <div class="side-grp">Gestão</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>PLHIS e indicadores</div>
+              <div class="navitem"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Trilha de auditoria</div>
+            </aside>
+
+            <div class="body-col">
+              <div class="topbar">
+                <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Buscar por CPF, nome ou protocolo</div>
+                <span class="spacer"></span>
+                <span class="iconbtn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></span>
+                <span class="avatar"><span class="ini">BM</span><span class="who"><b>Bianka Moreira</b><span>Gestora de Habitação</span></span></span>
+              </div>
+
+              <div class="content">
+                <div class="crumb">Início <span>›</span> Famílias <span>›</span> <b>Marlene A. dos Santos</b></div>
+
+                <div class="mcard idcard" style="margin-top:12px">
+                  <span class="ph">MS</span>
+                  <div class="meta" style="flex:1">
+                    <h2>Marlene Aparecida dos Santos</h2>
+                    <div class="sub">CPF 037.•••.•••-22 · NIS 1620••••• · responsável familiar · 5 pessoas</div>
+                    <div class="row">
+                      <span class="mbadge b-warn"><i></i> Recurso em análise</span>
+                      <span class="mbadge b-neut"><i></i> Fila · posição 1</span>
+                      <span class="mbadge b-info"><i></i> Processo REURB ativo</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:9px">
+                    <span class="mbtn mbtn-sec mbtn-sm">Histórico</span>
+                    <span class="mbtn mbtn-pri mbtn-sm">Registrar visita</span>
+                  </div>
+                </div>
+
+                <div class="split">
+                  <div>
+                    <div class="mcard">
+                      <div class="panel-h"><h3>Ficha social</h3><span style="font-size:11.5px;color:var(--m-ink-3)">atualizada em 22/07/2026 · válida até 07/2027</span></div>
+                      <dl class="dl">
+                        <div><dt>Renda familiar</dt><dd>R$ 1.090,00</dd></div>
+                        <div><dt>Renda per capita</dt><dd>R$ 218,00</dd></div>
+                        <div><dt>Fonte principal</dt><dd>Trabalho informal</dd></div>
+                        <div><dt>Composição</dt><dd>5 pessoas · 3 menores</dd></div>
+                        <div><dt>Tempo no município</dt><dd>14 anos</dd></div>
+                        <div><dt>Moradia atual</dt><dd>Cedida · alvenaria</dd></div>
+                        <div><dt>Saneamento</dt><dd>Fossa rudimentar</dd></div>
+                        <div><dt>Benefício ativo</dt><dd>Bolsa Família</dd></div>
+                        <div><dt>Outro imóvel</dt><dd>Não declarado</dd></div>
+                      </dl>
+                    </div>
+
+                    <div class="mcard" style="margin-top:16px">
+                      <div class="panel-h"><h3>Linha do tempo</h3><a href="#m7">Trilha completa</a></div>
+                      <div class="tl">
+                        <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Recurso protocolado</b><span>08/08/2026 · pela Central do Munícipe</span></span></div>
+                        <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Pontuação recalculada — 97,0</b><span>05/08/2026 · critério v3 · Bianka Moreira</span></span></div>
+                        <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Visita domiciliar realizada</b><span>22/07/2026 · Técnico social · 4 fotos</span></span></div>
+                        <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Ficha social atualizada</b><span>22/07/2026 · renda revista para R$ 1.090,00</span></span></div>
+                        <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Inscrição deferida</b><span>14/03/2023 · Residencial Bela Vista</span></span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="mcard scorebox">
+                      <div class="k" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--m-ink-3)">Pontuação vigente</div>
+                      <div class="tot"><b>97,0</b><span>de 100</span></div>
+                      <div class="snap">congelada 05/08/2026 09:14 · v3</div>
+                      <div class="crit">
+                        <div class="crit-row"><span class="lb">Renda per capita &lt; ¼ salário</span><span class="pt">30</span></div>
+                        <div class="crit-row"><span class="lb">Mulher chefe de família</span><span class="pt">15</span></div>
+                        <div class="crit-row"><span class="lb">Menores no domicílio</span><span class="pt">15</span></div>
+                        <div class="crit-row"><span class="lb">Tempo de residência</span><span class="pt">14</span></div>
+                        <div class="crit-row"><span class="lb">Tempo de inscrição</span><span class="pt">13</span></div>
+                        <div class="crit-row"><span class="lb">Moradia inadequada</span><span class="pt">10</span></div>
+                        <div class="crit-row"><span class="lb">PCD ou idoso</span><span class="pt z">0</span></div>
+                        <div class="crit-row"><span class="lb">Situação de risco</span><span class="pt z">0</span></div>
+                      </div>
+                    </div>
+
+                    <div class="mcard" style="margin-top:16px;padding:16px">
+                      <div class="alertbox info">
+                        <svg width="17" height="17" style="flex:0 0 auto;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        <span>
+                          <b>Também está no Regulariza+.</b> Processo <b>2024/0731</b>, lote 118 do
+                          Jardim Morada do Sol, em análise documental.
+                          <span style="display:block;margin-top:7px;opacity:.85">Contemplar com unidade nova exige decisão sobre este processo.</span>
+                        </span>
+                      </div>
+                      <div class="mbtn mbtn-sec mbtn-sm" style="margin-top:12px;width:100%;justify-content:center">Abrir no Regulariza+</div>
+                    </div>
+
+                    <div class="mcard" style="margin-top:16px;padding:16px">
+                      <div class="alertbox warn">
+                        <svg width="17" height="17" style="flex:0 0 auto;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span><b>Recurso em análise.</b> Prazo de resposta encerra em <b>15/08/2026</b>.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption>
+        <b>O cartão azul é a única coisa nesta tela que não é dado do Habita+.</b> A cor
+        avisa antes da leitura: veio do produto irmão, por consulta de API, e é por isso
+        que ele carrega o botão de abrir lá em vez de editar aqui.
+      </figcaption>
+    </section>
+
+    <!-- ================= 8 · CENTRAL ================= -->
+    <section id="m8">
+      <div class="h2-wrap"><span class="eyebrow">§8</span><h2>Central do munícipe</h2></div>
+
+      <div class="prose">
+        <p class="lede">
+          O outro lado do balcão. Entra com protocolo e CPF, vê a própria posição e a própria
+          pontuação — nunca a de terceiro, nem por inferência.
+        </p>
+      </div>
+
+      <div class="screen mock">
+        <div class="screen-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">habita.tangaradaserra.mt.gov.br/minha-inscricao</span></div>
+        <div class="canvas narrow">
+          <div class="pub">
+            <div class="pub-top">
+              <svg width="26" height="26" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="pb"><rect x="8" y="8" width="84" height="84" rx="16.8"/></clipPath></defs><g clip-path="url(#pb)"><rect x="8" y="8" width="84" height="84" fill="#2B6353"/><path d="M50 8 L92 8 L92 50 L50 50 Z" fill="#14332B"/><path d="M50 50 L71 26 L92 50 Z" fill="#E0A340"/><rect x="41.18" y="8" width="17.64" height="84" fill="#fff"/><rect x="8" y="41.18" width="84" height="17.64" fill="#fff"/></g></svg>
+              <b>Habita<span>+</span></b>
+              <span class="r">Prefeitura de Tangará da Serra · Sair</span>
+            </div>
+
+            <div class="pub-body">
+              <div style="font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--m-ink-3);margin-bottom:8px">Sua inscrição</div>
+              <h2 style="font-family:var(--font-ui);font-size:26px;font-weight:800;letter-spacing:-.025em;margin:0 0 4px">Residencial Bela Vista</h2>
+              <p style="font-size:13.5px;color:var(--m-ink-2);margin-bottom:20px">Protocolo HAB-2026/00418 · inscrita em 14 de março de 2023</p>
+
+              <div class="mcard pub-hero">
+                <div>
+                  <div class="lb">Sua posição hoje</div>
+                  <div class="big">1º</div>
+                  <div class="of">entre 1.402 famílias aptas</div>
+                </div>
+                <div class="rt">
+                  <div class="lb">Sua pontuação</div>
+                  <div class="big" style="color:var(--m-accent);font-size:40px">97,0</div>
+                  <div class="of">calculada em 05/08/2026</div>
+                </div>
+              </div>
+
+              <div class="mcard" style="margin-top:16px">
+                <div class="panel-h"><h3>O que já aconteceu</h3></div>
+                <div class="tl">
+                  <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Seu recurso foi recebido</b><span>08/08/2026 · resposta até 15/08/2026</span></span></div>
+                  <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Pontuação atualizada</b><span>05/08/2026 · veja abaixo como foi calculada</span></span></div>
+                  <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Visita domiciliar realizada</b><span>22/07/2026</span></span></div>
+                  <div class="tl-i on"><span class="pt"></span><span class="tx"><b>Inscrição aprovada</b><span>14/03/2023</span></span></div>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+                <div class="mcard" style="padding:18px">
+                  <div class="lb" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--m-ink-3)">Documentos</div>
+                  <p style="font-size:13.5px;color:var(--m-ink-2);margin-top:8px;line-height:1.5">Está tudo entregue. Nada pendente do seu lado.</p>
+                  <span class="mbadge b-ok" style="margin-top:12px"><i></i> Em dia</span>
+                </div>
+                <div class="mcard" style="padding:18px">
+                  <div class="lb" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--m-ink-3)">Como a nota é feita</div>
+                  <p style="font-size:13.5px;color:var(--m-ink-2);margin-top:8px;line-height:1.5">Os critérios e pesos deste programa são públicos.</p>
+                  <span class="mbtn mbtn-sec mbtn-sm" style="margin-top:12px">Ler o regulamento</span>
+                </div>
+              </div>
+
+              <div class="alertbox info" style="margin-top:16px">
+                <svg width="17" height="17" style="flex:0 0 auto;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span>Estar em primeiro lugar não garante a casa: a convocação depende de unidade disponível e da reconferência dos seus dados no dia do atendimento.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption>
+        <b>O aviso final existe para evitar um processo judicial.</b> Posição na fila cria
+        expectativa de direito adquirido; dizer isso na própria tela, antes de a família
+        perguntar, é mais barato do que explicar depois — e é a diferença entre transparência
+        e promessa.
+      </figcaption>
+
+      <div class="note">
+        <b>O que não aparece aqui.</b> Nome, CPF ou pontuação de qualquer outra família. O
+        ranking público, quando sai, usa número de inscrição — numa cidade pequena, nome e
+        nota juntos revelam a condição social de vizinhos identificáveis.
+      </div>
+    </section>
+
+    <footer>
+      <p><b>Habita+</b> · Identidade visual e telas de referência, rascunho 0.1 · 13 de agosto de 2026 · GeoGis.</p>
+      <p>
+        As telas são maquetes em HTML, não capturas de um sistema em funcionamento — os dados
+        são fictícios. A fundação visual (gov.br-DS v3, Rawline e Raleway) e a geometria da
+        marca foram lidas diretamente do repositório do Regulariza+.
+      </p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var visible = new Set();
+  function paint() {
+    var current = null;
+    for (var i = 0; i < links.length; i++) {
+      var id = links[i].getAttribute('href').slice(1);
+      if (visible.has(id)) { current = id; break; }
+    }
+    links.forEach(function (a) {
+      if (a.getAttribute('href').slice(1) === current) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id); });
+    paint();
+  }, { rootMargin: '-10% 0px -70% 0px' });
+  links.forEach(function (a) {
+    var el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) io.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>

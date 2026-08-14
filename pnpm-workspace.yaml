@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Build scripts nativos aprovados (pacotes confiáveis). pnpm 11 bloqueia por padrão e grava a
+# decisão aqui. @scarf/scarf fica de fora (telemetria); esbuild é do tsx (seed/migrations).
+allowBuilds:
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  argon2: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true

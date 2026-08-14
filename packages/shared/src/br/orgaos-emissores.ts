@@ -1,0 +1,32 @@
+// Órgãos expedidores de documento de identidade usados no Brasil (fonte única — autocomplete
+// do campo "Órgão expedidor"). Lista de sugestão: o campo aceita digitação livre além dela.
+
+export const ORGAOS_EMISSORES: readonly string[] = [
+  'SSP',
+  'PC',
+  'DETRAN',
+  'IFP',
+  'IGP',
+  'IIRGD',
+  'DGPC',
+  'SESP',
+  'SESP/GO',
+  'SSPDS',
+  'SEJUSP',
+  'SJTC',
+  'PM',
+  'PF',
+  'MEX',
+  'MAER',
+  'MMA',
+  'OAB',
+  'CREA',
+  'CRM',
+  'CRO',
+  'CRC',
+  'CRF',
+  'CRN',
+  'CRP',
+  'CRBio',
+  'CRQ',
+];

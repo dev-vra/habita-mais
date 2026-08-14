@@ -1,0 +1,1644 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habita+</title>
+
+<style>
+/* ============================================================
+   TOKENS — paleta própria do Habita+.
+   Verde-eucalipto (estrutura) + âmbar-mel (acento) + azul-aço
+   (funcional: marca tudo que vem do Regulariza+).
+   ============================================================ */
+:root {
+  --ground:      #F1F2EF;
+  --surface:     #FBFBFA;
+  --surface-2:   #E7EAE4;
+  --ink:         #1B2320;
+  --ink-2:       #4C554F;
+  --ink-3:       #79837C;
+  --line:        #D2D7CF;
+  --line-2:      #BFC6BC;
+  --accent:      #9A6210;
+  --accent-soft: #F0E4CD;
+  --struct:      #22423A;
+  --struct-soft: #DCE6E1;
+  --herdado:     #2A5580;
+  --herdado-soft:#DDE6EF;
+  --risco:       #973325;
+  --risco-soft:  #F2DFDB;
+
+  --font-body: Charter, "Bitstream Charter", "Iowan Old Style", "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+
+  --shell: 1060px;
+  --read: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #131714;
+    --surface:     #1A201C;
+    --surface-2:   #232B26;
+    --ink:         #E7EBE6;
+    --ink-2:       #A8B1AA;
+    --ink-3:       #7B857E;
+    --line:        #313A34;
+    --line-2:      #414B44;
+    --accent:      #DDA84E;
+    --accent-soft: #33291A;
+    --struct:      #86BAA8;
+    --struct-soft: #1E2C27;
+    --herdado:     #82ACD8;
+    --herdado-soft:#1B2530;
+    --risco:       #DC8171;
+    --risco-soft:  #2E1E1B;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:      #131714;
+  --surface:     #1A201C;
+  --surface-2:   #232B26;
+  --ink:         #E7EBE6;
+  --ink-2:       #A8B1AA;
+  --ink-3:       #7B857E;
+  --line:        #313A34;
+  --line-2:      #414B44;
+  --accent:      #DDA84E;
+  --accent-soft: #33291A;
+  --struct:      #86BAA8;
+  --struct-soft: #1E2C27;
+  --herdado:     #82ACD8;
+  --herdado-soft:#1B2530;
+  --risco:       #DC8171;
+  --risco-soft:  #2E1E1B;
+}
+
+/* ============================================================ BASE */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-body); text-wrap: balance; margin: 0; }
+p, ul, ol { margin: 0; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+code, .mono { font-family: var(--font-mono); font-size: .86em; }
+code {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: .08em .34em;
+  color: var(--ink);
+}
+
+/* ============================================================ CABEÇALHO */
+.masthead {
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(to right, var(--line) 1px, transparent 1px) 0 0 / 46px 46px,
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px) 0 0 / 46px 46px,
+    var(--surface);
+  background-blend-mode: normal;
+  position: relative;
+}
+.masthead::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 25%, var(--ground) 100%);
+  pointer-events: none;
+}
+.masthead-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 46px 28px 40px;
+  position: relative; z-index: 1;
+}
+.brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
+.brandline svg { display: block; }
+.wordmark {
+  font-family: var(--font-ui);
+  font-weight: 650;
+  font-size: 19px;
+  letter-spacing: -.015em;
+}
+.wordmark .plus { color: var(--accent); }
+.brand-sep { width: 1px; height: 20px; background: var(--line-2); }
+.brand-note { font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-3); }
+
+h1 {
+  font-size: clamp(34px, 5.4vw, 55px);
+  line-height: 1.06;
+  letter-spacing: -.022em;
+  font-weight: 600;
+  max-width: 20ch;
+}
+.deck {
+  margin-top: 20px;
+  max-width: 60ch;
+  font-size: clamp(17px, 2.1vw, 20px);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.meta-strip {
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 10px 34px;
+  font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-3);
+}
+.meta-strip b { color: var(--ink-2); font-weight: 600; }
+
+/* ============================================================ SHELL */
+.shell {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 28px 100px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+@media (min-width: 1180px) {
+  .shell { grid-template-columns: 186px 1fr; gap: 48px; max-width: 1300px; }
+}
+
+/* rail de navegação */
+.rail { display: none; }
+@media (min-width: 1180px) {
+  .rail {
+    display: block;
+    position: sticky; top: 0; align-self: start;
+    padding-top: 54px;
+    font-family: var(--font-ui);
+    max-height: 100vh; overflow-y: auto;
+  }
+  .rail ol { list-style: none; padding: 0; margin: 10px 0 0; }
+  .rail li { margin: 0; }
+  .rail a {
+    display: grid; grid-template-columns: 22px 1fr; gap: 7px;
+    padding: 5px 0;
+    font-size: 12.5px; line-height: 1.35;
+    color: var(--ink-3); text-decoration: none;
+    border-left: 2px solid transparent; padding-left: 11px;
+  }
+  .rail a:hover { color: var(--ink); }
+  .rail a .n { font-variant-numeric: tabular-nums; color: var(--line-2); }
+  .rail a[aria-current="true"] { color: var(--ink); border-left-color: var(--accent); }
+  .rail a[aria-current="true"] .n { color: var(--accent); }
+}
+
+main { min-width: 0; padding-top: 54px; }
+.prose { max-width: var(--read); }
+.prose > * + * { margin-top: 18px; }
+
+section { scroll-margin-top: 22px; }
+section + section { margin-top: 76px; }
+
+h2 {
+  font-size: clamp(25px, 3.4vw, 33px);
+  line-height: 1.16;
+  letter-spacing: -.018em;
+  font-weight: 600;
+}
+.h2-wrap { margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.h2-wrap .eyebrow { display: block; margin-bottom: 9px; }
+h3 {
+  font-size: 20px; font-weight: 600; letter-spacing: -.012em;
+  margin-top: 40px; margin-bottom: 12px;
+}
+h4 {
+  font-family: var(--font-ui);
+  font-size: 12px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-2);
+  margin-top: 30px; margin-bottom: 10px;
+}
+
+ul.list, ol.list { padding-left: 1.15em; }
+ul.list li, ol.list li { margin-top: 7px; }
+ol.list { font-variant-numeric: tabular-nums; }
+
+.lede { font-size: 19px; line-height: 1.55; color: var(--ink-2); }
+
+/* ============================================================ CALLOUTS */
+.pull {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 18px 22px;
+  margin-top: 26px;
+  max-width: var(--read);
+}
+.pull p { font-size: 17px; }
+.pull .eyebrow { display: block; margin-bottom: 7px; color: var(--accent); }
+
+.note {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 16px 20px;
+  font-size: 15.5px;
+  color: var(--ink-2);
+  max-width: var(--read);
+  margin-top: 24px;
+}
+.note b { color: var(--ink); }
+
+/* ============================================================ TABELAS */
+.tablewrap { overflow-x: auto; margin-top: 26px; border: 1px solid var(--line); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; font-family: var(--font-ui); }
+thead th {
+  text-align: left;
+  font-size: 10.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-2);
+  padding: 11px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+tbody td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.45; }
+tbody tr:last-child td { border-bottom: none; }
+tbody th {
+  text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line);
+  font-weight: 600; vertical-align: top; line-height: 1.45; white-space: nowrap;
+}
+tbody tr:last-child th { border-bottom: none; }
+td.num, th.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* pills de origem */
+.tag {
+  display: inline-block;
+  font-family: var(--font-ui); font-size: 10.5px; font-weight: 650;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 2px; white-space: nowrap;
+  border: 1px solid;
+}
+.tag-novo     { color: var(--accent);  background: var(--accent-soft);  border-color: var(--accent); }
+.tag-herdado  { color: var(--herdado); background: var(--herdado-soft); border-color: var(--herdado); }
+.tag-api      { color: var(--struct);  background: var(--struct-soft);  border-color: var(--struct); }
+.tag-risco    { color: var(--risco);   background: var(--risco-soft);   border-color: var(--risco); }
+
+/* ============================================================ MÓDULOS */
+.modgrid {
+  margin-top: 28px;
+  display: grid; gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px)  { .modgrid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1180px) { .modgrid { grid-template-columns: 1fr 1fr 1fr; } }
+.mod { background: var(--surface); padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+.mod-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.mod-n { font-family: var(--font-mono); font-size: 12px; color: var(--line-2); font-variant-numeric: tabular-nums; }
+.mod h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+.mod p { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.mod ul { list-style: none; padding: 0; margin: 2px 0 0; font-family: var(--font-ui); font-size: 13px; }
+.mod ul li { padding: 4px 0 4px 15px; position: relative; color: var(--ink-2); line-height: 1.4; }
+.mod ul li::before {
+  content: ""; position: absolute; left: 0; top: 11px;
+  width: 6px; height: 1px; background: var(--line-2);
+}
+
+/* ============================================================ FIGURAS */
+figure { margin: 34px 0 0; }
+figure svg {
+  display: block; width: 100%; max-width: 100%; height: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.figscroll { overflow-x: auto; }
+.figscroll svg { min-width: 640px; }
+figcaption {
+  font-family: var(--font-ui); font-size: 13px; line-height: 1.5;
+  color: var(--ink-3); margin-top: 11px; max-width: 76ch;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+.svg-box { fill: var(--surface); stroke: var(--line-2); }
+.svg-box-accent { fill: var(--accent-soft); stroke: var(--accent); }
+.svg-box-herd { fill: var(--herdado-soft); stroke: var(--herdado); }
+.svg-box-risco { fill: var(--risco-soft); stroke: var(--risco); }
+.svg-t { font-family: var(--font-ui); font-size: 12.5px; fill: var(--ink); }
+.svg-t-sm { font-family: var(--font-ui); font-size: 11px; fill: var(--ink-2); }
+.svg-t-lbl { font-family: var(--font-ui); font-size: 10.5px; fill: var(--ink-3); }
+.svg-t-cap { font-family: var(--font-ui); font-size: 11px; font-weight: 650; letter-spacing: .07em; }
+.svg-line { stroke: var(--ink-3); fill: none; stroke-width: 1.4; }
+.svg-dash { stroke: var(--line-2); fill: none; stroke-width: 1.4; stroke-dasharray: 5 5; }
+
+/* ============================================================ FLUXOS */
+.flow { margin-top: 44px; }
+.flow-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.flow-head h3 { margin: 0; }
+.steps {
+  margin-top: 20px;
+  counter-reset: st;
+  list-style: none; padding: 0;
+  display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line);
+}
+@media (min-width: 780px) { .steps { grid-template-columns: 1fr 1fr; } }
+.steps li {
+  counter-increment: st;
+  background: var(--surface);
+  padding: 13px 16px 14px 44px;
+  position: relative;
+  font-size: 15px; line-height: 1.48;
+}
+.steps li::before {
+  content: counter(st, decimal-leading-zero);
+  position: absolute; left: 16px; top: 14px;
+  font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.steps li b { font-weight: 600; }
+
+/* ============================================================ ENTIDADES */
+.ents { margin-top: 26px; display: grid; gap: 20px; }
+@media (min-width: 780px) { .ents { grid-template-columns: 1fr 1fr; } }
+.entgroup { border: 1px solid var(--line); background: var(--surface); padding: 18px 20px 20px; }
+.entgroup h4 { margin-top: 0; }
+.entgroup ul { list-style: none; padding: 0; margin: 0; font-size: 14.5px; }
+.entgroup li { padding: 7px 0; border-top: 1px solid var(--line); line-height: 1.45; }
+.entgroup li:first-child { border-top: none; padding-top: 0; }
+.entgroup .en { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+.entgroup .ed { display: block; font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+
+/* ============================================================ RISCOS */
+.risks { margin-top: 26px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.risk { background: var(--surface); padding: 17px 20px; }
+.risk h4 { margin: 0 0 6px; color: var(--risco); font-family: var(--font-ui); }
+.risk p { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.risk p + p { margin-top: 8px; }
+.risk .mit { color: var(--ink); }
+.risk .mit b { font-family: var(--font-ui); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 650; }
+
+/* ============================================================ ROADMAP */
+.phases { margin-top: 26px; display: grid; gap: 18px; }
+@media (min-width: 900px) { .phases { grid-template-columns: repeat(3, 1fr); } }
+.phase { border: 1px solid var(--line); background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.phase.now { border-color: var(--accent); border-width: 1px; box-shadow: inset 3px 0 0 var(--accent); }
+.phase h3 { margin: 0; font-size: 19px; }
+.phase .when { font-family: var(--font-ui); font-size: 11px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.phase.now .when { color: var(--accent); }
+.phase ul { list-style: none; padding: 0; margin: 0; font-family: var(--font-ui); font-size: 13.5px; }
+.phase ul li { padding: 6px 0; border-top: 1px solid var(--line); color: var(--ink-2); line-height: 1.4; }
+.phase ul li:first-child { border-top: none; }
+.phase .goal { font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* ============================================================ PALETA */
+.swatches { margin-top: 24px; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); grid-template-columns: 1fr; }
+@media (min-width: 680px) { .swatches { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .swatches { grid-template-columns: repeat(4, 1fr); } }
+.sw { background: var(--surface); padding: 0 0 15px; }
+.sw .chip { height: 62px; display: block; border-bottom: 1px solid var(--line); }
+.sw .body { padding: 12px 16px 0; }
+.sw .nm { font-family: var(--font-ui); font-size: 13px; font-weight: 620; }
+.sw .hx { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
+.sw .ds { font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-2); margin-top: 7px; line-height: 1.42; }
+
+/* ============================================================ RODAPÉ */
+footer {
+  border-top: 1px solid var(--line);
+  margin-top: 84px; padding-top: 26px;
+  font-family: var(--font-ui); font-size: 13px; color: var(--ink-3);
+  max-width: var(--read);
+}
+footer p + p { margin-top: 9px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+html { scroll-behavior: smooth; }
+
+/* ============================================================
+   IMPRESSÃO / PDF — A4 retrato. Documento de leitura: o papel
+   é sempre claro, independentemente do tema em que foi lido.
+   ============================================================ */
+@media print {
+  @page { size: A4 portrait; margin: 15mm 14mm; }
+
+  :root,
+  :root:not([data-theme="light"]),
+  :root[data-theme="dark"] {
+    --ground: #FFFFFF; --surface: #FFFFFF; --surface-2: #F2F4F1;
+    --ink: #1B2320; --ink-2: #4C554F; --ink-3: #6E7872;
+    --line: #D2D7CF; --line-2: #BFC6BC;
+    --accent: #8A5810; --accent-soft: #F6EEDF;
+    --struct: #22423A; --struct-soft: #E6EDE9;
+    --herdado: #24507A; --herdado-soft: #E6EDF5;
+    --risco: #8C2E21;
+  }
+
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; font-size: 10.5pt; line-height: 1.5; }
+
+  .rail { display: none !important; }
+  .shell { display: block; max-width: 100%; padding: 0; }
+  main { padding-top: 0; }
+  .masthead { border-bottom: 1px solid var(--line); background: #fff; }
+  .masthead::after { display: none; }
+  .masthead-inner { padding: 0 0 22px; max-width: 100%; }
+  h1 { font-size: 30pt; }
+  .deck { font-size: 12pt; }
+
+  section { break-before: page; margin-top: 0; }
+  section + section { margin-top: 0; }
+  h2 { font-size: 18pt; }
+  h3, h4 { break-after: avoid; }
+  .h2-wrap { break-after: avoid; }
+
+  /* Tabelas longas quebram ENTRE linhas, com o cabeçalho repetindo na página nova.
+     Marcá-las como indivisíveis empurrava a tabela inteira e deixava a página da
+     intro em branco. */
+  .tablewrap { overflow: visible; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+
+  figure, .note, .pull, .risk, .phase, .entgroup, .mod, .steps li { break-inside: avoid; }
+  section > .prose { break-after: avoid; }
+  .modgrid { grid-template-columns: 1fr 1fr; }
+  .phases { grid-template-columns: 1fr; }
+  .phase { break-inside: avoid; }
+  figure svg { border: 1px solid var(--line); }
+  .figscroll { overflow: visible; }
+  .figscroll svg { min-width: 0; }
+  footer { break-before: avoid; }
+  a { color: var(--ink); text-decoration: none; }
+}
+</style>
+
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brandline">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="0.75" y="0.75" width="28.5" height="28.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/>
+        <line x1="10.25" y1="0.75" x2="10.25" y2="29.25" stroke="currentColor" stroke-width="1" opacity=".25"/>
+        <line x1="19.75" y1="0.75" x2="19.75" y2="29.25" stroke="currentColor" stroke-width="1" opacity=".25"/>
+        <line x1="0.75" y1="10.25" x2="29.25" y2="10.25" stroke="currentColor" stroke-width="1" opacity=".25"/>
+        <line x1="0.75" y1="19.75" x2="29.25" y2="19.75" stroke="currentColor" stroke-width="1" opacity=".25"/>
+        <rect x="10.25" y="10.25" width="9.5" height="9.5" fill="var(--accent)"/>
+        <path d="M11.9 15.7 L15 12.8 L18.1 15.7 L18.1 18.1 L11.9 18.1 Z" fill="var(--surface)"/>
+      </svg>
+      <span class="wordmark">Habita<span class="plus">+</span></span>
+      <span class="brand-sep"></span>
+      <span class="brand-note">Estudo de produto · GeoGis</span>
+    </div>
+
+    <h1>Gestão do setor de Habitação, com a fila auditável de ponta a ponta.</h1>
+
+    <p class="deck">
+      A prefeitura já sabe quem precisa de casa. O que ela não tem é como provar,
+      linha por linha, por que a casa foi para aquela família e não para a outra.
+      O Habita+ é o sistema que responde a essa pergunta — e o irmão natural do
+      Regulariza+, que já roda para o mesmo cliente.
+    </p>
+
+    <div class="meta-strip">
+      <span><b>Documento</b> Especificação funcional e de arquitetura</span>
+      <span><b>Versão</b> Rascunho 0.1 · 13 ago 2026</span>
+      <span><b>Base</b> Regulariza+ (REURB) em pré-produção</span>
+      <span><b>Decisão travada</b> Produto standalone, integrado por API</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Sumário">
+    <span class="eyebrow">Sumário</span>
+    <ol>
+      <li><a href="#s1"><span class="n">1</span><span>Por que agora</span></a></li>
+      <li><a href="#s2"><span class="n">2</span><span>Posicionamento</span></a></li>
+      <li><a href="#s3"><span class="n">3</span><span>O que herda</span></a></li>
+      <li><a href="#s4"><span class="n">4</span><span>Módulos</span></a></li>
+      <li><a href="#s5"><span class="n">5</span><span>Atores e perfis</span></a></li>
+      <li><a href="#s6"><span class="n">6</span><span>Fluxos-chave</span></a></li>
+      <li><a href="#s7"><span class="n">7</span><span>Modelo de dados</span></a></li>
+      <li><a href="#s8"><span class="n">8</span><span>Riscos</span></a></li>
+      <li><a href="#s9"><span class="n">9</span><span>Decisão em aberto</span></a></li>
+      <li><a href="#s10"><span class="n">10</span><span>Roadmap</span></a></li>
+      <li><a href="#s11"><span class="n">11</span><span>Identidade</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============================================ 1 -->
+    <section id="s1">
+      <div class="h2-wrap">
+        <span class="eyebrow">§1</span>
+        <h2>Por que agora</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          O gancho não é hipotético. O Departamento de Habitação e Interesse Social
+          de Tangará da Serra <b>já é usuário do Regulariza+ hoje</b> — o perfil de
+          atendimento tem acesso à consulta social justamente para o trabalho desse
+          departamento. Ele está dentro do sistema, mas sem um sistema seu.
+        </p>
+
+        <p>
+          O que ele faz lá é consulta: olhar a ficha social de uma família que entrou
+          por um processo de REURB. Tudo o que é trabalho próprio da Habitação — a fila
+          de um programa habitacional, a obra que produz as unidades, o contrato do
+          mutuário que recebeu a chave, o aluguel social que segura a família até a
+          obra sair — continua em planilha, em pasta de papel, ou na cabeça de quem
+          atende no balcão.
+        </p>
+
+        <p>
+          É onde o risco mora. A fila habitacional é o ato administrativo mais
+          contestável de uma prefeitura: decide quem recebe um bem de altíssimo valor,
+          com critério que quase nunca está publicado e quase nunca tem trilha. Não é
+          um problema de planilha ruim — é um problema de prova.
+        </p>
+
+        <div class="pull">
+          <span class="eyebrow">A tese</span>
+          <p>
+            O Regulariza+ resolveu o processo do <b>lote</b>. O Habita+ resolve a fila
+            da <b>família</b>. São dois lados do mesmo balcão, no mesmo cliente, com o
+            mesmo padrão de auditoria — e o segundo se vende para prefeituras que nem
+            têm REURB, porque departamento de Habitação toda cidade tem.
+          </p>
+        </div>
+
+        <h3>Onde termina o Regulariza+</h3>
+        <p>
+          A fronteira é limpa e foi verificada no código, não suposta. O Regulariza+
+          cobre o processo REURB do cadastro à titulação: requerente, ficha social
+          vinculada ao processo, núcleo urbano e lote com geometria, documentos,
+          pendências, tramitação por setor, CRF e título. Ele <b>não</b> tem — e não
+          deveria ter — fila de programa habitacional, produção de unidade, contrato
+          de mutuário, aluguel social ou PLHIS.
+        </p>
+        <p>
+          Não há sobreposição funcional a resolver. Há uma única sobreposição real,
+          e ela é de <b>dado</b>: a mesma família aparece nos dois lugares.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ 2 -->
+    <section id="s2">
+      <div class="h2-wrap">
+        <span class="eyebrow">§2</span>
+        <h2>Posicionamento e arquitetura</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          O Habita+ nasce como <b>produto independente</b> — banco, tenant, autenticação
+          e deploy próprios — e conversa com o Regulariza+ por API autenticada. É a mesma
+          escolha que o Regulariza+ fez em relação ao GovOS, e pela mesma razão: preservar
+          a capacidade de vender cada produto sozinho.
+        </p>
+
+        <p>
+          A alternativa era virar um módulo dentro do Regulariza+, ligado pelo toggle de
+          módulo por prefeitura que já existe lá. Tecnicamente é mais barato: compartilharia
+          cadastro de pessoa por chave estrangeira, sem sincronizar nada. Mas amarra o
+          Habita+ a um cliente que precisa ter REURB, e acopla o ciclo de release dos dois.
+          Como departamento de Habitação existe em toda prefeitura e núcleo informal
+          consolidado não, a independência vale o custo.
+        </p>
+      </div>
+
+      <figure class="figscroll">
+        <svg viewBox="0 0 900 350" role="img" aria-label="Habita+ e Regulariza+ são dois produtos com bancos separados; o Habita+ consulta o Regulariza+ por API autenticada usando o CPF, e o munícipe acessa dois portais distintos.">
+          <!-- fronteira -->
+          <line x1="450" y1="14" x2="450" y2="300" class="svg-dash"/>
+          <text x="450" y="326" text-anchor="middle" class="svg-t-lbl">fronteira de banco e de tenant — nenhuma chave estrangeira atravessa</text>
+
+          <!-- HABITA+ -->
+          <rect x="24" y="30" width="356" height="188" rx="3" class="svg-box-accent"/>
+          <text x="44" y="56" class="svg-t-cap" fill="var(--accent)">HABITA+</text>
+          <rect x="44" y="70" width="316" height="34" rx="2" fill="var(--surface)" stroke="var(--line-2)"/>
+          <text x="58" y="91" class="svg-t">Web + PWA · design gov.br-DS</text>
+          <rect x="44" y="112" width="316" height="34" rx="2" fill="var(--surface)" stroke="var(--line-2)"/>
+          <text x="58" y="133" class="svg-t">API NestJS · RLS por tenant · AuditLog</text>
+          <rect x="44" y="154" width="316" height="46" rx="2" fill="var(--surface)" stroke="var(--line-2)"/>
+          <text x="58" y="173" class="svg-t">Postgres + PostGIS próprio</text>
+          <text x="58" y="190" class="svg-t-sm">famílias · fila · obras · mutuários · auxílios</text>
+
+          <!-- REGULARIZA+ -->
+          <rect x="520" y="30" width="356" height="188" rx="3" class="svg-box-herd"/>
+          <text x="540" y="56" class="svg-t-cap" fill="var(--herdado)">REGULARIZA+</text>
+          <rect x="540" y="70" width="316" height="34" rx="2" fill="var(--surface)" stroke="var(--line-2)"/>
+          <text x="554" y="91" class="svg-t">Web + PWA · design gov.br-DS</text>
+          <rect x="540" y="112" width="316" height="34" rx="2" fill="var(--surface)" stroke="var(--line-2)"/>
+          <text x="554" y="133" class="svg-t">API NestJS · RLS por tenant · AuditLog</text>
+          <rect x="540" y="154" width="316" height="46" rx="2" fill="var(--surface)" stroke="var(--line-2)"/>
+          <text x="554" y="173" class="svg-t">Postgres + PostGIS próprio</text>
+          <text x="554" y="190" class="svg-t-sm">requerentes · processos · lotes · títulos</text>
+
+          <!-- seta de integração -->
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/>
+            </marker>
+            <marker id="ar-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+            </marker>
+          </defs>
+          <line x1="380" y1="129" x2="518" y2="129" class="svg-line" stroke="var(--accent)" marker-end="url(#ar-a)"/>
+          <text x="449" y="115" text-anchor="middle" class="svg-t-lbl" fill="var(--accent)">consulta por CPF</text>
+          <text x="449" y="152" text-anchor="middle" class="svg-t-lbl">chave de API com escopo</text>
+          <text x="449" y="167" text-anchor="middle" class="svg-t-lbl">leitura auditada dos dois lados</text>
+
+          <!-- munícipe -->
+          <rect x="356" y="248" width="188" height="46" rx="3" class="svg-box"/>
+          <text x="450" y="270" text-anchor="middle" class="svg-t">Munícipe</text>
+          <text x="450" y="286" text-anchor="middle" class="svg-t-sm">protocolo + CPF</text>
+          <polyline points="356,262 202,262 202,220" class="svg-line" marker-end="url(#ar)"/>
+          <polyline points="544,262 698,262 698,220" class="svg-line" marker-end="url(#ar)"/>
+        </svg>
+        <figcaption>
+          <b>O que atravessa a fronteira é só uma pergunta.</b> O Habita+ nunca lê o banco do
+          Regulariza+: ele pergunta “esta pessoa tem processo de REURB?” pela API, com chave
+          de escopo restrito, e ambos os lados registram a leitura. O custo honesto da decisão
+          está no rodapé do desenho — o munícipe tem dois portais, então convém unificá-los na
+          comunicação ao cidadão mesmo que os sistemas sigam separados.
+        </figcaption>
+      </figure>
+
+      <div class="note">
+        <b>Consequência a assumir:</b> a ficha social é duplicada. O Habita+ tem a sua,
+        com as perguntas que a pontuação da fila exige e que o REURB não faz. Quando a
+        pessoa já tem processo lá, a inscrição oferece pré-preenchimento a partir daquela
+        ficha — nunca cópia silenciosa: exige consentimento registrado e carimba a origem
+        do dado. Ver §8.
+      </div>
+    </section>
+
+    <!-- ============================================ 3 -->
+    <section id="s3">
+      <div class="h2-wrap">
+        <span class="eyebrow">§3</span>
+        <h2>O que herda do Regulariza+</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Ser standalone não significa começar do zero. Três coisas diferentes se
+          reaproveitam, e vale não confundi-las: <b>padrão de engenharia</b> (copia-se o
+          jeito), <b>integração</b> (consulta-se por API) e <b>construção nova</b> (não
+          existe em lugar nenhum).
+        </p>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Peça</th><th>Origem</th><th>Como entra no Habita+</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Stack e monorepo</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>Turborepo + pnpm, NestJS na API, Next.js App Router no web, Prisma 7 com driver adapter, Postgres + PostGIS. Mesma forma, repositório próprio.</td>
+            </tr>
+            <tr>
+              <th>Multi-tenant com RLS</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td><code>SET LOCAL</code> do tenant dentro da transação de cada request — seguro com pool. Corrigindo de saída a dívida conhecida do irmão: papel de banco da aplicação sem <code>BYPASSRLS</code>.</td>
+            </tr>
+            <tr>
+              <th>Trilha de auditoria</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>Log append-only com ator, operação, entidade, <i>diff</i> campo a campo e IP, gravado na mesma transação do caso de uso. Máscara de dado sensível antes de logar — ampliada aqui para dado bancário.</td>
+            </tr>
+            <tr>
+              <th>Carimbo em toda tabela</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td><code>createdAt/By</code>, <code>updatedAt/By</code>, <code>deletedAt/By</code> preenchidos automaticamente, nunca pelo cliente.</td>
+            </tr>
+            <tr>
+              <th>Autorização</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>Guarda de perfil + guarda de capacidade sobre matriz declarada em pacote compartilhado, com sobrescrita por prefeitura. Sem CASL — decisão já tomada e validada no irmão.</td>
+            </tr>
+            <tr>
+              <th>Design system</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>Fundação gov.br-DS + Tailwind CSS-first + componentes próprios, com a camada de humanização de microcopy e marcos. Acento e marca próprios (§11).</td>
+            </tr>
+            <tr>
+              <th>Portal do munícipe</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>Acesso por protocolo + CPF, linha do tempo, envio de documento. Mesma mecânica, conteúdo novo: posição na fila, status do auxílio, extrato de parcelas.</td>
+            </tr>
+            <tr>
+              <th>Arquivos e PDF</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>Object storage S3-compatível para foto de vistoria e laudo; geração de ofício, termo e extrato em PDF pelo mesmo motor.</td>
+            </tr>
+            <tr>
+              <th>Camada territorial</th>
+              <td><span class="tag tag-herdado">padrão</span></td>
+              <td>PostGIS + MapLibre + importação de GeoJSON. Aqui serve para o empreendimento, a área de risco e a ocorrência de fiscalização.</td>
+            </tr>
+            <tr>
+              <th>Processo REURB da família</th>
+              <td><span class="tag tag-api">via API</span></td>
+              <td>Consulta por CPF: existe processo? em que fase? há ficha social recente? Alimenta pré-preenchimento e checagem de duplicidade de benefício.</td>
+            </tr>
+            <tr>
+              <th>Fila e pontuação</th>
+              <td><span class="tag tag-novo">novo</span></td>
+              <td>Programa, critério com peso, inscrição, cálculo com <i>snapshot</i>, ranking, convocação. Não existe no Regulariza+.</td>
+            </tr>
+            <tr>
+              <th>Produção habitacional</th>
+              <td><span class="tag tag-novo">novo</span></td>
+              <td>Convênio, obra, cronograma físico-financeiro, medição, unidade.</td>
+            </tr>
+            <tr>
+              <th>Mutuários e auxílios</th>
+              <td><span class="tag tag-novo">novo</span></td>
+              <td>Contrato, parcela, inadimplência, transferência de titularidade; aluguel social com concessão, renovação e corte.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================ 4 -->
+    <section id="s4">
+      <div class="h2-wrap">
+        <span class="eyebrow">§4</span>
+        <h2>Módulos</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Dez módulos. A unidade de atendimento não é a pessoa, é a <b>família</b> —
+          diferença de fundo em relação ao Regulariza+, onde a unidade é o requerente
+          de um lote. Renda per capita, composição e vulnerabilidade só fazem sentido
+          no grupo, e é o grupo que entra na fila.
+        </p>
+      </div>
+
+      <div class="modgrid">
+
+        <article class="mod">
+          <div class="mod-head"><h3>Cadastro de famílias</h3><span class="mod-n">01</span></div>
+          <p>Base de família e membros, com a ficha social que alimenta a pontuação. Núcleo do produto.</p>
+          <ul>
+            <li>Família, responsável familiar e membros</li>
+            <li>Renda, CadÚnico/NIS, benefícios, escolaridade, trabalho</li>
+            <li>Vulnerabilidade: PCD, idoso, mulher chefe de família, risco</li>
+            <li>Condição de moradia atual e tempo de residência</li>
+            <li>Pré-preencher a partir de processo REURB, com consentimento</li>
+            <li>Visão 360°: fila, auxílio, contrato e REURB da mesma família</li>
+            <li>Recadastramento periódico com validade de ficha</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Fila de programas</h3><span class="mod-n">02</span></div>
+          <p>O coração. Inscrição, pontuação objetiva, ranking e convocação com prova de cada passo.</p>
+          <ul>
+            <li>Programa: fonte de recurso, vagas, período, regulamento</li>
+            <li>Critérios com peso, versionados e publicados</li>
+            <li>Inscrever família e validar documentação</li>
+            <li>Recalcular pontuação — individual e em lote</li>
+            <li>Congelar <i>snapshot</i> de pontuação a cada cálculo</li>
+            <li>Publicar ranking e emitir ofício de convocação</li>
+            <li>Registrar comparecimento, recusa ou inelegibilidade</li>
+            <li>Declarar contemplação e abrir contrato</li>
+            <li>Receber e julgar recurso contra a classificação</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Produção habitacional</h3><span class="mod-n">03</span></div>
+          <p>Do convênio à chave: obra, cronograma físico-financeiro e a unidade que a fila espera.</p>
+          <ul>
+            <li>Convênio e repasse: valor, contrapartida, vigência</li>
+            <li>Obra georreferenciada, com projeto e licenças</li>
+            <li>Etapas do cronograma e medição com foto</li>
+            <li>Unidades: tipologia, valor, situação</li>
+            <li>Registrar conclusão e habite-se</li>
+            <li>Liberar unidade para a fila</li>
+            <li>Painel de desvio de prazo e de orçamento</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Mutuários</h3><span class="mod-n">04</span></div>
+          <p>A vida da unidade depois da entrega — que é onde a maioria das prefeituras perde o controle.</p>
+          <ul>
+            <li>Contrato: valor, subsídio, prazo, condições</li>
+            <li>Gerar plano de parcelas</li>
+            <li>Baixar pagamento e apurar inadimplência</li>
+            <li>Notificar e registrar trilha de cobrança</li>
+            <li>Renegociar preservando o histórico anterior</li>
+            <li>Transferir titularidade: sucessão, separação, cessão</li>
+            <li>Detectar ocupação irregular da unidade</li>
+            <li>Emitir extrato e declaração de quitação</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Aluguel social</h3><span class="mod-n">05</span></div>
+          <p>Benefício emergencial temporário. Rápido de conceder, difícil de esquecer aceso.</p>
+          <ul>
+            <li>Abrir pedido com motivo: risco, incêndio, violência, ordem judicial</li>
+            <li>Triagem social expressa com parecer</li>
+            <li>Conceder: valor, vigência, dados de pagamento</li>
+            <li>Registrar competência mensal paga</li>
+            <li>Renovar com novo parecer</li>
+            <li>Cortar com motivo obrigatório</li>
+            <li>Alerta de prazo máximo e de benefício sem revisão</li>
+            <li>Encaminhar para a fila do programa definitivo</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Reassentamento</h3><span class="mod-n">06</span></div>
+          <p>Não é um fluxo próprio: é o caso que aciona os outros módulos sob evidência técnica.</p>
+          <ul>
+            <li>Abrir caso a partir de acionamento da Defesa Civil</li>
+            <li>Anexar laudo de risco — sem laudo, não há prioridade</li>
+            <li>Classificar urgência: remoção imediata ou monitorada</li>
+            <li>Conceder aluguel social como ponte</li>
+            <li>Marcar prioridade de risco na fila, com justificativa</li>
+            <li>Registrar realocação definitiva ou indenização</li>
+            <li>Interditar a área de origem contra reocupação</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>PLHIS e Conselho</h3><span class="mod-n">07</span></div>
+          <p>O plano e o controle social — exigência para acessar fundo, hoje quase sempre em PDF solto.</p>
+          <ul>
+            <li>Metas e indicadores do plano local</li>
+            <li>Painel de déficit alimentado pelos módulos operacionais</li>
+            <li>Atas e deliberações do conselho municipal</li>
+            <li>Relatório de execução para o gestor</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Fiscalização</h3><span class="mod-n">08</span></div>
+          <p>Loteamento clandestino e ocupação de área pública, com registro no mapa.</p>
+          <ul>
+            <li>Registrar denúncia georreferenciada</li>
+            <li>Vistoria e auto de constatação com foto</li>
+            <li>Encaminhar ao jurídico, à Defesa Civil ou ao REURB</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Central do munícipe</h3><span class="mod-n">09</span></div>
+          <p>Reduz o balcão. É também a peça de transparência que sustenta a defesa da fila.</p>
+          <ul>
+            <li>Consultar posição na fila e pontuação recebida</li>
+            <li>Ver pendência de documento e enviar arquivo</li>
+            <li>Acompanhar auxílio e extrato de parcelas</li>
+            <li>Ler o regulamento e os critérios vigentes</li>
+            <li>Interpor recurso contra a classificação</li>
+          </ul>
+        </article>
+
+        <article class="mod">
+          <div class="mod-head"><h3>Administração</h3><span class="mod-n">10</span></div>
+          <p>Parametrização por prefeitura e a ponte com o Regulariza+.</p>
+          <ul>
+            <li>Usuários, perfis e matriz de capacidades</li>
+            <li>Identidade visual e signatários do município</li>
+            <li>Chave de API para integrar o Regulariza+</li>
+            <li>Consulta da trilha de auditoria com filtro</li>
+            <li>Modelos de ofício, termo e declaração</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ============================================ 5 -->
+    <section id="s5">
+      <div class="h2-wrap">
+        <span class="eyebrow">§5</span>
+        <h2>Atores e perfis</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Perfis próprios, inspirados nos do Regulariza+ mas não herdados — o Habita+
+          tem seu próprio cadastro de usuário. O corte que importa: <b>quem vê
+          vulnerabilidade social não precisa ver dado financeiro, e vice-versa.</b>
+        </p>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Perfil</th><th>Faz</th><th>Não alcança</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th><span class="mono">ADMINISTRADOR</span></th>
+              <td>Configura o município: usuários, capacidades, modelos, integração.</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <th><span class="mono">GESTOR_HABITACAO</span></th>
+              <td>Abre programa, define e versiona critérios, homologa ranking, autoriza convocação, acompanha obras e indicadores.</td>
+              <td>Editar ficha social alheia; alterar pontuação individual à mão.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">TECNICO_SOCIAL</span></th>
+              <td>Cadastro e ficha social da família, visita domiciliar, parecer de vulnerabilidade, triagem de aluguel social.</td>
+              <td>Valor de parcela, inadimplência, dado bancário do mutuário.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">ATENDENTE</span></th>
+              <td>Inscreve na fila, recebe documento, abre pedido de auxílio, orienta no balcão.</td>
+              <td>Recalcular pontuação; declarar contemplação; emitir convocação.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">FISCAL_OBRAS</span></th>
+              <td>Cronograma, medição com foto, conclusão de unidade, entrega de chaves.</td>
+              <td>Ficha social; fila; contrato de mutuário.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">ANALISTA_MUTUARIO</span></th>
+              <td>Contrato, plano de parcelas, baixa de pagamento, cobrança, renegociação, transferência.</td>
+              <td>Indicador de vulnerabilidade; parecer social.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">JURIDICO</span></th>
+              <td>Parecer em desapropriação, reassentamento, convênio, recurso e litígio de mutuário.</td>
+              <td>Operar fila e obra.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">FISCAL_AUDITOR</span></th>
+              <td>Leitura de tudo, incluindo trilha de auditoria e histórico de pontuação. Prestação de contas de convênio.</td>
+              <td>Qualquer escrita.</td>
+            </tr>
+            <tr>
+              <th><span class="mono">MUNICIPE</span> <span class="tag tag-api">esfera à parte</span></th>
+              <td>Consulta a própria situação por protocolo + CPF, envia documento, interpõe recurso.</td>
+              <td>Qualquer dado de terceiro, inclusive por inferência de ranking.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <b>Capacidade, não só perfil.</b> Ações sensíveis — recalcular pontuação em lote,
+        convocar fora de ordem, cortar auxílio, transferir titularidade — são capacidades
+        concedidas explicitamente por prefeitura, não implícitas no cargo. É a mesma
+        mecânica de matriz de capacidades que o Regulariza+ já usa, e é o que torna a
+        segregação de funções demonstrável para o controle externo.
+      </div>
+    </section>
+
+    <!-- ============================================ 6 -->
+    <section id="s6">
+      <div class="h2-wrap">
+        <span class="eyebrow">§6</span>
+        <h2>Fluxos-chave</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Quatro fluxos sustentam o produto. Os três primeiros são operação; o quarto é
+          a integração com o Regulariza+, que só aparece quando a família tem os dois
+          processos ao mesmo tempo.
+        </p>
+      </div>
+
+      <!-- 6.1 FILA -->
+      <div class="flow">
+        <div class="flow-head">
+          <span class="eyebrow">§6.1</span>
+          <h3>Da inscrição à contemplação</h3>
+        </div>
+
+        <figure class="figscroll">
+          <svg viewBox="0 0 900 300" role="img" aria-label="Fluxo da fila habitacional: inscrição, validação documental, pontuação com snapshot, ranking publicado e convocação; quem comparece e é elegível vai para contemplação, quem não comparece retorna à fila com motivo auditado.">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/>
+              </marker>
+            </defs>
+
+            <rect x="16"  y="44" width="156" height="56" rx="3" class="svg-box"/>
+            <text x="94"  y="70" text-anchor="middle" class="svg-t">Inscrição</text>
+            <text x="94"  y="87" text-anchor="middle" class="svg-t-sm">família + ficha social</text>
+
+            <rect x="192" y="44" width="156" height="56" rx="3" class="svg-box"/>
+            <text x="270" y="70" text-anchor="middle" class="svg-t">Validação</text>
+            <text x="270" y="87" text-anchor="middle" class="svg-t-sm">documentos e pendências</text>
+
+            <rect x="368" y="44" width="156" height="56" rx="3" class="svg-box-accent"/>
+            <text x="446" y="70" text-anchor="middle" class="svg-t">Pontuação</text>
+            <text x="446" y="87" text-anchor="middle" class="svg-t-sm">congela snapshot</text>
+
+            <rect x="544" y="44" width="156" height="56" rx="3" class="svg-box"/>
+            <text x="622" y="70" text-anchor="middle" class="svg-t">Ranking publicado</text>
+            <text x="622" y="87" text-anchor="middle" class="svg-t-sm">prazo de recurso</text>
+
+            <rect x="720" y="44" width="156" height="56" rx="3" class="svg-box"/>
+            <text x="798" y="70" text-anchor="middle" class="svg-t">Convocação</text>
+            <text x="798" y="87" text-anchor="middle" class="svg-t-sm">ofício em PDF</text>
+
+            <line x1="172" y1="72" x2="190" y2="72" class="svg-line" marker-end="url(#ar2)"/>
+            <line x1="348" y1="72" x2="366" y2="72" class="svg-line" marker-end="url(#ar2)"/>
+            <line x1="524" y1="72" x2="542" y2="72" class="svg-line" marker-end="url(#ar2)"/>
+            <line x1="700" y1="72" x2="718" y2="72" class="svg-line" marker-end="url(#ar2)"/>
+
+            <!-- decisão -->
+            <polygon points="798,124 884,164 798,204 712,164" fill="var(--surface)" stroke="var(--line-2)" stroke-width="1"/>
+            <text x="798" y="161" text-anchor="middle" class="svg-t">Compareceu e</text>
+            <text x="798" y="177" text-anchor="middle" class="svg-t">segue elegível?</text>
+            <line x1="798" y1="100" x2="798" y2="122" class="svg-line" marker-end="url(#ar2)"/>
+
+            <!-- sim -->
+            <rect x="720" y="230" width="156" height="52" rx="3" class="svg-box-accent"/>
+            <text x="798" y="252" text-anchor="middle" class="svg-t">Contemplação</text>
+            <text x="798" y="269" text-anchor="middle" class="svg-t-sm">abre contrato · §6.2</text>
+            <line x1="798" y1="204" x2="798" y2="228" class="svg-line" marker-end="url(#ar2)"/>
+            <text x="812" y="220" class="svg-t-lbl">sim</text>
+
+            <!-- não -->
+            <polyline points="712,164 622,164 622,102" class="svg-line" marker-end="url(#ar2)"/>
+            <text x="628" y="185" class="svg-t-lbl">não — retorna à fila,</text>
+            <text x="628" y="199" class="svg-t-lbl">motivo auditado, chama o próximo</text>
+          </svg>
+          <figcaption>
+            <b>O <i>snapshot</i> é o detalhe que salva a prefeitura.</b> A pontuação é
+            congelada no momento do cálculo, com a versão do critério que valia. Mudar o
+            peso de um critério depois não reescreve quem já foi convocado — sem isso,
+            qualquer alteração de regra vira suspeita de fraude retroativa e não há como
+            provar o contrário.
+          </figcaption>
+        </figure>
+
+        <ol class="steps">
+          <li>Prefeitura abre o <b>programa</b>: fonte do recurso, número de vagas, período de inscrição, regulamento anexado.</li>
+          <li>Critérios e pesos são <b>publicados antes</b> da inscrição abrir — renda per capita, tempo de residência, mulher chefe de família, PCD ou idoso no domicílio, situação de risco, tempo de fila.</li>
+          <li>Família se inscreve no balcão ou pela central. Se já houver processo REURB, o sistema oferece pré-preencher a ficha.</li>
+          <li>Validação documental gera <b>pendências</b> com prazo; a inscrição fica suspensa até o saneamento.</li>
+          <li>Pontuação é calculada e o <b>snapshot congelado</b> junto com a versão do critério aplicada.</li>
+          <li>Ranking é publicado. Abre <b>prazo de recurso</b> — a família contesta pela central, com resposta fundamentada.</li>
+          <li>Unidade fica disponível (§6.2) e o sistema monta a lista de convocação <b>na ordem</b>.</li>
+          <li>Gestor emite o ofício. Comparecimento reconfirma elegibilidade — renda pode ter mudado desde a inscrição.</li>
+          <li><b>Contempla</b> e abre o contrato de mutuário; ou registra recusa/inelegibilidade com motivo e chama o próximo.</li>
+          <li>Recadastramento periódico revalida quem segue na fila e baixa quem não se apresentou.</li>
+        </ol>
+      </div>
+
+      <!-- 6.2 PRODUÇÃO -->
+      <div class="flow">
+        <div class="flow-head">
+          <span class="eyebrow">§6.2</span>
+          <h3>Do convênio à chave</h3>
+        </div>
+
+        <figure class="figscroll">
+          <svg viewBox="0 0 910 210" role="img" aria-label="Fluxo da produção habitacional: convênio, obra lançada, medições do cronograma, unidade concluída e contrato com entrega de chaves; a família contemplada na fila entra no último passo.">
+            <defs>
+              <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/>
+              </marker>
+            </defs>
+
+            <rect x="737" y="18" width="164" height="50" rx="3" class="svg-box-accent"/>
+            <text x="819" y="40" text-anchor="middle" class="svg-t">Família contemplada</text>
+            <text x="819" y="56" text-anchor="middle" class="svg-t-sm">vem da fila · §6.1</text>
+            <line x1="819" y1="68" x2="819" y2="110" class="svg-line" marker-end="url(#ar3)"/>
+
+            <rect x="9"   y="112" width="164" height="56" rx="3" class="svg-box"/>
+            <text x="91"  y="138" text-anchor="middle" class="svg-t">Convênio</text>
+            <text x="91"  y="155" text-anchor="middle" class="svg-t-sm">recurso e contrapartida</text>
+
+            <rect x="191" y="112" width="164" height="56" rx="3" class="svg-box"/>
+            <text x="273" y="138" text-anchor="middle" class="svg-t">Obra lançada</text>
+            <text x="273" y="155" text-anchor="middle" class="svg-t-sm">projeto e licenças</text>
+
+            <rect x="373" y="112" width="164" height="56" rx="3" class="svg-box"/>
+            <text x="455" y="138" text-anchor="middle" class="svg-t">Medições</text>
+            <text x="455" y="155" text-anchor="middle" class="svg-t-sm">físico-financeiro + foto</text>
+
+            <rect x="555" y="112" width="164" height="56" rx="3" class="svg-box"/>
+            <text x="637" y="138" text-anchor="middle" class="svg-t">Unidade concluída</text>
+            <text x="637" y="155" text-anchor="middle" class="svg-t-sm">habite-se</text>
+
+            <rect x="737" y="112" width="164" height="56" rx="3" class="svg-box-accent"/>
+            <text x="819" y="138" text-anchor="middle" class="svg-t">Contrato + chaves</text>
+            <text x="819" y="155" text-anchor="middle" class="svg-t-sm">vira mutuário · §4.4</text>
+
+            <line x1="173" y1="140" x2="189" y2="140" class="svg-line" marker-end="url(#ar3)"/>
+            <line x1="355" y1="140" x2="371" y2="140" class="svg-line" marker-end="url(#ar3)"/>
+            <line x1="537" y1="140" x2="553" y2="140" class="svg-line" marker-end="url(#ar3)"/>
+            <line x1="719" y1="140" x2="735" y2="140" class="svg-line" marker-end="url(#ar3)"/>
+
+            <text x="455" y="196" text-anchor="middle" class="svg-t-lbl">rastro contínuo para prestação de contas ao órgão repassador</text>
+          </svg>
+          <figcaption>
+            <b>Oferta e demanda se encontram num único evento.</b> A obra produz unidade,
+            a fila produz família, e o contrato é onde as duas linhas se cruzam — é também
+            o ponto em que a prestação de contas do convênio precisa fechar com a lista de
+            quem efetivamente recebeu.
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- 6.3 RISCO -->
+      <div class="flow">
+        <div class="flow-head">
+          <span class="eyebrow">§6.3</span>
+          <h3>Área de risco: o caso que aciona os outros</h3>
+        </div>
+
+        <figure class="figscroll">
+          <svg viewBox="0 0 840 270" role="img" aria-label="Fluxo do reassentamento por área de risco: o laudo da Defesa Civil abre o caso, que aciona o aluguel social como ponte temporária e a fila com prioridade de risco, ambos convergindo para a solução definitiva.">
+            <defs>
+              <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/>
+              </marker>
+            </defs>
+
+            <rect x="14"  y="100" width="170" height="58" rx="3" class="svg-box-risco"/>
+            <text x="99"  y="126" text-anchor="middle" class="svg-t">Laudo da Defesa Civil</text>
+            <text x="99"  y="143" text-anchor="middle" class="svg-t-sm">evidência obrigatória</text>
+
+            <rect x="214" y="100" width="170" height="58" rx="3" class="svg-box"/>
+            <text x="299" y="126" text-anchor="middle" class="svg-t">Caso de reassentamento</text>
+            <text x="299" y="143" text-anchor="middle" class="svg-t-sm">classifica urgência</text>
+
+            <rect x="424" y="22"  width="180" height="58" rx="3" class="svg-box"/>
+            <text x="514" y="48"  text-anchor="middle" class="svg-t">Aluguel social</text>
+            <text x="514" y="65"  text-anchor="middle" class="svg-t-sm">ponte temporária · §4.5</text>
+
+            <rect x="424" y="178" width="180" height="58" rx="3" class="svg-box"/>
+            <text x="514" y="204" text-anchor="middle" class="svg-t">Fila com prioridade</text>
+            <text x="514" y="221" text-anchor="middle" class="svg-t-sm">justificativa reforçada · §6.1</text>
+
+            <rect x="644" y="100" width="180" height="58" rx="3" class="svg-box-accent"/>
+            <text x="734" y="126" text-anchor="middle" class="svg-t">Solução definitiva</text>
+            <text x="734" y="143" text-anchor="middle" class="svg-t-sm">unidade ou indenização</text>
+
+            <line x1="184" y1="129" x2="212" y2="129" class="svg-line" marker-end="url(#ar4)"/>
+            <polyline points="384,129 404,129 404,51 422,51"  class="svg-line" marker-end="url(#ar4)"/>
+            <polyline points="384,129 404,129 404,207 422,207" class="svg-line" marker-end="url(#ar4)"/>
+            <polyline points="604,51 624,51 624,115 642,115"   class="svg-line" marker-end="url(#ar4)"/>
+            <polyline points="604,207 624,207 624,143 642,143" class="svg-line" marker-end="url(#ar4)"/>
+
+            <text x="414" y="97"  class="svg-t-lbl">enquanto isso</text>
+            <text x="414" y="256" class="svg-t-lbl">destino</text>
+          </svg>
+          <figcaption>
+            <b>Sem laudo não há prioridade.</b> O risco não é um campo que o servidor marca:
+            é uma evidência de terceiro, anexada e rastreável. Modelar assim é o que separa
+            uma prioridade defensável de um atalho na fila — e é a razão de o reassentamento
+            não ter fluxo próprio, apenas orquestrar os módulos que já existem.
+          </figcaption>
+        </figure>
+
+        <div class="note">
+          <b>Aluguel social fora do reassentamento</b> segue o mesmo caminho a partir do
+          passo do meio: pedido com motivo (incêndio, violência doméstica, ordem judicial),
+          triagem expressa com parecer, concessão com vigência, renovação por novo parecer,
+          e corte com motivo obrigatório. O alerta de “benefício ativo sem revisão” é o que
+          impede o auxílio de virar renda permanente por inércia administrativa.
+        </div>
+      </div>
+
+      <!-- 6.4 INTEGRAÇÃO -->
+      <div class="flow">
+        <div class="flow-head">
+          <span class="eyebrow">§6.4</span>
+          <h3>Quando a família tem os dois processos</h3>
+        </div>
+
+        <div class="prose">
+          <p>
+            Acontece com frequência, e é a situação mais delicada do conjunto: a mesma
+            família tem processo de REURB sobre o lote onde mora <b>e</b> inscrição na fila
+            habitacional. Não é contradição — o REURB regulariza a posse de quem já está;
+            a fila atende quem não tem moradia adequada — mas vira contradição quando o
+            reassentamento entra, porque a família sai do lote que está sendo regularizado.
+          </p>
+        </div>
+
+        <ol class="steps">
+          <li>Na inscrição, o Habita+ consulta o Regulariza+ <b>por CPF</b> pela API e mostra ao atendente se há processo em curso.</li>
+          <li>Havendo ficha social recente lá, o atendente oferece o pré-preenchimento. A família <b>consente na tela</b> e o consentimento fica registrado.</li>
+          <li>O dado copiado carrega <b>carimbo de origem</b> e data — não vira dado nativo do Habita+ sem rastro.</li>
+          <li>Se a família for contemplada com unidade nova, o sistema <b>alerta</b> sobre o processo REURB do lote antigo, que precisa de baixa ou de decisão expressa.</li>
+          <li>A checagem de duplicidade de benefício usa a mesma consulta: ninguém recebe unidade nova e titulação do lote de origem sem decisão fundamentada.</li>
+          <li>Ambos os lados registram a leitura na trilha — o Regulariza+ como acesso de terceiro, o Habita+ como origem do dado.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============================================ 7 -->
+    <section id="s7">
+      <div class="h2-wrap">
+        <span class="eyebrow">§7</span>
+        <h2>Modelo de dados</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Entidades principais, em alto nível. Tudo carrega tenant, carimbo de auditoria e
+          exclusão lógica; nada aqui referencia o banco do Regulariza+ por chave estrangeira.
+        </p>
+      </div>
+
+      <div class="ents">
+
+        <div class="entgroup">
+          <h4>Pessoas e famílias</h4>
+          <ul>
+            <li><span class="en">Familia</span><span class="ed">unidade de atendimento; aponta o responsável familiar</span></li>
+            <li><span class="en">Pessoa</span><span class="ed">única por CPF na prefeitura; pode pertencer a uma família</span></li>
+            <li><span class="en">MembroFamiliar</span><span class="ed">vínculo pessoa↔família com parentesco e condição</span></li>
+            <li><span class="en">FichaSocial</span><span class="ed">renda, CadÚnico, vulnerabilidade, moradia atual; tem validade e origem</span></li>
+            <li><span class="en">VisitaDomiciliar</span><span class="ed">parecer técnico com foto e georreferência</span></li>
+          </ul>
+        </div>
+
+        <div class="entgroup">
+          <h4>Fila</h4>
+          <ul>
+            <li><span class="en">ProgramaHabitacional</span><span class="ed">recurso, vagas, período, regulamento</span></li>
+            <li><span class="en">CriterioPontuacao</span><span class="ed">peso e fórmula; versionado por programa</span></li>
+            <li><span class="en">InscricaoFila</span><span class="ed">família em um programa; situação e posição</span></li>
+            <li><span class="en">PontuacaoSnapshot</span><span class="ed">nota congelada + versão do critério aplicada</span></li>
+            <li><span class="en">Convocacao</span><span class="ed">ofício, prazo, comparecimento, desfecho</span></li>
+            <li><span class="en">Recurso</span><span class="ed">contestação da classificação e decisão fundamentada</span></li>
+          </ul>
+        </div>
+
+        <div class="entgroup">
+          <h4>Produção</h4>
+          <ul>
+            <li><span class="en">ConvenioRepasse</span><span class="ed">fonte, valor, contrapartida, vigência</span></li>
+            <li><span class="en">ObraHabitacional</span><span class="ed">empreendimento georreferenciado</span></li>
+            <li><span class="en">EtapaCronograma</span><span class="ed">previsto × executado, físico e financeiro</span></li>
+            <li><span class="en">Medicao</span><span class="ed">percentual aferido com evidência fotográfica</span></li>
+            <li><span class="en">UnidadeHabitacional</span><span class="ed">tipologia, valor, situação, geometria opcional</span></li>
+          </ul>
+        </div>
+
+        <div class="entgroup">
+          <h4>Benefício e pós-entrega</h4>
+          <ul>
+            <li><span class="en">ContratoMutuario</span><span class="ed">família + unidade; subsídio, prazo, condições</span></li>
+            <li><span class="en">ParcelaMutuario</span><span class="ed">vencimento, pagamento, situação</span></li>
+            <li><span class="en">TransferenciaTitularidade</span><span class="ed">sucessão, separação ou cessão, com motivo</span></li>
+            <li><span class="en">AuxilioAluguel</span><span class="ed">motivo, vigência, valor, situação</span></li>
+            <li><span class="en">CompetenciaAuxilio</span><span class="ed">mês pago e comprovante</span></li>
+          </ul>
+        </div>
+
+        <div class="entgroup">
+          <h4>Risco e território</h4>
+          <ul>
+            <li><span class="en">AreaRisco</span><span class="ed">polígono, grau, situação de interdição</span></li>
+            <li><span class="en">LaudoRisco</span><span class="ed">documento da Defesa Civil que fundamenta o caso</span></li>
+            <li><span class="en">CasoReassentamento</span><span class="ed">liga família, área, auxílio e destino final</span></li>
+            <li><span class="en">OcorrenciaFiscalizacao</span><span class="ed">denúncia, vistoria e auto de constatação</span></li>
+          </ul>
+        </div>
+
+        <div class="entgroup">
+          <h4>Plataforma</h4>
+          <ul>
+            <li><span class="en">Tenant</span><span class="ed">prefeitura: identidade, signatários, parâmetros</span></li>
+            <li><span class="en">Usuario · Perfil · Capacidade</span><span class="ed">matriz com sobrescrita por município</span></li>
+            <li><span class="en">Protocolo</span><span class="ed">número público de qualquer pedido do munícipe</span></li>
+            <li><span class="en">AuditLog</span><span class="ed">append-only: ator, operação, entidade, diff, IP</span></li>
+            <li><span class="en">ConsultaExterna</span><span class="ed">registro de cada leitura feita no Regulariza+</span></li>
+            <li><span class="en">MetaPLHIS · DeliberacaoConselho</span><span class="ed">plano local e controle social</span></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="note">
+        <b>Duas escolhas de modelagem que carregam regra de negócio.</b>
+        <code>PontuacaoSnapshot</code> existe como tabela própria, e não como coluna em
+        <code>InscricaoFila</code>, porque a nota precisa de histórico versionado — recalcular
+        não pode apagar o que valia antes. E <code>ConsultaExterna</code> existe porque cada
+        leitura de dado no Regulariza+ é um evento auditável no Habita+ também, não só lá.
+      </div>
+    </section>
+
+    <!-- ============================================ 8 -->
+    <section id="s8">
+      <div class="h2-wrap">
+        <span class="eyebrow">§8</span>
+        <h2>Riscos e cuidados</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          O domínio tem riscos que não são técnicos — são jurídicos e políticos, e caem
+          sobre o cliente. A spec precisa endereçá-los antes da primeira linha de código.
+        </p>
+      </div>
+
+      <div class="risks">
+
+        <div class="risk">
+          <h4>Finalidade dupla do dado sensível</h4>
+          <p>Vulnerabilidade social coletada para fundamentar regularização de posse não é automaticamente reutilizável para priorizar fila — são finalidades distintas sob a LGPD, agora em produtos distintos, o que torna a transferência ainda mais explícita.</p>
+          <p class="mit"><b>Mitigação</b> Base legal e registro de operação próprios para o Habita+; consentimento na tela antes de qualquer pré-preenchimento; carimbo de origem no dado copiado; leitura auditada nos dois sistemas.</p>
+        </div>
+
+        <div class="risk">
+          <h4>Fila manipulável</h4>
+          <p>É o risco central. Mudar o peso de um critério depois que o ranking saiu pode reordenar a fila retroativamente sem deixar rastro — e não há como a prefeitura provar que não foi de propósito.</p>
+          <p class="mit"><b>Mitigação</b> Critério versionado e publicado antes da inscrição; <i>snapshot</i> de pontuação congelado no cálculo; diff auditado de toda alteração de peso; convocação fora de ordem como capacidade separada, com motivo obrigatório e publicidade.</p>
+        </div>
+
+        <div class="risk">
+          <h4>Transparência que vaza dado de terceiro</h4>
+          <p>Publicar o ranking é o que sustenta a defesa da fila, mas posição e pontuação permitem inferir a condição social de vizinhos identificáveis numa cidade pequena.</p>
+          <p class="mit"><b>Mitigação</b> Ranking público por identificador de inscrição, nunca por nome ou CPF; pontuação detalhada só para a própria família autenticada; agregados do PLHIS sem granularidade que reidentifique.</p>
+        </div>
+
+        <div class="risk">
+          <h4>Dado bancário e financeiro</h4>
+          <p>Conta, chave PIX e histórico de inadimplência têm sensibilidade diferente da ficha social, e a lista de inadimplentes não pode virar relatório de circulação livre.</p>
+          <p class="mit"><b>Mitigação</b> Máscara desses campos no diff de auditoria; criptografia de coluna onde couber; separação de perfil — quem faz parecer social não vê valor devido.</p>
+        </div>
+
+        <div class="risk">
+          <h4>Direito de recurso</h4>
+          <p>Família indeferida ou mal classificada sem canal formal de contestação é vício de devido processo administrativo, e é o caminho mais curto para a decisão cair na Justiça.</p>
+          <p class="mit"><b>Mitigação</b> Recurso como entidade de primeira classe, com prazo, decisão fundamentada e efeito rastreável sobre a pontuação.</p>
+        </div>
+
+        <div class="risk">
+          <h4>CadÚnico digitado à mão</h4>
+          <p>Se a pontuação depende de NIS e renda declarados sem validação na base federal, um erro de digitação vira decisão pública equivocada — e o sistema dá aparência de rigor a um dado frágil.</p>
+          <p class="mit"><b>Mitigação</b> Registrar como limitação conhecida; marcar o campo como não verificado na interface; prever integração oficial no roadmap em vez de fingir precisão que não existe.</p>
+        </div>
+
+        <div class="risk">
+          <h4>Prestação de contas do convênio</h4>
+          <p>Recurso federal exige rastro de ponta a ponta entre o que foi repassado, o que foi executado e quem recebeu a unidade — auditado por órgão de controle anos depois.</p>
+          <p class="mit"><b>Mitigação</b> Cronograma, medição e contemplação amarrados ao convênio desde o início; perfil de auditor com leitura ampla desde a primeira versão, não como recurso posterior.</p>
+        </div>
+
+        <div class="risk">
+          <h4>Duplicidade de benefício</h4>
+          <p>Mesma família com unidade nova, aluguel social ativo e titulação do lote de origem simultâneos é achado clássico de auditoria — e nem sempre é fraude, às vezes é só falta de visão cruzada.</p>
+          <p class="mit"><b>Mitigação</b> Visão 360° da família em todos os módulos; checagem contra o Regulariza+ na contemplação; bloqueio com liberação por decisão fundamentada, nunca silencioso.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================ 9 -->
+    <section id="s9">
+      <div class="h2-wrap">
+        <span class="eyebrow">§9</span>
+        <h2>Decisão em aberto</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Uma questão não é técnica e precisa de decisão do dono do produto antes de
+          desenhar a capacidade correspondente: <b>a fila admite exceção?</b>
+        </p>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Caminho</th><th>A favor</th><th>Contra</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Pontuação estritamente objetiva</th>
+              <td>Defensável em qualquer auditoria ou ação judicial. Elimina a pergunta “quem furou a fila” — ninguém pode.</td>
+              <td>Casos sociais reais que a fórmula não capturou ficam sem saída dentro do sistema, e a prefeitura resolve por fora — o que é pior, porque some do rastro.</td>
+            </tr>
+            <tr>
+              <th>Objetiva com exceção auditada</th>
+              <td>Absorve o caso extremo dentro do sistema, onde ele fica registrado, publicado e revisável.</td>
+              <td>Cria uma porta. Sem capacidade separada, motivo obrigatório e publicidade, a exceção vira regra na prática.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pull">
+        <span class="eyebrow">Recomendação</span>
+        <p>
+          Objetiva por padrão, com exceção possível apenas como <b>capacidade concedida
+          explicitamente</b>, motivo obrigatório, publicação junto ao ranking e contagem
+          visível no painel do gestor. Uma exceção que aparece num contador é uma exceção
+          que a própria prefeitura vai controlar.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ 10 -->
+    <section id="s10">
+      <div class="h2-wrap">
+        <span class="eyebrow">§10</span>
+        <h2>Roadmap</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Dez módulos não saem juntos. O corte do MVP é o que já resolve a dor mais cara
+          e mais contestável — a fila — e o que dá para demonstrar numa reunião.
+        </p>
+      </div>
+
+      <div class="phases">
+
+        <div class="phase now">
+          <span class="when">Fase 1 · MVP</span>
+          <h3>A fila em pé</h3>
+          <p class="goal">Uma prefeitura consegue abrir programa, inscrever, pontuar, publicar ranking e convocar — com trilha completa.</p>
+          <ul>
+            <li>Fundação: tenant, RLS, auditoria, perfis</li>
+            <li>Cadastro de famílias e ficha social</li>
+            <li>Fila: programa, critérios, pontuação, ranking</li>
+            <li>Convocação e contemplação</li>
+            <li>Central do munícipe: posição e documentos</li>
+            <li>Administração e trilha filtrável</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <span class="when">Fase 2</span>
+          <h3>A unidade e o depois</h3>
+          <p class="goal">Fecha o ciclo: a unidade que a fila espera passa a nascer dentro do sistema, e o pós-entrega deixa de sumir.</p>
+          <ul>
+            <li>Convênio, obra e cronograma</li>
+            <li>Medição com evidência fotográfica</li>
+            <li>Unidades e entrega de chaves</li>
+            <li>Contrato, parcelas e inadimplência</li>
+            <li>Transferência de titularidade</li>
+            <li>Extrato na central do munícipe</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <span class="when">Fase 3</span>
+          <h3>Emergência e plano</h3>
+          <p class="goal">Cobre o que é episódico mas politicamente crítico, e liga o operacional ao planejamento e ao produto irmão.</p>
+          <ul>
+            <li>Aluguel social completo</li>
+            <li>Reassentamento e área de risco</li>
+            <li>Integração por API com o Regulariza+</li>
+            <li>PLHIS, indicadores e conselho</li>
+            <li>Fiscalização de loteamento</li>
+            <li>Consulta oficial ao CadÚnico</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================ 11 -->
+    <section id="s11">
+      <div class="h2-wrap">
+        <span class="eyebrow">§11</span>
+        <h2>Identidade</h2>
+      </div>
+
+      <div class="prose">
+        <p class="lede">
+          Mesma fundação gov.br-DS do Regulariza+, mesma família de marca com o “+”,
+          acento próprio. A diferença de cor não é estética: o azul institucional continua
+          significando <b>Regulariza+</b> dentro do Habita+, marcando o que veio de lá.
+        </p>
+        <p>
+          O símbolo segue a lógica do irmão — lá, uma quadra dividida em lotes com um lote
+          regularizado; aqui, a mesma malha com uma célula ocupada por um teto. Mesma
+          gramática visual, outro assunto.
+        </p>
+      </div>
+
+      <div class="swatches">
+        <div class="sw">
+          <span class="chip" style="background: var(--accent)"></span>
+          <div class="body">
+            <div class="nm">Âmbar-mel</div>
+            <div class="hx">#9A6210 · #DDA84E</div>
+            <div class="ds">Acento do produto. Marca a ação e o que é próprio do Habita+.</div>
+          </div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background: var(--struct)"></span>
+          <div class="body">
+            <div class="nm">Verde-eucalipto</div>
+            <div class="hx">#22423A · #86BAA8</div>
+            <div class="ds">Estrutura e superfícies institucionais. Enraíza o neutro.</div>
+          </div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background: var(--herdado)"></span>
+          <div class="body">
+            <div class="nm">Azul-aço</div>
+            <div class="hx">#2A5580 · #82ACD8</div>
+            <div class="ds">Funcional: tudo que vem do Regulariza+ ou fala com ele.</div>
+          </div>
+        </div>
+        <div class="sw">
+          <span class="chip" style="background: var(--risco)"></span>
+          <div class="body">
+            <div class="nm">Terra-queimada</div>
+            <div class="hx">#973325 · #DC8171</div>
+            <div class="ds">Risco e interdição. Reservado à Defesa Civil e a alertas reais.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>Tipografia.</b> Serifada humanista para leitura longa — parecer, regulamento e
+        ficha são textos de ler, não de escanear. Sans para rótulo, tabela e navegação;
+        monoespaçada tabular para número de protocolo, pontuação, valor e parcela, onde
+        dígito precisa alinhar em coluna.
+      </div>
+    </section>
+
+    <footer>
+      <p>
+        <b>Habita+</b> · Especificação funcional e de arquitetura, rascunho 0.1 ·
+        13 de agosto de 2026 · GeoGis.
+      </p>
+      <p>
+        Documento de estudo. Decisões marcadas como travadas foram confirmadas com o dono
+        do produto; a questão da §9 segue aberta. Fatos sobre o Regulariza+ foram
+        verificados no código e nos registros de decisão do repositório, não presumidos.
+      </p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+
+  var visible = new Set();
+
+  function paint() {
+    var current = null;
+    for (var i = 0; i < links.length; i++) {
+      var id = links[i].getAttribute('href').slice(1);
+      if (visible.has(id)) { current = id; break; }
+    }
+    links.forEach(function (a) {
+      var on = a.getAttribute('href').slice(1) === current;
+      if (on) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) visible.add(e.target.id);
+      else visible.delete(e.target.id);
+    });
+    paint();
+  }, { rootMargin: '-10% 0px -70% 0px' });
+
+  Object.keys(byId).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>

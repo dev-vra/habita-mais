@@ -1,0 +1,28 @@
+{
+  "name": "@habita/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./br": { "types": "./dist/br/index.d.ts", "default": "./dist/br/index.js" },
+    "./habitacao": {
+      "types": "./dist/habitacao/index.d.ts",
+      "default": "./dist/habitacao/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@habita/config": "workspace:*",
+    "@vitest/coverage-v8": "4.1.9",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

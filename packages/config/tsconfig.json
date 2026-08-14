@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "$comment": "tsconfig base compartilhado entre apps/packages. Cada workspace estende este."
+}

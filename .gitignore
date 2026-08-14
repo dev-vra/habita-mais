@@ -1,0 +1,47 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# turbo
+.turbo/
+
+# env / secrets (NUNCA commitar)
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# prisma
+**/prisma/*.db
+
+# testes / cobertura
+coverage/
+playwright-report/
+test-results/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Claude Code (config local da máquina)
+.claude/settings.local.json
+.remember/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# uploads locais / infra
+infra/data/
+infra/minio-data/
