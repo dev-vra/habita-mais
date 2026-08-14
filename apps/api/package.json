@@ -12,7 +12,8 @@
     "test": "jest --passWithNoTests",
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:bootstrap-role": "tsx prisma/bootstrap-role.ts",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed-documentos": "tsx prisma/seed-documentos.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1075.0",

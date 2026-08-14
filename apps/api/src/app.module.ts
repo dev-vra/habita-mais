@@ -16,6 +16,7 @@ import type { AuthUser } from './auth/jwt.strategy';
 import { PerfilGuard } from './auth/perfil.guard';
 import { CommonModule } from './common/common.module';
 import { TenantContextInterceptor } from './context/tenant-context.interceptor';
+import { DocumentosModule } from './documentos/documentos.controller';
 import { FamiliasModule } from './familias/familias.module';
 import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
@@ -59,6 +60,7 @@ import { StorageModule } from './storage/storage.module';
     CommonModule,
     AuthModule,
     AdministracaoModule,
+    DocumentosModule,
     FamiliasModule,
     FilaModule,
     IndicadoresModule,

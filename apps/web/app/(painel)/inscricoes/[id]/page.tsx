@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
 import { apiFetch } from '@/lib/api/server';
 import { formatarNota, statusInscricao } from '@/lib/status';
+import { PainelDocumental, type ItemDocumental, type ResumoDocumental } from '@/components/domain/painel-documental';
+import { sessaoAtual } from '@/lib/auth/session';
 import { AcoesInscricao } from './acoes-inscricao';
 
 interface Inscricao {
@@ -50,6 +52,14 @@ export default async function PaginaInscricao({ params }: { params: Promise<{ id
   const { id } = await params;
   const inscricao = await apiFetch<Inscricao>(`/inscricoes/${id}`);
   const status = statusInscricao(inscricao.situacao);
+
+  const [documental, tipos, sessao] = await Promise.all([
+    apiFetch<{ itens: ItemDocumental[]; resumo: ResumoDocumental }>(
+      `/documentos/situacao/FAMILIA/${inscricao.familia.id}?programaId=${inscricao.programa.id}`,
+    ),
+    apiFetch<{ id: string; codigo: string; nome: string }[]>('/tipos-documento'),
+    sessaoAtual(),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -167,13 +177,26 @@ export default async function PaginaInscricao({ params }: { params: Promise<{ id
           )}
         </section>
 
-        <AcoesInscricao
+        <div className="space-y-6">
+          <PainelDocumental
+            titulo="Documentação exigida pelo programa"
+            escopo="FAMILIA"
+            referenciaId={inscricao.familia.id}
+            itens={documental.itens}
+            resumo={documental.resumo}
+            tipos={tipos}
+            caminho={`/inscricoes/${inscricao.id}`}
+            podeConferir={sessao?.capacidades.includes('VALIDAR_DOCUMENTACAO') ?? false}
+          />
+
+          <AcoesInscricao
           inscricaoId={inscricao.id}
           programaId={inscricao.programa.id}
           situacao={inscricao.situacao}
           pendencias={inscricao.pendencias}
           convocacaoAberta={inscricao.convocacoes.find((c) => !c.desfecho)?.id}
-        />
+          />
+        </div>
       </div>
     </div>
   );

@@ -73,6 +73,10 @@ enum SerieProtocolo {
   FAM
   /// Encaminhamento entre setores.
   ENC
+  /// Documento juntado ao processo.
+  DOC
+  /// Pilha documental montada para entrega externa.
+  PIL
 }
 
 /// Tipo do setor — o município nomeia como quiser, mas a integração precisa saber o papel.
@@ -108,6 +112,44 @@ enum SituacaoEncaminhamento {
   RESPONDIDO
   DEVOLVIDO
   CANCELADO
+}
+
+/// A que entidade o documento pertence. Um catálogo só, escopos distintos: o mesmo mecanismo
+/// serve para o RG do requerente e para o edital do programa.
+enum EscopoDocumento {
+  PESSOA
+  FAMILIA
+  INSCRICAO
+  PROGRAMA
+  CONVENIO
+  OBRA
+  UNIDADE
+  CONTRATO
+  CASO_RETOMADA
+}
+
+enum SituacaoDocumento {
+  RECEBIDO
+  CONFERIDO
+  RECUSADO
+  SUBSTITUIDO
+}
+
+/// Para que a pilha está sendo montada. Cada finalidade tem sua lista de exigências — a do
+/// cartório não é a mesma da prestação de contas do convênio.
+enum FinalidadePilha {
+  REGISTRO_CARTORIO
+  PRESTACAO_CONTAS
+  HABITE_SE
+  CONTRATO_MUTUARIO
+  RETOMADA_UNIDADE
+  OUTRA
+}
+
+enum SituacaoPilha {
+  EM_MONTAGEM
+  COMPLETA
+  ENTREGUE
 }
 
 enum PapelSignatario {
@@ -302,6 +344,160 @@ model Encaminhamento {
   @@index([tenantId, entidade, entidadeId])
   @@index([tenantId, prazoAte])
   @@map("encaminhamento")
+}
+
+/// Catálogo de tipos de documento do município.
+///
+/// Cada prefeitura tem a sua lista — o que uma exige como "comprovante de residência" a outra
+/// aceita como conta de luz. O tipo carrega a validade: documento com prazo vence sozinho e
+/// reabre a pendência, em vez de ficar velho no processo sem ninguém notar.
+model TipoDocumento {
+  id           String          @id @default(cuid())
+  tenantId     String
+  codigo       String
+  nome         String
+  escopo       EscopoDocumento
+  /// Meses de validade a partir da emissão. Nulo = não vence (RG, certidão de nascimento).
+  validadeMeses Int?
+  aceitaFoto   Boolean         @default(true)
+  /// O que o atendente fala para a família: "conta de luz dos últimos 3 meses, em nome de…".
+  orientacao   String?
+  ativo        Boolean         @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  documentos  Documento[]
+  exigencias  ExigenciaDocumental[]
+  itensPilha  ItemPilha[]
+
+  @@unique([tenantId, codigo])
+  @@index([tenantId, escopo, ativo])
+  @@map("tipo_documento")
+}
+
+/// Documento anexado a uma entidade.
+///
+/// `escopo` + `referenciaId` apontam para o dono (família, programa, contrato) sem chave
+/// estrangeira: o mesmo mecanismo precisa servir para módulos que ainda não existem. A conferência
+/// é ato registrado — anexar não é o mesmo que aceitar.
+model Documento {
+  id              String            @id @default(cuid())
+  tenantId        String
+  tipoDocumentoId String
+  escopo          EscopoDocumento
+  referenciaId    String
+  protocolo       String
+
+  arquivoKey  String
+  nomeArquivo String
+  mimeType    String
+  tamanho     Int
+
+  emitidoEm DateTime?
+  validoAte DateTime?
+
+  situacao     SituacaoDocumento @default(RECEBIDO)
+  conferidoPor String?
+  conferidoEm  DateTime?
+  motivoRecusa String?
+  observacao   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tipo       TipoDocumento @relation(fields: [tipoDocumentoId], references: [id], onDelete: Restrict)
+  itensPilha ItemPilha[]
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, escopo, referenciaId])
+  @@index([tenantId, validoAte])
+  @@map("documento")
+}
+
+/// O que um programa exige de quem se inscreve. Vira pendência com prazo na inscrição.
+model ExigenciaDocumental {
+  id              String  @id @default(cuid())
+  tenantId        String
+  programaId      String
+  tipoDocumentoId String
+  obrigatorio     Boolean @default(true)
+  prazoDias       Int     @default(30)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  programa ProgramaHabitacional @relation(fields: [programaId], references: [id], onDelete: Cascade)
+  tipo     TipoDocumento        @relation(fields: [tipoDocumentoId], references: [id], onDelete: Restrict)
+
+  @@unique([programaId, tipoDocumentoId])
+  @@index([tenantId, programaId])
+  @@map("exigencia_documental")
+}
+
+/// Pilha documental: o conjunto que vai a algum lugar de fora.
+///
+/// É o que resolve o problema do cartório. A prefeitura abre "Registro — unidade 118", o sistema
+/// lista o que aquela finalidade exige, marca o que já existe, e o índice sai na ordem de juntada.
+/// Sem isso, montar a pilha é conferência manual e a família volta ao balcão por um papel.
+model PilhaDocumental {
+  id           String          @id @default(cuid())
+  tenantId     String
+  finalidade   FinalidadePilha
+  escopo       EscopoDocumento
+  referenciaId String
+  nome         String
+  situacao     SituacaoPilha   @default(EM_MONTAGEM)
+  observacao   String?
+  /// PDF do índice de juntada, gerado quando a pilha fecha.
+  indiceKey    String?
+  entregueEm   DateTime?
+  entreguePara String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  itens ItemPilha[]
+
+  @@index([tenantId, escopo, referenciaId])
+  @@index([tenantId, situacao])
+  @@map("pilha_documental")
+}
+
+model ItemPilha {
+  id              String  @id @default(cuid())
+  tenantId        String
+  pilhaId         String
+  tipoDocumentoId String
+  documentoId     String?
+  ordem           Int
+  obrigatorio     Boolean @default(true)
+  observacao      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  pilha     PilhaDocumental @relation(fields: [pilhaId], references: [id], onDelete: Cascade)
+  tipo      TipoDocumento   @relation(fields: [tipoDocumentoId], references: [id], onDelete: Restrict)
+  documento Documento?      @relation(fields: [documentoId], references: [id], onDelete: SetNull)
+
+  @@unique([pilhaId, tipoDocumentoId])
+  @@index([tenantId, pilhaId])
+  @@map("item_pilha")
 }
 
 /// Quem assina ofício de convocação, termo e declaração.
@@ -947,6 +1143,7 @@ model ProgramaHabitacional {
   versoes    VersaoCriterio[]
   inscricoes InscricaoFila[]
   rankings   RankingPublicacao[]
+  exigencias ExigenciaDocumental[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, situacao])

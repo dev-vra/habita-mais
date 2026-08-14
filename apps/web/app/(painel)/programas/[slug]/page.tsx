@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/api/server';
 import { formatarNota, situacaoPrograma } from '@/lib/status';
 import { AcoesPrograma } from './acoes-programa';
+import { Exigencias } from './exigencias';
 import { Recadastramento } from './recadastramento';
 
 interface VersaoDetalhe {
@@ -29,11 +30,15 @@ interface ProgramaDetalhe {
 export default async function PaginaPrograma({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const programa = await apiFetch<ProgramaDetalhe>(`/programas/${slug}/detalhe`);
-  const [parametros, candidatas] = await Promise.all([
+  const [parametros, candidatas, tipos, exigencias] = await Promise.all([
     apiFetch<{ salarioMinimo: number | null }>('/programas/parametros'),
     apiFetch<
       { inscricaoId: string; protocolo: string; familia: string; fichaVenceuEm: string; diasVencida: number }[]
     >(`/programas/${programa.id}/recadastramento`),
+    apiFetch<{ id: string; codigo: string; nome: string; escopo: string; orientacao?: string | null }[]>(
+      '/tipos-documento',
+    ),
+    apiFetch<{ tipoDocumentoId: string }[]>(`/programas/${programa.id}/exigencias`),
   ]);
 
   const publicada = programa.versoes.find((versao) => versao.situacao === 'PUBLICADA');
@@ -70,6 +75,13 @@ export default async function PaginaPrograma({ params }: { params: Promise<{ slu
         temRascunho={Boolean(rascunho)}
         versaoPublicadaId={publicada?.id}
         salarioMinimo={parametros.salarioMinimo}
+      />
+
+      <Exigencias
+        programaId={programa.id}
+        slug={programa.slug}
+        tipos={tipos}
+        selecionadosIniciais={exigencias.map((exigencia) => exigencia.tipoDocumentoId)}
       />
 
       <Recadastramento programaId={programa.id} slug={programa.slug} candidatas={candidatas} />
