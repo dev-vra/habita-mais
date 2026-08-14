@@ -62,6 +62,10 @@ enum SerieProtocolo {
   MUT
   REA
   FIS
+  /// Ofício de convocação e recurso têm numeração própria: são atos distintos da inscrição, e
+  /// misturá-los no mesmo contador tornaria a sequência impossível de auditar.
+  OFC
+  REC
 }
 
 enum PapelSignatario {
@@ -406,6 +410,10 @@ model FichaSocial {
 
   rendaFamiliar     Decimal @db.Decimal(14, 2)
   rendaPerCapita    Decimal @db.Decimal(14, 2)
+  /// Pessoas no grupo familiar segundo a apuração. Fica na ficha, e não na contagem de membros
+  /// cadastrados, porque a composição é o que o técnico apurou na visita — o cadastro nominal
+  /// dos membros pode estar incompleto sem invalidar a renda per capita já calculada.
+  quantidadePessoas Int     @default(1)
   fonteRendaPrincipal String?
   /// NIS/CadÚnico digitado no balcão: sem validação na base federal, é dado não verificado —
   /// a interface precisa dizer isso, e o roadmap prevê a consulta oficial (spec §8).
@@ -768,6 +776,10 @@ model Recurso {
   inscricaoId    String
   protocolo      String
   motivo         String
+  /// Situação da inscrição quando o recurso entrou. Indeferir o recurso devolve a família a este
+  /// estado — sem isso, contestar a nota poderia piorar a posição de quem recorreu, e o direito
+  /// de recurso viraria risco (spec §8).
+  situacaoAnterior SituacaoInscricao
   apresentadoEm  DateTime        @default(now())
   /// Quem protocolou: a própria família pela central, ou o servidor no balcão.
   apresentadoPor String

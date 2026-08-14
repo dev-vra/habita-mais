@@ -370,6 +370,7 @@ async function semearFamiliasEInscricoes(
             familiaId: familia.id,
             rendaFamiliar: dados.rendaFamiliar,
             rendaPerCapita: Number((dados.rendaFamiliar / dados.pessoas).toFixed(2)),
+            quantidadePessoas: dados.pessoas,
             fonteRendaPrincipal: 'Trabalho informal',
             nis: null,
             mulherChefeFamilia: dados.mulherChefeFamilia,

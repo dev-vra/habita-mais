@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate dev && prisma generate",
     "db:bootstrap-role": "tsx prisma/bootstrap-role.ts",
     "db:seed": "tsx prisma/seed.ts"
   },

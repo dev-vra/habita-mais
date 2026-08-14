@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import type { AuthUser } from './auth/jwt.strategy';
 import { PerfilGuard } from './auth/perfil.guard';
 import { TenantContextInterceptor } from './context/tenant-context.interceptor';
+import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -46,6 +47,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     AuditModule,
     AuthModule,
+    FilaModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -1,0 +1,151 @@
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { CapacidadesService } from '../auth/capacidades.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { RequerCapacidade } from '../auth/capacidade.decorator';
+import type { AuthUser } from '../auth/jwt.strategy';
+import { PrismaService } from '../prisma/prisma.service';
+import { ConvocarFamiliaUseCase } from './application/convocar-familia.use-case';
+import { InscreverFamiliaUseCase } from './application/inscrever-familia.use-case';
+import { PublicarRankingUseCase } from './application/publicar-ranking.use-case';
+import { RecalcularPontuacaoUseCase } from './application/recalcular-pontuacao.use-case';
+import { RecursosUseCase } from './application/recursos.use-case';
+import { RegistrarDesfechoUseCase } from './application/registrar-desfecho.use-case';
+import {
+  ConvocarDto,
+  DecidirRecursoDto,
+  DesfechoConvocacaoDto,
+  InscreverFamiliaDto,
+  InterporRecursoDto,
+  PublicarRankingDto,
+} from './dto/fila.dto';
+import { FilaQueryService } from './infra/fila.query-service';
+
+/** Controller fino: traduz request em caso de uso. Regra de negócio nenhuma mora aqui. */
+@Controller()
+export class FilaController {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly capacidades: CapacidadesService,
+    private readonly consulta: FilaQueryService,
+    private readonly inscrever: InscreverFamiliaUseCase,
+    private readonly recalcular: RecalcularPontuacaoUseCase,
+    private readonly publicarRanking: PublicarRankingUseCase,
+    private readonly convocar: ConvocarFamiliaUseCase,
+    private readonly desfecho: RegistrarDesfechoUseCase,
+    private readonly recursos: RecursosUseCase,
+  ) {}
+
+  @Get('programas/:programaId/fila')
+  fila(@Param('programaId') programaId: string) {
+    return this.consulta.doPrograma(programaId);
+  }
+
+  @RequerCapacidade('INSCREVER_FAMILIA')
+  @Post('programas/:programaId/inscricoes')
+  inscreverFamilia(@Param('programaId') programaId: string, @Body() dto: InscreverFamiliaDto) {
+    return this.inscrever.executar({
+      programaId,
+      familiaId: dto.familiaId,
+      agora: new Date(),
+    });
+  }
+
+  @RequerCapacidade('RECALCULAR_PONTUACAO')
+  @HttpCode(HttpStatus.OK)
+  @Post('programas/:programaId/inscricoes/:inscricaoId/recalcular')
+  recalcularUma(
+    @Param('programaId') programaId: string,
+    @Param('inscricaoId') inscricaoId: string,
+  ) {
+    return this.recalcular.umaInscricao(inscricaoId, programaId, new Date());
+  }
+
+  /**
+   * Recálculo em lote é capacidade sensível (§5): o guard barra pelo token e aqui a concessão é
+   * reconfirmada no banco, dentro da transação — access token curto ainda é uma janela.
+   */
+  @RequerCapacidade('RECALCULAR_PONTUACAO_LOTE')
+  @HttpCode(HttpStatus.OK)
+  @Post('programas/:programaId/recalcular')
+  async recalcularLote(@Param('programaId') programaId: string, @CurrentUser() user: AuthUser) {
+    await this.confirmarSensivel(user, 'RECALCULAR_PONTUACAO_LOTE');
+    const resultados = await this.recalcular.programaInteiro(programaId, new Date());
+    return { recalculadas: resultados.length, resultados };
+  }
+
+  @RequerCapacidade('PUBLICAR_RANKING')
+  @Post('programas/:programaId/ranking')
+  publicar(@Param('programaId') programaId: string, @Body() dto: PublicarRankingDto) {
+    return this.publicarRanking.executar(programaId, dto.prazoRecursoAte);
+  }
+
+  @RequerCapacidade('EMITIR_CONVOCACAO')
+  @Post('inscricoes/:inscricaoId/convocacoes')
+  async convocarFamilia(
+    @Param('inscricaoId') inscricaoId: string,
+    @Body() dto: ConvocarDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const foraDeOrdem = dto.foraDeOrdem ?? false;
+    if (foraDeOrdem) {
+      await this.confirmarSensivel(user, 'CONVOCAR_FORA_DE_ORDEM');
+    }
+
+    return this.convocar.executar({
+      inscricaoId,
+      prazoComparecimentoAte: dto.prazoComparecimentoAte,
+      agora: new Date(),
+      foraDeOrdem,
+      motivoExcecao: dto.motivoExcecao,
+    });
+  }
+
+  @RequerCapacidade('DECLARAR_CONTEMPLACAO')
+  @HttpCode(HttpStatus.OK)
+  @Post('convocacoes/:convocacaoId/desfecho')
+  registrarDesfecho(
+    @Param('convocacaoId') convocacaoId: string,
+    @Body() dto: DesfechoConvocacaoDto,
+  ) {
+    return this.desfecho.executar({
+      convocacaoId,
+      desfecho: dto.desfecho,
+      motivo: dto.motivo,
+    });
+  }
+
+  @RequerCapacidade('VALIDAR_DOCUMENTACAO', 'JULGAR_RECURSO')
+  @Post('inscricoes/:inscricaoId/recursos')
+  interporRecurso(
+    @Param('inscricaoId') inscricaoId: string,
+    @Body() dto: InterporRecursoDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.recursos.interpor({
+      inscricaoId,
+      motivo: dto.motivo,
+      apresentadoPor: user.nome,
+      prazoRespostaAte: dto.prazoRespostaAte,
+      agora: new Date(),
+    });
+  }
+
+  @RequerCapacidade('JULGAR_RECURSO')
+  @HttpCode(HttpStatus.OK)
+  @Post('recursos/:recursoId/decisao')
+  decidirRecurso(@Param('recursoId') recursoId: string, @Body() dto: DecidirRecursoDto) {
+    return this.recursos.decidir({
+      recursoId,
+      decisao: dto.decisao,
+      fundamentacao: dto.fundamentacao,
+    });
+  }
+
+  private async confirmarSensivel(
+    user: AuthUser,
+    capacidade: Parameters<CapacidadesService['confirmar']>[3],
+  ): Promise<void> {
+    if (!user.perfil) return;
+    await this.capacidades.confirmar(this.prisma.tx, user.userId, user.perfil, capacidade);
+  }
+}
