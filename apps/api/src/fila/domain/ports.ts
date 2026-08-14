@@ -16,22 +16,14 @@ export const PROGRAMAS_REPOSITORY = Symbol('ProgramasRepository');
 export const INSCRICOES_REPOSITORY = Symbol('InscricoesRepository');
 export const CONVOCACOES_REPOSITORY = Symbol('ConvocacoesRepository');
 export const RECURSOS_REPOSITORY = Symbol('RecursosRepository');
-export const TRILHA_AUDITORIA = Symbol('TrilhaAuditoria');
-export const GERADOR_PROTOCOLO = Symbol('GeradorProtocolo');
 
-/** Trilha vista de dentro do domínio: registrar é parte do ato, não um efeito colateral opcional. */
-export interface TrilhaAuditoria {
-  registrar(evento: {
-    operacao: 'INSERT' | 'UPDATE' | 'DELETE' | 'READ';
-    entidade: string;
-    entidadeId: string;
-    diff?: Record<string, unknown>;
-  }): Promise<void>;
-}
-
-export interface GeradorProtocolo {
-  proximo(serie: 'HAB' | 'AUX' | 'MUT' | 'REA' | 'FIS' | 'OFC' | 'REC', ano: number): Promise<string>;
-}
+// Trilha e numeração são compartilhadas por todos os módulos — ver src/common/ports.ts.
+export {
+  GERADOR_PROTOCOLO,
+  TRILHA_AUDITORIA,
+  type GeradorProtocolo,
+  type TrilhaAuditoria,
+} from '../../common/ports';
 
 export interface ProgramasRepository {
   buscarPorId(id: string): Promise<Programa | null>;

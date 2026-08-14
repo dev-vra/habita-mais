@@ -35,12 +35,16 @@ cobre só o que muda a forma de trabalhar aqui dentro.
 - `prisma migrate dev` nem sempre regenera o client nesta versão — use `pnpm db:migrate`, que já
   encadeia o `generate`.
 
+## Decisões travadas com o dono do produto (14/08/2026)
+
+- **Fila**: objetiva com exceção auditada (§9). Já implementada.
+- **ADMINISTRADOR** configura e lê trilha; não opera fila, ficha nem contrato.
+- **Salário mínimo** é parâmetro por prefeitura (`Tenant.parametros.salarioMinimo`).
+- **Tipografia**: caderno de identidade §3 (Rawline/Raleway), não a serifada da spec §11.
+
 ## Pendências conhecidas
 
 - Fontes Rawline/Raleway não estão embarcadas; a interface cai no fallback do sistema. Mesma dívida
-  do Regulariza+.
-- Divergência entre os cadernos: a spec §11 fala em serifada humanista para leitura longa; a
-  identidade §3 define Rawline/Raleway. O código segue a identidade — confirmar com o dono do
-  produto.
+  do Regulariza+ — embarcar em `public/fontes` com `@font-face`.
 - Envio de documento pelo munícipe ainda não tem policy de escrita: a central hoje é leitura mais
   interposição de recurso.

@@ -13,7 +13,9 @@ import { EsferaGuard } from './auth/esfera.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import type { AuthUser } from './auth/jwt.strategy';
 import { PerfilGuard } from './auth/perfil.guard';
+import { CommonModule } from './common/common.module';
 import { TenantContextInterceptor } from './context/tenant-context.interceptor';
+import { FamiliasModule } from './familias/familias.module';
 import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
 import { PrismaModule } from './prisma/prisma.module';
@@ -46,7 +48,9 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     AuditModule,
+    CommonModule,
     AuthModule,
+    FamiliasModule,
     FilaModule,
   ],
   controllers: [HealthController],

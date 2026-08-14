@@ -66,6 +66,8 @@ enum SerieProtocolo {
   /// misturá-los no mesmo contador tornaria a sequência impossível de auditar.
   OFC
   REC
+  /// Código público da família — a mesma numeração por prefeitura e ano das demais séries.
+  FAM
 }
 
 enum PapelSignatario {
