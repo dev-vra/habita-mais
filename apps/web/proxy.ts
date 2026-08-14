@@ -55,6 +55,13 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
+/**
+ * Matcher negativo: protege tudo, menos o que é explicitamente público. A lista positiva anterior
+ * envelhecia mal — cada rota nova nascia desprotegida até alguém lembrar de incluí-la aqui.
+ *
+ * Fora: assets do Next, a central do munícipe (esfera própria), a validação pública de documento
+ * e as rotas de BFF (que já anexam e validam o token no servidor).
+ */
 export const config = {
-  matcher: ['/entrar', '/painel/:path*', '/fila/:path*', '/familias/:path*', '/trocar-senha'],
+  matcher: ['/((?!_next/|api/|minha-inscricao|validar/|favicon|.*\\.(?:svg|png|jpg|ico)$).*)'],
 };

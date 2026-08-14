@@ -6,6 +6,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { LoggerModule } from 'nestjs-pino';
+import { AdministracaoModule } from './administracao/administracao.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { CapacidadeGuard } from './auth/capacidade.guard';
@@ -54,6 +55,7 @@ import { StorageModule } from './storage/storage.module';
     AuditModule,
     CommonModule,
     AuthModule,
+    AdministracaoModule,
     FamiliasModule,
     FilaModule,
     MunicipeModule,
