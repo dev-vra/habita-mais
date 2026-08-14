@@ -477,6 +477,7 @@ async function publicarRanking(
         versaoCriterioId: versaoId,
         publicadoPor: SISTEMA,
         prazoRecursoAte: new Date('2026-08-20'),
+        totalClassificadas: classificados.length,
         createdBy: SISTEMA,
       },
     });

@@ -24,6 +24,7 @@ export class ConvocacoesPrismaRepository implements ConvocacoesRepository {
         programaId: dados.programaId,
         versaoCriterioId: dados.versaoCriterioId,
         prazoRecursoAte: dados.prazoRecursoAte,
+        totalClassificadas: dados.itens.length,
         publicadoPor: ator,
         createdBy: ator,
       },

@@ -700,6 +700,10 @@ model RankingPublicacao {
   publicadoEm      DateTime @default(now())
   publicadoPor     String
   prazoRecursoAte  DateTime
+  /// Quantas famílias a publicação classificou. Fica aqui, e não como contagem de ranking_item,
+  /// porque na esfera do munícipe a RLS só deixa ver a própria linha — e a família precisa saber
+  /// "2º entre 1.402" sem que isso signifique enxergar as outras 1.401.
+  totalClassificadas Int      @default(0)
   pdfKey           String?
 
   createdAt DateTime @default(now())

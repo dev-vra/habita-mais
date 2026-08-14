@@ -18,6 +18,7 @@ import { TenantContextInterceptor } from './context/tenant-context.interceptor';
 import { FamiliasModule } from './familias/familias.module';
 import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
+import { MunicipeModule } from './municipe/municipe.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProgramasModule } from './programas/programas.module';
 
@@ -53,6 +54,7 @@ import { ProgramasModule } from './programas/programas.module';
     AuthModule,
     FamiliasModule,
     FilaModule,
+    MunicipeModule,
     ProgramasModule,
   ],
   controllers: [HealthController],

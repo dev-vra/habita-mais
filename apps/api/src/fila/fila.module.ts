@@ -38,5 +38,8 @@ import { RecursosPrismaRepository } from './infra/recursos.prisma-repository';
     { provide: RECURSOS_REPOSITORY, useClass: RecursosPrismaRepository },
     { provide: PENDENCIAS_REPOSITORY, useClass: PendenciasPrismaRepository },
   ],
+  // RecursosUseCase é reusado pela central do munícipe: o recurso interposto pela família é o
+  // mesmo ato do interposto no balcão, com a mesma regra de prazo e situação.
+  exports: [RecursosUseCase],
 })
 export class FilaModule {}
