@@ -19,6 +19,7 @@ import { FamiliasModule } from './familias/familias.module';
 import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProgramasModule } from './programas/programas.module';
 
 // Módulo raiz. Auth, RLS e auditoria são a fundação; cada domínio entra como feature module.
 @Module({
@@ -52,6 +53,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AuthModule,
     FamiliasModule,
     FilaModule,
+    ProgramasModule,
   ],
   controllers: [HealthController],
   providers: [

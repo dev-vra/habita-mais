@@ -35,6 +35,7 @@ export default async function LayoutPainel({ children }: { children: React.React
             <ul className="mt-2 space-y-0.5">
               <ItemNavegacao href="/painel" rotulo="Painel" />
               <ItemNavegacao href="/familias" rotulo="Famílias" contador={resumo.familias} />
+              <ItemNavegacao href="/programas" rotulo="Programas" />
               {resumo.programas.map((programa) => (
                 <ItemNavegacao
                   key={programa.id}
