@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { CapacidadesService } from '../auth/capacidades.service';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -8,6 +18,7 @@ import { OficioService } from '../pdf/oficio.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConvocarFamiliaUseCase } from './application/convocar-familia.use-case';
 import { PendenciasUseCase } from './application/pendencias.use-case';
+import { RecadastramentoUseCase } from './application/recadastramento.use-case';
 import { InscreverFamiliaUseCase } from './application/inscrever-familia.use-case';
 import { PublicarRankingUseCase } from './application/publicar-ranking.use-case';
 import { RecalcularPontuacaoUseCase } from './application/recalcular-pontuacao.use-case';
@@ -15,6 +26,7 @@ import { RecursosUseCase } from './application/recursos.use-case';
 import { RegistrarDesfechoUseCase } from './application/registrar-desfecho.use-case';
 import {
   AbrirPendenciaDto,
+  BaixaRecadastramentoDto,
   ConvocarDto,
   DecidirRecursoDto,
   DesfechoConvocacaoDto,
@@ -23,6 +35,7 @@ import {
   PublicarRankingDto,
   ResolverPendenciaDto,
 } from './dto/fila.dto';
+import { DecisoesQueryService } from './infra/decisoes.query-service';
 import { FilaQueryService } from './infra/fila.query-service';
 
 /** Controller fino: traduz request em caso de uso. Regra de negócio nenhuma mora aqui. */
@@ -40,11 +53,40 @@ export class FilaController {
     private readonly recursos: RecursosUseCase,
     private readonly pendencias: PendenciasUseCase,
     private readonly oficios: OficioService,
+    private readonly decisoes: DecisoesQueryService,
+    private readonly recadastramento: RecadastramentoUseCase,
   ) {}
 
   @Get('painel')
   painel() {
     return this.consulta.resumo();
+  }
+
+  /** O que espera decisão hoje — a lista que abre o painel do gestor. */
+  @Get('painel/decisoes')
+  decisoesPendentes() {
+    return this.decisoes.pendentes(new Date());
+  }
+
+  @Get('busca')
+  buscar(@Query('q') termo: string) {
+    return this.decisoes.buscar(termo ?? '');
+  }
+
+  @RequerCapacidade('GERIR_PROGRAMA')
+  @Get('programas/:programaId/recadastramento')
+  candidatasABaixa(@Param('programaId') programaId: string) {
+    return this.recadastramento.candidatas(programaId, new Date());
+  }
+
+  @RequerCapacidade('GERIR_PROGRAMA')
+  @HttpCode(HttpStatus.OK)
+  @Post('programas/:programaId/recadastramento')
+  baixarPorRecadastramento(
+    @Param('programaId') programaId: string,
+    @Body() dto: BaixaRecadastramentoDto,
+  ) {
+    return this.recadastramento.baixar(programaId, dto.inscricoes, new Date());
   }
 
   @Get('inscricoes/:inscricaoId')

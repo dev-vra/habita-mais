@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoHabita } from '@/components/brand/logo';
+import { BuscaGlobal } from '@/components/domain/busca-global';
 import { apiFetch } from '@/lib/api/server';
 import { sessaoAtual } from '@/lib/auth/session';
 import { sair } from '@/app/actions/auth';
@@ -29,6 +30,10 @@ export default async function LayoutPainel({ children }: { children: React.React
     <div className="flex min-h-screen">
       <aside className="hidden w-72 shrink-0 flex-col bg-institucional px-5 py-6 text-surface lg:flex">
         <LogoHabita tamanho={34} escuro />
+
+        <div className="mt-5">
+          <BuscaGlobal />
+        </div>
 
         <nav className="mt-9 space-y-6 text-sm">
           <div>

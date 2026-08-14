@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/api/server';
 import { formatarNota, situacaoPrograma } from '@/lib/status';
 import { AcoesPrograma } from './acoes-programa';
+import { Recadastramento } from './recadastramento';
 
 interface VersaoDetalhe {
   id: string;
@@ -27,9 +28,12 @@ interface ProgramaDetalhe {
 
 export default async function PaginaPrograma({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [programa, parametros] = await Promise.all([
-    apiFetch<ProgramaDetalhe>(`/programas/${slug}/detalhe`),
+  const programa = await apiFetch<ProgramaDetalhe>(`/programas/${slug}/detalhe`);
+  const [parametros, candidatas] = await Promise.all([
     apiFetch<{ salarioMinimo: number | null }>('/programas/parametros'),
+    apiFetch<
+      { inscricaoId: string; protocolo: string; familia: string; fichaVenceuEm: string; diasVencida: number }[]
+    >(`/programas/${programa.id}/recadastramento`),
   ]);
 
   const publicada = programa.versoes.find((versao) => versao.situacao === 'PUBLICADA');
@@ -67,6 +71,8 @@ export default async function PaginaPrograma({ params }: { params: Promise<{ slu
         versaoPublicadaId={publicada?.id}
         salarioMinimo={parametros.salarioMinimo}
       />
+
+      <Recadastramento programaId={programa.id} slug={programa.slug} candidatas={candidatas} />
 
       <section className="mt-8">
         <h2 className="font-display text-xl font-bold text-institucional">Versões de critério</h2>

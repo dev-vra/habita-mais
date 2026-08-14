@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsDate,
   IsIn,
@@ -77,6 +78,12 @@ export class ResolverPendenciaDto {
   @IsOptional()
   @IsString()
   arquivoKey?: string;
+}
+
+export class BaixaRecadastramentoDto {
+  @IsArray()
+  @IsString({ each: true })
+  inscricoes!: string[];
 }
 
 export class DecidirRecursoDto {

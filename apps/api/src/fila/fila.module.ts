@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConvocarFamiliaUseCase } from './application/convocar-familia.use-case';
 import { InscreverFamiliaUseCase } from './application/inscrever-familia.use-case';
 import { PendenciasUseCase } from './application/pendencias.use-case';
+import { RecadastramentoUseCase } from './application/recadastramento.use-case';
 import { PublicarRankingUseCase } from './application/publicar-ranking.use-case';
 import { RecalcularPontuacaoUseCase } from './application/recalcular-pontuacao.use-case';
 import { RecursosUseCase } from './application/recursos.use-case';
@@ -15,6 +16,7 @@ import {
 } from './domain/ports';
 import { FilaController } from './fila.controller';
 import { ConvocacoesPrismaRepository } from './infra/convocacoes.prisma-repository';
+import { DecisoesQueryService } from './infra/decisoes.query-service';
 import { FilaQueryService } from './infra/fila.query-service';
 import { PendenciasPrismaRepository } from './infra/pendencias.prisma-repository';
 import { InscricoesPrismaRepository } from './infra/inscricoes.prisma-repository';
@@ -32,6 +34,8 @@ import { RecursosPrismaRepository } from './infra/recursos.prisma-repository';
     RegistrarDesfechoUseCase,
     RecursosUseCase,
     PendenciasUseCase,
+    RecadastramentoUseCase,
+    DecisoesQueryService,
     { provide: PROGRAMAS_REPOSITORY, useClass: ProgramasPrismaRepository },
     { provide: INSCRICOES_REPOSITORY, useClass: InscricoesPrismaRepository },
     { provide: CONVOCACOES_REPOSITORY, useClass: ConvocacoesPrismaRepository },

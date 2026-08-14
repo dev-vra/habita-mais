@@ -114,3 +114,21 @@ export async function publicarCriterios(
     throw erro;
   }
 }
+
+export async function baixarPorRecadastramento(
+  programaId: string,
+  slug: string,
+  inscricoes: string[],
+): Promise<{ erro?: string; dados?: { baixadas: number } }> {
+  try {
+    const dados = await apiFetch<{ baixadas: number }>(
+      `/programas/${programaId}/recadastramento`,
+      { method: 'POST', body: JSON.stringify({ inscricoes }) },
+    );
+    revalidatePath(`/programas/${slug}`);
+    return { dados };
+  } catch (erro) {
+    if (erro instanceof ApiError) return { erro: erro.message };
+    throw erro;
+  }
+}
