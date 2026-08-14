@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
+import { EncaminharFamilia } from '@/components/domain/encaminhar-familia';
 import { InscreverEmPrograma } from '@/components/domain/inscrever-em-programa';
 import { apiFetch } from '@/lib/api/server';
 import { formatarNota, formatarReais, statusInscricao } from '@/lib/status';
@@ -46,9 +47,10 @@ interface Familia360 {
  */
 export default async function PaginaFamilia({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [familia, programas] = await Promise.all([
+  const [familia, programas, setores] = await Promise.all([
     apiFetch<Familia360>(`/familias/${id}`),
     apiFetch<{ id: string; nome: string; situacao: string }[]>('/programas'),
+    apiFetch<{ id: string; nome: string; sigla: string; tipo: string; ativo: boolean }[]>('/setores'),
   ]);
   const { ficha } = familia;
   const jaInscrita = new Set(familia.inscricoes.map((inscricao) => inscricao.programa));
@@ -193,6 +195,22 @@ export default async function PaginaFamilia({ params }: { params: Promise<{ id: 
 
             <div className="mt-4 border-t border-borda pt-4">
               <InscreverEmPrograma familiaId={familia.id} programas={abertos} />
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-borda bg-surface p-6">
+            <h2 className="font-display text-lg font-bold text-institucional">Outros setores</h2>
+            <p className="mt-1 text-xs text-texto-suave">
+              Defesa Civil, Jurídico, Obras. O laudo de risco pedido aqui volta valendo na ficha.
+            </p>
+            <div className="mt-3">
+              <EncaminharFamilia
+                familiaId={familia.id}
+                resumoSugerido={`${familia.responsavel.nome} · ${familia.codigo}${
+                  ficha ? ` · ${ficha.quantidadePessoas} pessoas` : ''
+                }`}
+                setores={setores.filter((setor) => setor.ativo)}
+              />
             </div>
           </section>
 

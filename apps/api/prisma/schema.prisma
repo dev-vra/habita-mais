@@ -34,6 +34,9 @@ enum PerfilTenant {
   ANALISTA_MUTUARIO
   JURIDICO
   FISCAL_AUDITOR
+  /// Perfis de setor externo: entram pelo encaminhamento e não alcançam a fila nem a ficha.
+  DEFESA_CIVIL
+  SETOR_PARCEIRO
 }
 
 enum StatusUsuario {
@@ -68,6 +71,43 @@ enum SerieProtocolo {
   REC
   /// Código público da família — a mesma numeração por prefeitura e ano das demais séries.
   FAM
+  /// Encaminhamento entre setores.
+  ENC
+}
+
+/// Tipo do setor — o município nomeia como quiser, mas a integração precisa saber o papel.
+/// É o que permite dizer "encaminhe à Defesa Civil" sem depender do nome que cada prefeitura usa.
+enum TipoSetor {
+  HABITACAO
+  ASSISTENCIA_SOCIAL
+  DEFESA_CIVIL
+  OBRAS
+  JURIDICO
+  PLANEJAMENTO_URBANO
+  MEIO_AMBIENTE
+  FAZENDA
+  GABINETE
+  CONTROLE_INTERNO
+  OUTRO
+}
+
+/// O que está sendo pedido ao outro setor. Define o efeito da resposta no processo da Habitação:
+/// laudo de risco respondido pela Defesa Civil passa a valer como evidência na ficha da família,
+/// que é o que a spec §6.3 exige — risco é evidência de terceiro, não marcação do servidor.
+enum TipoSolicitacao {
+  LAUDO_RISCO
+  PARECER_JURIDICO
+  VISTORIA_TECNICA
+  ANALISE_PROJETO
+  APOIO_SOCIAL
+  OUTRO
+}
+
+enum SituacaoEncaminhamento {
+  ABERTO
+  RESPONDIDO
+  DEVOLVIDO
+  CANCELADO
 }
 
 enum PapelSignatario {
@@ -100,6 +140,7 @@ model Tenant {
   deletedBy String?
 
   usuarios    Usuario[]
+  setores     Setor[]
   signatarios Signatario[]
   familias    Familia[]
   pessoas     Pessoa[]
@@ -115,6 +156,8 @@ model Usuario {
   tenantId           String?
   esfera             EsferaUsuario @default(TENANT)
   perfil             PerfilTenant?
+  /// Setor do servidor. Nulo = lotado na Habitação (o setor dono do sistema).
+  setorId            String?
   nome               String
   email              String
   cpf                String?       @db.Char(11)
@@ -134,6 +177,7 @@ model Usuario {
   deletedBy String?
 
   tenant        Tenant?             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  setor         Setor?              @relation(fields: [setorId], references: [id], onDelete: SetNull)
   capacidades   UsuarioCapacidade[]
   refreshTokens RefreshToken[]
 
@@ -180,6 +224,84 @@ model RefreshToken {
 
   @@index([usuarioId])
   @@map("refresh_token")
+}
+
+/// Unidade organizacional da prefeitura. A Habitação opera o sistema; os demais setores entram
+/// por encaminhamento, e só enxergam o que lhes foi encaminhado (ver policies na migration).
+model Setor {
+  id         String    @id @default(cuid())
+  tenantId   String
+  nome       String
+  sigla      String
+  tipo       TipoSetor
+  /// Secretaria a que o setor pertence, quando o município organiza em dois níveis.
+  secretaria String?
+  email      String?
+  ativo      Boolean   @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  usuarios         Usuario[]
+  encaminhamentosEnviados  Encaminhamento[] @relation("SetorOrigem")
+  encaminhamentosRecebidos Encaminhamento[] @relation("SetorDestino")
+
+  @@unique([tenantId, sigla])
+  @@index([tenantId, tipo, ativo])
+  @@map("setor")
+}
+
+/// Tramitação entre setores.
+///
+/// É o mecanismo que liga os módulos sem fundi-los: a Habitação pede laudo à Defesa Civil, parecer
+/// ao Jurídico, vistoria às Obras. O encaminhamento aponta para a entidade em questão (família,
+/// inscrição, obra, caso de risco) e carrega o prazo — sem prazo, encaminhar vira arquivar.
+model Encaminhamento {
+  id            String                 @id @default(cuid())
+  tenantId      String
+  numero        String
+  setorOrigemId String
+  setorDestinoId String
+  /// Entidade referenciada, em par tipo + id. Não é chave estrangeira de propósito: o mesmo
+  /// mecanismo serve para qualquer módulo, inclusive os que ainda não existem.
+  entidade      String
+  entidadeId    String
+  tipoSolicitacao TipoSolicitacao @default(OUTRO)
+  assunto       String
+  descricao     String
+  /// Resumo do caso, escrito pela Habitação no ato do encaminhamento.
+  ///
+  /// O setor de destino lê ISTO, não a ficha da família. É a mesma escolha da fronteira com o
+  /// Regulariza+: o que atravessa é o que foi declarado de propósito — a Defesa Civil precisa do
+  /// endereço e do caso, não da renda.
+  referenciaResumo String
+  prazoAte      DateTime
+  situacao      SituacaoEncaminhamento @default(ABERTO)
+
+  resposta      String?
+  respondidoEm  DateTime?
+  respondidoPor String?
+  /// Documento anexado na resposta (laudo, parecer, auto de vistoria).
+  anexoKey      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  setorOrigem  Setor @relation("SetorOrigem", fields: [setorOrigemId], references: [id], onDelete: Restrict)
+  setorDestino Setor @relation("SetorDestino", fields: [setorDestinoId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, numero])
+  @@index([tenantId, setorDestinoId, situacao])
+  @@index([tenantId, entidade, entidadeId])
+  @@index([tenantId, prazoAte])
+  @@map("encaminhamento")
 }
 
 /// Quem assina ofício de convocação, termo e declaração.
@@ -268,6 +390,163 @@ enum Sexo {
   NAO_INFORMADO
 }
 
+enum EstadoCivil {
+  SOLTEIRO
+  CASADO
+  UNIAO_ESTAVEL
+  DIVORCIADO
+  VIUVO
+  SEPARADO
+}
+
+enum RegimeBens {
+  COMUNHAO_PARCIAL
+  COMUNHAO_UNIVERSAL
+  SEPARACAO_TOTAL
+  SEPARACAO_OBRIGATORIA
+  PARTICIPACAO_FINAL_AQUESTOS
+}
+
+enum Escolaridade {
+  NAO_ALFABETIZADO
+  SEM_INSTRUCAO
+  FUNDAMENTAL_INCOMPLETO
+  FUNDAMENTAL_COMPLETO
+  MEDIO_INCOMPLETO
+  MEDIO_COMPLETO
+  SUPERIOR_INCOMPLETO
+  SUPERIOR_COMPLETO
+  POS_GRADUACAO
+}
+
+enum SituacaoTrabalho {
+  CARTEIRA_ASSINADA
+  SERVIDOR_PUBLICO
+  AUTONOMO
+  INFORMAL
+  DESEMPREGADO
+  APOSENTADO_PENSIONISTA
+  ESTUDANTE
+  DO_LAR
+  INCAPACITADO
+}
+
+enum TipoDeficiencia {
+  FISICA
+  VISUAL
+  AUDITIVA
+  INTELECTUAL
+  PSICOSSOCIAL
+  TEA
+  MULTIPLA
+  MOBILIDADE_REDUZIDA
+}
+
+enum FonteRenda {
+  EMPREGO_FORMAL
+  MEI
+  AUTONOMO
+  INFORMAL
+  APOSENTADORIA_PENSAO
+  BPC
+  PROGRAMA_SOCIAL
+  SEM_RENDA
+}
+
+enum RegimeRenda {
+  FIXA
+  VARIAVEL
+  MISTA
+}
+
+enum BeneficioSocial {
+  BOLSA_FAMILIA
+  BPC_PCD
+  BPC_IDOSO
+  APOSENTADORIA_INVALIDEZ
+  SEGURO_DESEMPREGO
+  AUXILIO_ALUGUEL_MUNICIPAL
+  TARIFA_SOCIAL_ENERGIA
+}
+
+enum EstruturaFamiliar {
+  CASAL_COM_FILHOS
+  CASAL_SEM_FILHOS
+  MONOPARENTAL_MAE
+  MONOPARENTAL_PAI
+  UNIPESSOAL
+  AMPLIADA
+  OUTRA
+}
+
+enum IndicadorVulnerabilidade {
+  VIOLENCIA_DOMESTICA
+  TRABALHO_INFANTIL
+  USO_SUBSTANCIAS
+  SITUACAO_RUA_ANTERIOR
+  DOENCA_CRONICA_GRAVE
+  PCD_DOMICILIO
+  CUIDADOS_CONTINUOS
+  GESTANTE
+  ADOLESCENTE_RESPONSAVEL
+  ENDIVIDAMENTO_RENDA_BASICA
+  DESPEJO_EM_CURSO
+  AREA_DE_RISCO
+}
+
+enum NivelVulnerabilidade {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum SituacaoHabitacional {
+  ADEQUADA
+  PRECARIA_HABITAVEL
+  INADEQUADA
+}
+
+enum AbastecimentoAgua {
+  REDE_PUBLICA
+  POCO_NASCENTE
+  CARRO_PIPA
+  SEM_ABASTECIMENTO
+}
+
+enum EnergiaEletrica {
+  RELOGIO_PROPRIO
+  RELOGIO_COMPARTILHADO
+  LIGACAO_IRREGULAR
+  SEM_ENERGIA
+}
+
+enum ColetaLixo {
+  COLETA_REGULAR
+  COLETA_IRREGULAR
+  QUEIMA_ENTERRA
+  DESCARTE_IRREGULAR
+}
+
+enum Pavimentacao {
+  ASFALTO
+  BLOQUETE
+  CASCALHO
+  TERRA
+}
+
+enum TipoEscola {
+  PUBLICA
+  PRIVADA
+  FILANTROPICA
+}
+
+enum TurnoEscola {
+  MATUTINO
+  VESPERTINO
+  NOTURNO
+  INTEGRAL
+}
+
 enum Parentesco {
   RESPONSAVEL
   CONJUGE
@@ -330,8 +609,44 @@ model Pessoa {
   sexo        Sexo      @default(NAO_INFORMADO)
   nis         String?   @db.VarChar(11)
   telefone    String?
+  telefoneAlternativo String?
   email       String?
-  deficiencia Boolean   @default(false)
+
+  /// Filiação. O pai "não informado" é declaração, e é diferente de campo em branco por descuido —
+  /// a distinção importa em documento que vai a cartório.
+  nomeMae             String?
+  nomePai             String?
+  nomePaiNaoInformado Boolean @default(false)
+
+  estadoCivil EstadoCivil?
+  regimeBens  RegimeBens?
+
+  rg             String?
+  orgaoExpedidor String?
+  rgUf           String? @db.Char(2)
+  /// Declarou não possuir RG. Sem isso, a ficha fica eternamente "incompleta" para quem não tem.
+  rgAusente      Boolean @default(false)
+
+  nacionalidade String?
+  naturalidade  String?
+  profissao     String?
+  escolaridade     Escolaridade?
+  situacaoTrabalho SituacaoTrabalho?
+
+  deficiencia       Boolean           @default(false)
+  tiposDeficiencia  TipoDeficiencia[]
+  usaCadeiraDeRodas Boolean           @default(false)
+  necessitaCuidador Boolean           @default(false)
+
+  /// Endereço atual. É o que a Defesa Civil e o técnico social usam para chegar na casa.
+  cep         String? @db.Char(8)
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  municipio   String?
+  uf          String? @db.Char(2)
+  referencia  String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -387,6 +702,19 @@ model MembroFamiliar {
   parentesco Parentesco
   /// Contribui para a renda familiar declarada.
   contribuiRenda Boolean @default(false)
+  renda          Decimal? @db.Decimal(14, 2)
+
+  escolaridade     Escolaridade?
+  frequentaEscola  Boolean?
+  tipoEscola       TipoEscola?
+  turnoEscola      TurnoEscola?
+  nomeEscola       String?
+
+  situacaoTrabalho SituacaoTrabalho?
+  ocupacao         String?
+
+  doencaCronica    Boolean @default(false)
+  gestante         Boolean @default(false)
   entrouEm   DateTime   @default(now())
   saiuEm     DateTime?
 
@@ -412,6 +740,10 @@ model FichaSocial {
 
   rendaFamiliar     Decimal @db.Decimal(14, 2)
   rendaPerCapita    Decimal @db.Decimal(14, 2)
+  fonteRenda        FonteRenda?
+  regimeRenda       RegimeRenda?
+  rendaComplementar Boolean @default(false)
+  rendaComplementarDesc String?
   /// Pessoas no grupo familiar segundo a apuração. Fica na ficha, e não na contagem de membros
   /// cadastrados, porque a composição é o que o técnico apurou na visita — o cadastro nominal
   /// dos membros pode estar incompleto sem invalidar a renda per capita já calculada.
@@ -421,7 +753,15 @@ model FichaSocial {
   /// a interface precisa dizer isso, e o roadmap prevê a consulta oficial (spec §8).
   nis               String?  @db.VarChar(11)
   nisVerificado     Boolean  @default(false)
+  inscritoCadUnico  Boolean  @default(false)
+  beneficios        BeneficioSocial[]
   beneficioAtivo    String?
+
+  estruturaFamiliar       EstruturaFamiliar?
+  vulnerabilidades        IndicadorVulnerabilidade[]
+  nivelVulnerabilidade    NivelVulnerabilidade?
+  /// Parecer técnico da visita. Texto de conteúdo social — mascarado na trilha.
+  parecerTecnico          String?
 
   mulherChefeFamilia     Boolean @default(false)
   temPessoaComDeficiencia Boolean @default(false)
@@ -437,6 +777,19 @@ model FichaSocial {
   tipoMoradia        TipoMoradia
   tipoConstrucao     TipoConstrucao
   saneamento         Saneamento
+  situacaoHabitacional SituacaoHabitacional?
+  comodos            Int?
+  banheiros          Int?
+  /// Infraestrutura do entorno — o que separa "casa ruim" de "lugar sem serviço público".
+  abastecimentoAgua  AbastecimentoAgua?
+  energiaEletrica    EnergiaEletrica?
+  coletaLixo         ColetaLixo?
+  pavimentacao       Pavimentacao?
+  iluminacaoPublica  Boolean?
+  drenagemPluvial    Boolean?
+  acessoEscolaProxima     Boolean?
+  acessoSaudeProxima      Boolean?
+  acessoTransportePublico Boolean?
   moradiaInadequada  Boolean  @default(false)
   possuiOutroImovel  Boolean  @default(false)
   mesesResidenciaMunicipio Int  @default(0)

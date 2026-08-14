@@ -8,6 +8,8 @@ export interface UsuarioResumo {
   email: string;
   perfil: PerfilTenant | null;
   status: string;
+  setorId: string | null;
+  setor: { nome: string; sigla: string; tipo: string } | null;
   ultimoAcessoEm: Date | null;
   capacidadesConcedidas: Capacidade[];
   capacidadesRevogadas: Capacidade[];
@@ -22,6 +24,7 @@ export interface AdministracaoRepository {
     email: string;
     perfil: PerfilTenant;
     senhaHash: string;
+    setorId?: string;
   }): Promise<{ id: string }>;
   definirStatus(usuarioId: string, status: string): Promise<void>;
   redefinirSenha(usuarioId: string, senhaHash: string): Promise<void>;

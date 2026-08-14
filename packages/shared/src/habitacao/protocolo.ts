@@ -11,13 +11,14 @@ export const SERIES_PROTOCOLO = {
   OFC: 'Ofício de convocação',
   REC: 'Recurso contra a classificação',
   FAM: 'Cadastro de família',
+  ENC: 'Encaminhamento entre setores',
 } as const;
 
 export type SerieProtocolo = keyof typeof SERIES_PROTOCOLO;
 
 const DIGITOS_SEQUENCIAL = 5;
 
-const PADRAO_PROTOCOLO = /^(HAB|AUX|MUT|REA|FIS|OFC|REC|FAM)-(\d{4})\/(\d{5})$/;
+const PADRAO_PROTOCOLO = /^(HAB|AUX|MUT|REA|FIS|OFC|REC|FAM|ENC)-(\d{4})\/(\d{5})$/;
 
 export interface ProtocoloPartes {
   serie: SerieProtocolo;

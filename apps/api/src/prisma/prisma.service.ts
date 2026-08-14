@@ -47,12 +47,22 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         // Esfera MUNÍCIPE: o GUC de tenant fica VAZIO (as policies de tenant negam tudo) e a
         // leitura é liberada só pela família do contexto. O tenantId continua no AsyncLocalStorage
         // para a auditoria saber de que prefeitura foi o acesso.
-        const ehMunicipe = Boolean(ctx.familiaId);
-        const tenantGuc = ehMunicipe ? '' : (ctx.tenantId ?? '');
+        // Munícipe e setor externo compartilham o mesmo mecanismo: sem tenant no GUC, as policies
+        // de tenant negam tudo, e só as policies do escopo próprio liberam.
+        const escopoProprio = Boolean(ctx.familiaId) || ctx.setorRestrito === true;
+        const tenantGuc = escopoProprio ? '' : (ctx.tenantId ?? '');
 
         await tx.$executeRaw`SELECT set_config('app.current_tenant', ${tenantGuc}, true)`;
         await tx.$executeRaw`SELECT set_config('app.is_platform', ${ctx.isPlatform ? 'true' : 'false'}, true)`;
         await tx.$executeRaw`SELECT set_config('app.current_familia', ${ctx.familiaId ?? ''}, true)`;
+        await tx.$executeRaw`SELECT set_config('app.current_setor', ${ctx.setorId ?? ''}, true)`;
+        // Necessário para o RETURNING do INSERT na trilha: sob RLS, a linha inserida também
+        // precisa passar pela policy de SELECT, e cada ator pode ler o que ele mesmo registrou.
+        await tx.$executeRaw`SELECT set_config('app.current_ator', ${ctx.userId ?? ''}, true)`;
+        // Tenant do ator, sempre presente — inclusive nas esferas restritas, onde o GUC de tenant
+        // fica vazio de propósito. Serve só para amarrar escopos mínimos (ex.: a família numerar
+        // o próprio recurso), nunca para liberar leitura de domínio.
+        await tx.$executeRaw`SELECT set_config('app.tenant_do_ator', ${ctx.tenantId ?? ''}, true)`;
 
         const active: ActiveContext = { ...ctx, tx };
         return requestContextStorage.run(active, () => work(active));

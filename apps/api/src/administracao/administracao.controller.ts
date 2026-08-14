@@ -12,6 +12,7 @@ class CriarUsuarioDto {
   @IsString() @IsNotEmpty() nome!: string;
   @IsEmail() email!: string;
   @IsIn(PERFIS_TENANT) perfil!: PerfilTenant;
+  @IsOptional() @IsString() setorId?: string;
 }
 
 class StatusDto {

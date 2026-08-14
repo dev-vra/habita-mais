@@ -18,6 +18,9 @@ const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 /** A família volta à central com protocolo e CPF; nada de credencial longa presa a um CPF. */
 const ACCESS_TTL_MUNICIPE = '30m';
 
+/** Quem entra por encaminhamento, e não pela Habitação. */
+const PERFIS_DE_SETOR_EXTERNO: readonly string[] = ['DEFESA_CIVIL', 'SETOR_PARCEIRO'];
+
 const MAX_TENTATIVAS_FALHAS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
 
@@ -198,6 +201,9 @@ export class AuthService {
       perfil: usuario.perfil ?? undefined,
       capacidades,
       trocarSenhaNoLogin: usuario.trocarSenhaNoLogin,
+      setorId: usuario.setorId ?? undefined,
+      // Perfis de setor externo entram escopados ao próprio setor — nunca ao município inteiro.
+      setorRestrito: PERFIS_DE_SETOR_EXTERNO.includes(usuario.perfil ?? ''),
     };
 
     const accessToken = await this.jwt.signAsync(payload, {

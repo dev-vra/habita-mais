@@ -15,11 +15,13 @@ export class FamiliasController {
     private readonly membrosVisitas: RegistrarMembroVisitaUseCase,
   ) {}
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get()
   listar(@Query('busca') busca?: string, @Query('pagina') pagina?: string) {
     return this.consulta.listar(busca, Number(pagina ?? 1));
   }
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get(':familiaId')
   visao360(@Param('familiaId') familiaId: string) {
     return this.consulta.visao360(familiaId);

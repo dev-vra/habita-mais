@@ -13,79 +13,108 @@ interface ResumoNavegacao {
   programas: { id: string; nome: string; slug: string }[];
 }
 
+const PERFIS: Record<string, string> = {
+  ADMINISTRADOR: 'Administrador',
+  GESTOR_HABITACAO: 'Gestor de Habitação',
+  TECNICO_SOCIAL: 'Técnico social',
+  ATENDENTE: 'Atendimento',
+  FISCAL_OBRAS: 'Fiscal de obras',
+  ANALISTA_MUTUARIO: 'Analista de mutuários',
+  JURIDICO: 'Jurídico',
+  FISCAL_AUDITOR: 'Controle interno',
+  DEFESA_CIVIL: 'Defesa Civil',
+  SETOR_PARCEIRO: 'Setor parceiro',
+};
+
 /**
- * Casca do sistema. Os contadores na navegação não são enfeite: fila e convocações pendentes são
- * o que muda sozinho entre uma sessão e outra, e o gestor precisa ver crescimento sem abrir a tela.
+ * Casca do sistema.
+ *
+ * O menu mostra só o que o usuário pode abrir: oferecer link que devolve 403 faz o servidor
+ * descobrir a própria permissão por tentativa e erro. As filas aparecem nomeadas, uma por programa
+ * — "Fila" genérico não diz de qual programa se trata, e é sempre de um programa que se fala.
  */
 export default async function LayoutPainel({ children }: { children: React.ReactNode }) {
   const sessao = await sessaoAtual();
   if (!sessao) redirect('/entrar');
 
-  const resumo = await apiFetch<ResumoNavegacao>('/painel');
-  // O menu reflete a capacidade: mostrar o que o usuário não pode abrir só produz 403 na cara dele.
+  const podeHabitacao = sessao.capacidades.includes('ACESSAR_HABITACAO');
   const podeAdministrar = sessao.capacidades.includes('GERIR_USUARIOS');
+  const podeParametros = sessao.capacidades.includes('GERIR_PARAMETROS');
   const podeAuditar = sessao.capacidades.includes('LER_AUDITORIA');
+  const podeEncaminhar =
+    sessao.capacidades.includes('ENCAMINHAR_SETOR') ||
+    sessao.capacidades.includes('RESPONDER_ENCAMINHAMENTO');
+
+  const resumo = podeHabitacao
+    ? await apiFetch<ResumoNavegacao>('/painel')
+    : { familias: 0, aptas: 0, aguardandoConvocacao: 0, programas: [] };
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-72 shrink-0 flex-col bg-institucional px-5 py-6 text-surface lg:flex">
+      <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto bg-institucional px-5 py-6 text-surface lg:flex">
         <LogoHabita tamanho={34} escuro />
 
-        <div className="mt-5">
-          <BuscaGlobal />
-        </div>
-
-        <nav className="mt-9 space-y-6 text-sm">
-          <div>
-            <p className="px-2 text-xs font-bold uppercase tracking-wider text-institucional-claro">
-              Atendimento
-            </p>
-            <ul className="mt-2 space-y-0.5">
-              <ItemNavegacao href="/painel" rotulo="Painel" />
-              <ItemNavegacao href="/familias" rotulo="Famílias" contador={resumo.familias} />
-              <ItemNavegacao href="/programas" rotulo="Programas" />
-              {resumo.programas.map((programa) => (
-                <ItemNavegacao
-                  key={programa.id}
-                  href={`/fila/${programa.slug}`}
-                  rotulo={programa.nome}
-                  contador={resumo.aptas}
-                />
-              ))}
-            </ul>
+        {podeHabitacao && (
+          <div className="mt-5">
+            <BuscaGlobal />
           </div>
+        )}
 
-          <div>
-            <p className="px-2 text-xs font-bold uppercase tracking-wider text-institucional-claro">
-              Gestão
-            </p>
-            <ul className="mt-2 space-y-0.5">
-              <ItemNavegacao
-                href="/painel"
-                rotulo="Aguardam convocação"
-                contador={resumo.aguardandoConvocacao}
-              />
-              <ItemNavegacao href="/pendencias" rotulo="Pendências" />
-              {podeAuditar && <ItemNavegacao href="/auditoria" rotulo="Trilha de auditoria" />}
-            </ul>
-          </div>
+        <nav className="mt-8 space-y-6 text-sm">
+          {podeHabitacao && (
+            <>
+              <Grupo titulo="Atendimento">
+                <ItemNavegacao href="/painel" rotulo="Painel" />
+                <ItemNavegacao href="/familias" rotulo="Famílias" contador={resumo.familias} />
+                <ItemNavegacao href="/pendencias" rotulo="Pendências" />
+              </Grupo>
 
-          {podeAdministrar && (
-            <div>
-              <p className="px-2 text-xs font-bold uppercase tracking-wider text-institucional-claro">
-                Administração
-              </p>
-              <ul className="mt-2 space-y-0.5">
-                <ItemNavegacao href="/administracao/usuarios" rotulo="Usuários" />
-                <ItemNavegacao href="/administracao/parametros" rotulo="Parâmetros" />
-              </ul>
-            </div>
+              <Grupo titulo="Filas">
+                {resumo.programas.map((programa) => (
+                  <ItemNavegacao
+                    key={programa.id}
+                    href={`/fila/${programa.slug}`}
+                    rotulo={programa.nome}
+                    contador={resumo.aptas}
+                  />
+                ))}
+                <ItemNavegacao href="/programas" rotulo="Programas e critérios" />
+              </Grupo>
+
+              <Grupo titulo="Gestão">
+                <ItemNavegacao href="/indicadores" rotulo="Indicadores" />
+                {podeEncaminhar && (
+                  <ItemNavegacao href="/encaminhamentos" rotulo="Encaminhamentos" />
+                )}
+                {podeAuditar && <ItemNavegacao href="/auditoria" rotulo="Trilha de auditoria" />}
+              </Grupo>
+            </>
+          )}
+
+          {!podeHabitacao && podeEncaminhar && (
+            <Grupo titulo="Meu setor">
+              <ItemNavegacao href="/encaminhamentos" rotulo="Encaminhamentos recebidos" />
+            </Grupo>
+          )}
+
+          {(podeAdministrar || podeParametros) && (
+            <Grupo titulo="Administração">
+              {podeAdministrar && <ItemNavegacao href="/administracao/usuarios" rotulo="Usuários" />}
+              {podeParametros && (
+                <>
+                  <ItemNavegacao href="/administracao/setores" rotulo="Setores" />
+                  <ItemNavegacao href="/administracao/parametros" rotulo="Parâmetros" />
+                </>
+              )}
+            </Grupo>
           )}
         </nav>
 
         <div className="mt-auto border-t border-surface/15 pt-4">
           <p className="text-sm font-semibold">{sessao.nome}</p>
-          <p className="text-xs text-institucional-claro">{rotuloPerfil(sessao.perfil)}</p>
+          <p className="text-xs text-institucional-claro">
+            {sessao.perfil ? (PERFIS[sessao.perfil] ?? sessao.perfil) : 'Servidor'}
+          </p>
           <form action={sair} className="mt-3">
             <button
               type="submit"
@@ -98,6 +127,17 @@ export default async function LayoutPainel({ children }: { children: React.React
       </aside>
 
       <main className="flex-1 px-6 py-8 lg:px-10">{children}</main>
+    </div>
+  );
+}
+
+function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="px-2 text-xs font-bold uppercase tracking-wider text-institucional-claro">
+        {titulo}
+      </p>
+      <ul className="mt-2 space-y-0.5">{children}</ul>
     </div>
   );
 }
@@ -115,30 +155,15 @@ function ItemNavegacao({
     <li>
       <Link
         href={href}
-        className="flex items-center justify-between rounded-md px-2 py-1.5 transition hover:bg-surface/10"
+        className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 transition hover:bg-surface/10"
       >
-        <span>{rotulo}</span>
+        <span className="truncate">{rotulo}</span>
         {contador !== undefined && (
-          <span className="tabular text-xs text-institucional-claro">
+          <span className="tabular shrink-0 text-xs text-institucional-claro">
             {contador.toLocaleString('pt-BR')}
           </span>
         )}
       </Link>
     </li>
   );
-}
-
-const PERFIS: Record<string, string> = {
-  ADMINISTRADOR: 'Administrador',
-  GESTOR_HABITACAO: 'Gestor de Habitação',
-  TECNICO_SOCIAL: 'Técnico social',
-  ATENDENTE: 'Atendimento',
-  FISCAL_OBRAS: 'Fiscal de obras',
-  ANALISTA_MUTUARIO: 'Analista de mutuários',
-  JURIDICO: 'Jurídico',
-  FISCAL_AUDITOR: 'Controle interno',
-};
-
-function rotuloPerfil(perfil?: string): string {
-  return perfil ? (PERFIS[perfil] ?? perfil) : 'Servidor';
 }

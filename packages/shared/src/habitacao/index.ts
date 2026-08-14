@@ -6,3 +6,4 @@ export * from './ranking.js';
 export * from './fila-fluxo.js';
 export * from './protocolo.js';
 export * from './capacidades.js';
+export * from './rotulos.js';

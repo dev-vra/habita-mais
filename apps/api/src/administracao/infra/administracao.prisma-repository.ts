@@ -17,6 +17,8 @@ const SELECT_USUARIO = {
   email: true,
   perfil: true,
   status: true,
+  setorId: true,
+  setor: { select: { nome: true, sigla: true, tipo: true } },
   ultimoAcessoEm: true,
   capacidades: { select: { capacidade: true, concedida: true } },
 } satisfies Prisma.UsuarioSelect;
@@ -55,6 +57,7 @@ export class AdministracaoPrismaRepository implements AdministracaoRepository {
     email: string;
     perfil: PerfilTenant;
     senhaHash: string;
+    setorId?: string;
   }): Promise<{ id: string }> {
     const { tenantId } = getActiveContext();
     const ator = actorId();
@@ -67,6 +70,7 @@ export class AdministracaoPrismaRepository implements AdministracaoRepository {
         nome: dados.nome,
         email: dados.email,
         senhaHash: dados.senhaHash,
+        setorId: dados.setorId ?? null,
         createdBy: ator,
         updatedBy: ator,
       },
@@ -186,6 +190,8 @@ function paraResumo(usuario: Prisma.UsuarioGetPayload<{ select: typeof SELECT_US
     email: usuario.email,
     perfil: usuario.perfil as PerfilTenant | null,
     status: usuario.status,
+    setorId: usuario.setorId,
+    setor: usuario.setor,
     ultimoAcessoEm: usuario.ultimoAcessoEm,
     capacidadesConcedidas: usuario.capacidades
       .filter((registro) => registro.concedida)

@@ -57,17 +57,20 @@ export class FilaController {
     private readonly recadastramento: RecadastramentoUseCase,
   ) {}
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('painel')
   painel() {
     return this.consulta.resumo();
   }
 
   /** O que espera decisão hoje — a lista que abre o painel do gestor. */
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('painel/decisoes')
   decisoesPendentes() {
     return this.decisoes.pendentes(new Date());
   }
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('busca')
   buscar(@Query('q') termo: string) {
     return this.decisoes.buscar(termo ?? '');
@@ -89,11 +92,13 @@ export class FilaController {
     return this.recadastramento.baixar(programaId, dto.inscricoes, new Date());
   }
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('inscricoes/:inscricaoId')
   inscricao(@Param('inscricaoId') inscricaoId: string) {
     return this.consulta.inscricao(inscricaoId);
   }
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('pendencias')
   pendenciasAbertas() {
     return this.consulta.pendenciasAbertas();
@@ -116,6 +121,7 @@ export class FilaController {
   }
 
   /** Aceita id ou slug do programa. */
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('programas/:programa/fila')
   fila(@Param('programa') programa: string) {
     return this.consulta.doPrograma(programa);

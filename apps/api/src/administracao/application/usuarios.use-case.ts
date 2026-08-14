@@ -25,7 +25,12 @@ export class UsuariosUseCase {
    * Cria o servidor com senha temporária, devolvida uma única vez para ser entregue em mãos.
    * O sistema nunca mais mostra essa senha — e o primeiro acesso obriga a troca.
    */
-  async criar(dados: { nome: string; email: string; perfil: PerfilTenant }): Promise<{
+  async criar(dados: {
+    nome: string;
+    email: string;
+    perfil: PerfilTenant;
+    setorId?: string;
+  }): Promise<{
     id: string;
     senhaTemporaria: string;
   }> {
@@ -39,6 +44,7 @@ export class UsuariosUseCase {
       nome: dados.nome.trim(),
       email,
       perfil: dados.perfil,
+      setorId: dados.setorId,
       senhaHash: await this.senhas.hash(senhaTemporaria),
     });
 
@@ -46,7 +52,7 @@ export class UsuariosUseCase {
       operacao: 'INSERT',
       entidade: 'Usuario',
       entidadeId: usuario.id,
-      diff: { nome: dados.nome, email, perfil: dados.perfil },
+      diff: { nome: dados.nome, email, perfil: dados.perfil, setorId: dados.setorId ?? null },
     });
 
     return { id: usuario.id, senhaTemporaria };

@@ -29,6 +29,8 @@ export class TenantContextInterceptor implements NestInterceptor {
           capacidades: user.capacidades,
           isPlatform: user.esfera === 'PLATAFORMA',
           familiaId: user.esfera === 'MUNICIPE' ? user.familiaId : undefined,
+          setorId: user.setorId,
+          setorRestrito: user.setorRestrito,
           ip: req.ip,
         },
         () => lastValueFrom(next.handle()),

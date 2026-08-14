@@ -4,7 +4,7 @@
 export const TRILHA_AUDITORIA = Symbol('TrilhaAuditoria');
 export const GERADOR_PROTOCOLO = Symbol('GeradorProtocolo');
 
-export type SerieProtocoloDominio = 'HAB' | 'AUX' | 'MUT' | 'REA' | 'FIS' | 'OFC' | 'REC' | 'FAM';
+export type SerieProtocoloDominio = 'HAB' | 'AUX' | 'MUT' | 'REA' | 'FIS' | 'OFC' | 'REC' | 'FAM' | 'ENC';
 
 /** Registrar é parte do ato, não efeito colateral opcional. */
 export interface TrilhaAuditoria {

@@ -17,6 +17,13 @@ export interface RequestContext {
   isPlatform: boolean;
   /** Esfera MUNÍCIPE: id da família do contexto. Presente = RLS escopada a ela. */
   familiaId?: string;
+  /** Setor do servidor. Com `setorRestrito`, vira o único escopo que a RLS enxerga. */
+  setorId?: string;
+  /**
+   * Servidor de setor externo (Defesa Civil, Jurídico, Obras). Entra com o mesmo default-deny do
+   * munícipe: sem tenant no GUC, alcança apenas os encaminhamentos do próprio setor.
+   */
+  setorRestrito?: boolean;
   ip?: string;
 }
 

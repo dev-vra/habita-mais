@@ -20,16 +20,19 @@ export class ProgramasController {
     private readonly criterios: CriteriosUseCase,
   ) {}
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get()
   listar() {
     return this.consulta.listar();
   }
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('parametros')
   parametros() {
     return this.consulta.salarioMinimo().then((salarioMinimo) => ({ salarioMinimo }));
   }
 
+  @RequerCapacidade('ACESSAR_HABITACAO')
   @Get(':programa/detalhe')
   detalhe(@Param('programa') programa: string) {
     return this.consulta.detalhe(programa);

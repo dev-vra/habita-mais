@@ -16,11 +16,22 @@ export const PERFIS_TENANT = [
   'ANALISTA_MUTUARIO',
   'JURIDICO',
   'FISCAL_AUDITOR',
+  // Setores externos: entram pelo encaminhamento e não alcançam fila nem ficha social.
+  'DEFESA_CIVIL',
+  'SETOR_PARCEIRO',
 ] as const;
 
 export type PerfilTenant = (typeof PERFIS_TENANT)[number];
 
 export const CAPACIDADES = [
+  /**
+   * Leitura do módulo de Habitação (famílias, fila, programas, painel).
+   *
+   * Existe para que a porta não abra para quem não é da Habitação. A RLS já devolveria lista
+   * vazia ao setor externo, mas "200 com nada dentro" é resposta que confunde e que um dia
+   * alguém interpreta como bug e "conserta" afrouxando o escopo.
+   */
+  'ACESSAR_HABITACAO',
   // Administração do município
   'GERIR_USUARIOS',
   'GERIR_CAPACIDADES',
@@ -62,6 +73,10 @@ export const CAPACIDADES = [
   'CONCEDER_AUXILIO',
   'RENOVAR_AUXILIO',
   'CORTAR_AUXILIO',
+  // Tramitação entre setores
+  'ENCAMINHAR_SETOR',
+  'RESPONDER_ENCAMINHAMENTO',
+  'EMITIR_LAUDO_RISCO',
   // Jurídico e fiscalização
   'EMITIR_PARECER_JURIDICO',
   'REGISTRAR_OCORRENCIA',
@@ -90,6 +105,7 @@ export const CAPACIDADES_SENSIVEIS: readonly Capacidade[] = [
  */
 const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
   ADMINISTRADOR: [
+    'ACESSAR_HABITACAO',
     'GERIR_USUARIOS',
     'GERIR_CAPACIDADES',
     'GERIR_PARAMETROS',
@@ -97,6 +113,7 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
     'LER_AUDITORIA',
   ],
   GESTOR_HABITACAO: [
+    'ACESSAR_HABITACAO',
     'GERIR_PROGRAMA',
     'PUBLICAR_CRITERIO',
     'RECALCULAR_PONTUACAO',
@@ -108,9 +125,11 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
     'CONSULTAR_REURB',
     'GERIR_CONVENIO',
     'GERIR_OBRA',
+    'ENCAMINHAR_SETOR',
     'LER_AUDITORIA',
   ],
   TECNICO_SOCIAL: [
+    'ACESSAR_HABITACAO',
     'CADASTRAR_FAMILIA',
     'EDITAR_FICHA_SOCIAL',
     'REGISTRAR_VISITA_DOMICILIAR',
@@ -118,25 +137,40 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
     'CONSULTAR_REURB',
     'TRIAR_AUXILIO',
     'RENOVAR_AUXILIO',
+    'ENCAMINHAR_SETOR',
   ],
   ATENDENTE: [
+    'ACESSAR_HABITACAO',
     'CADASTRAR_FAMILIA',
     'INSCREVER_FAMILIA',
     'VALIDAR_DOCUMENTACAO',
     'ABRIR_PEDIDO_AUXILIO',
     'CONSULTAR_REURB',
+    'ENCAMINHAR_SETOR',
   ],
-  FISCAL_OBRAS: ['GERIR_OBRA', 'REGISTRAR_MEDICAO', 'ENTREGAR_UNIDADE'],
+  FISCAL_OBRAS: ['ACESSAR_HABITACAO', 'GERIR_OBRA', 'REGISTRAR_MEDICAO', 'ENTREGAR_UNIDADE', 'RESPONDER_ENCAMINHAMENTO'],
   ANALISTA_MUTUARIO: [
+    'ACESSAR_HABITACAO',
     'GERIR_CONTRATO',
     'BAIXAR_PAGAMENTO',
     'VER_DADO_FINANCEIRO',
     'RENEGOCIAR_CONTRATO',
   ],
-  JURIDICO: ['EMITIR_PARECER_JURIDICO', 'JULGAR_RECURSO', 'VER_PARECER_SOCIAL', 'LER_AUDITORIA'],
+  JURIDICO: [
+    'ACESSAR_HABITACAO',
+    'EMITIR_PARECER_JURIDICO',
+    'JULGAR_RECURSO',
+    'VER_PARECER_SOCIAL',
+    'RESPONDER_ENCAMINHAMENTO',
+    'LER_AUDITORIA',
+  ],
   // Auditor lê tudo e não escreve nada — inclusive o financeiro, que é onde a prestação de
   // contas do convênio precisa fechar (spec §8).
-  FISCAL_AUDITOR: ['LER_AUDITORIA', 'VER_PARECER_SOCIAL', 'VER_DADO_FINANCEIRO'],
+  FISCAL_AUDITOR: ['ACESSAR_HABITACAO', 'LER_AUDITORIA', 'VER_PARECER_SOCIAL', 'VER_DADO_FINANCEIRO'],
+  // Defesa Civil responde encaminhamento e emite laudo — nada além. O laudo é a evidência que
+  // sustenta a prioridade de risco na fila, e é por isso que ele nasce fora da Habitação.
+  DEFESA_CIVIL: ['RESPONDER_ENCAMINHAMENTO', 'EMITIR_LAUDO_RISCO', 'REGISTRAR_VISTORIA'],
+  SETOR_PARCEIRO: ['RESPONDER_ENCAMINHAMENTO'],
 };
 
 export interface SobrescritaCapacidades {

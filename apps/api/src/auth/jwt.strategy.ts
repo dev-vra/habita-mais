@@ -24,6 +24,8 @@ export interface JwtPayload {
   trocarSenhaNoLogin?: boolean;
   /** Família dona do token (só esfera MUNICIPE). */
   familiaId?: string;
+  setorId?: string;
+  setorRestrito?: boolean;
 }
 
 /** Usuário autenticado anexado ao request. */
@@ -36,6 +38,8 @@ export interface AuthUser {
   capacidades: Capacidade[];
   trocarSenhaNoLogin: boolean;
   familiaId?: string;
+  setorId?: string;
+  setorRestrito: boolean;
 }
 
 @Injectable()
@@ -58,6 +62,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       capacidades: payload.capacidades ?? [],
       trocarSenhaNoLogin: payload.trocarSenhaNoLogin ?? false,
       familiaId: payload.familiaId,
+      setorId: payload.setorId,
+      setorRestrito: payload.setorRestrito ?? false,
     };
   }
 }

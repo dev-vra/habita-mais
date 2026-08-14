@@ -19,10 +19,12 @@ import { TenantContextInterceptor } from './context/tenant-context.interceptor';
 import { FamiliasModule } from './familias/familias.module';
 import { FilaModule } from './fila/fila.module';
 import { HealthController } from './health.controller';
+import { IndicadoresModule } from './indicadores/indicadores.module';
 import { MunicipeModule } from './municipe/municipe.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PdfModule } from './pdf/pdf.module';
 import { ProgramasModule } from './programas/programas.module';
+import { SetoresModule } from './setores/setores.module';
 import { StorageModule } from './storage/storage.module';
 
 // Módulo raiz. Auth, RLS e auditoria são a fundação; cada domínio entra como feature module.
@@ -58,9 +60,11 @@ import { StorageModule } from './storage/storage.module';
     AdministracaoModule,
     FamiliasModule,
     FilaModule,
+    IndicadoresModule,
     MunicipeModule,
     PdfModule,
     ProgramasModule,
+    SetoresModule,
     StorageModule,
   ],
   controllers: [HealthController],
