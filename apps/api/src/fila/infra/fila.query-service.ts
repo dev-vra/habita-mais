@@ -15,11 +15,27 @@ export interface LinhaDaFila {
   versaoCriterio: number | null;
 }
 
+export interface ProgramaResumo {
+  id: string;
+  nome: string;
+  slug: string;
+  vagas: number;
+  situacao: string;
+}
+
 export interface FilaDoPrograma {
-  programa: { id: string; nome: string; slug: string; vagas: number; situacao: string };
+  programa: ProgramaResumo;
   versaoVigente: number | null;
   convocacoesForaDeOrdem: number;
   linhas: LinhaDaFila[];
+}
+
+export interface ResumoPainel {
+  familias: number;
+  aptas: number;
+  aguardandoConvocacao: number;
+  convocacoesForaDeOrdem: number;
+  programas: ProgramaResumo[];
 }
 
 /**
@@ -31,12 +47,32 @@ export interface FilaDoPrograma {
 export class FilaQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async doPrograma(programaId: string): Promise<FilaDoPrograma> {
+  /** Resumo do painel: os números que o gestor pergunta na segunda-feira (Identidade §5). */
+  async resumo(): Promise<ResumoPainel> {
+    const [familias, aptas, aguardandoConvocacao, foraDeOrdem, programas] = await Promise.all([
+      this.prisma.tx.familia.count({ where: { deletedAt: null } }),
+      this.prisma.tx.inscricaoFila.count({ where: { situacao: 'APTA', deletedAt: null } }),
+      this.prisma.tx.inscricaoFila.count({ where: { situacao: 'CONVOCADA', deletedAt: null } }),
+      this.prisma.tx.convocacao.count({ where: { foraDeOrdem: true } }),
+      this.prisma.tx.programaHabitacional.findMany({
+        where: { deletedAt: null },
+        orderBy: { nome: 'asc' },
+        select: { id: true, nome: true, slug: true, vagas: true, situacao: true },
+      }),
+    ]);
+
+    return { familias, aptas, aguardandoConvocacao, convocacoesForaDeOrdem: foraDeOrdem, programas };
+  }
+
+  /** Aceita id ou slug: a URL da tela é /fila/residencial-bela-vista, não um cuid. */
+  async doPrograma(idOuSlug: string): Promise<FilaDoPrograma> {
     const programa = await this.prisma.tx.programaHabitacional.findFirst({
-      where: { id: programaId, deletedAt: null },
+      where: { OR: [{ id: idOuSlug }, { slug: idOuSlug }], deletedAt: null },
       select: { id: true, nome: true, slug: true, vagas: true, situacao: true },
     });
     if (!programa) throw new NotFoundException('Programa não encontrado.');
+
+    const programaId = programa.id;
 
     const inscricoes = await this.prisma.tx.inscricaoFila.findMany({
       where: { programaId, deletedAt: null },

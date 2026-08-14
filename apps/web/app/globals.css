@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+/*
+ * Fundação visual: Padrão Digital de Governo (@govbr-ds/core v3), a mesma do Regulariza+ — uma
+ * prefeitura que usa os dois reconhece de imediato que são da mesma família.
+ *
+ * Três decisões de cor estruturam a paleta, e nenhuma é estética (Identidade §2):
+ *  • eucalipto é o institucional — ocupa o lugar do azul gov.br do irmão, e é o que separa os
+ *    dois de relance;
+ *  • âmbar-mel é a cor da AÇÃO — se está âmbar, é clicável ou é conquista;
+ *  • azul continua significando Regulariza+ — aqui marca o que veio do produto irmão, e nunca
+ *    é usado para ação própria.
+ *
+ * Regra de ouro: nunca hardcode hex em componente — consuma os tokens. O ESLint quebra o build
+ * se alguém escrever text-[#…] em className.
+ */
+@import '@govbr-ds/core/dist/core-tokens.css';
+
+@theme {
+  /* Institucional — navegação, painel de entrada, superfície profunda */
+  --color-institucional: #1b4d40;
+  --color-institucional-escuro: #14332b;
+  --color-institucional-claro: #86baa8;
+
+  /* Ação e marca — botão primário, item ativo, o "+" da assinatura */
+  --color-primary: #97620f;
+  --color-primary-claro: #e0a340;
+
+  /* Reservado: dado ou vínculo vindo do Regulariza+ */
+  --color-vinculo-reurb: var(--blue-warm-vivid-70, #1351b4);
+
+  --color-surface: #ffffff;
+  --color-background: #f3f5f4;
+  --color-borda: #d9e0dd;
+  --color-texto: #1c1f1e;
+  --color-texto-suave: #4e5b57;
+
+  /* Semântico do gov.br, sem alteração. Status nunca aparece só como cor: sempre com rótulo. */
+  --color-success: var(--success, #168821);
+  --color-warning: var(--warning, #ffcd07);
+  --color-danger: var(--danger, #e52207);
+  /* O amarelo gov.br não passa em contraste sobre branco; o irmão já resolveu com uma tinta
+     separada para o TEXTO de alerta, e herdamos a solução em vez de repetir o erro. */
+  --color-warning-text: var(--yellow-vivid-90, #8a6100);
+
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-sans: 'Rawline', 'Raleway', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Raleway', 'Rawline', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  /* Número que empilha, empilha alinhado: protocolo, pontuação, parcela e posição na fila.
+     Numa tabela de 1.402 linhas, dígito desalinhado é o que faz a leitura conferir errado. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@habita/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port 3001",
+    "start": "next start --port 3001",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@govbr-ds/core": "3.7.0",
+    "@habita/shared": "workspace:*",
+    "clsx": "2.1.1",
+    "lucide-react": "1.21.0",
+    "next": "16.2.9",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "tailwind-merge": "3.6.0"
+  },
+  "devDependencies": {
+    "@habita/config": "workspace:*",
+    "@tailwindcss/postcss": "4.3.1",
+    "@types/node": "26.0.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "tailwindcss": "4.3.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

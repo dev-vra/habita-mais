@@ -35,9 +35,15 @@ export class FilaController {
     private readonly recursos: RecursosUseCase,
   ) {}
 
-  @Get('programas/:programaId/fila')
-  fila(@Param('programaId') programaId: string) {
-    return this.consulta.doPrograma(programaId);
+  @Get('painel')
+  painel() {
+    return this.consulta.resumo();
+  }
+
+  /** Aceita id ou slug do programa. */
+  @Get('programas/:programa/fila')
+  fila(@Param('programa') programa: string) {
+    return this.consulta.doPrograma(programa);
   }
 
   @RequerCapacidade('INSCREVER_FAMILIA')
