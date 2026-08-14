@@ -16,6 +16,29 @@ export const PROGRAMAS_REPOSITORY = Symbol('ProgramasRepository');
 export const INSCRICOES_REPOSITORY = Symbol('InscricoesRepository');
 export const CONVOCACOES_REPOSITORY = Symbol('ConvocacoesRepository');
 export const RECURSOS_REPOSITORY = Symbol('RecursosRepository');
+export const PENDENCIAS_REPOSITORY = Symbol('PendenciasRepository');
+
+export interface PendenciaEstado {
+  id: string;
+  inscricaoId: string;
+  situacao: string;
+}
+
+export interface PendenciasRepository {
+  abrir(dados: {
+    inscricaoId: string;
+    tipo: string;
+    descricao: string;
+    prazoAte: Date;
+  }): Promise<{ id: string }>;
+  buscar(pendenciaId: string): Promise<PendenciaEstado | null>;
+  encerrar(
+    pendenciaId: string,
+    desfecho: 'RESOLVIDA' | 'DISPENSADA',
+    arquivoKey?: string,
+  ): Promise<void>;
+  abertasDaInscricao(inscricaoId: string): Promise<number>;
+}
 
 // Trilha e numeração são compartilhadas por todos os módulos — ver src/common/ports.ts.
 export {

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
+import { InscreverEmPrograma } from '@/components/domain/inscrever-em-programa';
 import { apiFetch } from '@/lib/api/server';
 import { formatarNota, formatarReais, statusInscricao } from '@/lib/status';
 
@@ -45,8 +46,15 @@ interface Familia360 {
  */
 export default async function PaginaFamilia({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const familia = await apiFetch<Familia360>(`/familias/${id}`);
+  const [familia, programas] = await Promise.all([
+    apiFetch<Familia360>(`/familias/${id}`),
+    apiFetch<{ id: string; nome: string; situacao: string }[]>('/programas'),
+  ]);
   const { ficha } = familia;
+  const jaInscrita = new Set(familia.inscricoes.map((inscricao) => inscricao.programa));
+  const abertos = programas
+    .filter((programa) => programa.situacao === 'INSCRICOES_ABERTAS')
+    .filter((programa) => !jaInscrita.has(programa.nome));
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -142,12 +150,16 @@ export default async function PaginaFamilia({ params }: { params: Promise<{ id: 
             {familia.inscricoes.length === 0 && (
               <p className="mt-2 text-sm text-texto-suave">Sem inscrição em programa.</p>
             )}
+
             {familia.inscricoes.map((inscricao) => {
               const status = statusInscricao(inscricao.situacao);
               return (
                 <article key={inscricao.id} className="mt-4 border-t border-borda pt-4 first:border-0 first:pt-0">
                   <div className="flex items-center justify-between gap-3">
-                    <Link href={`/fila/${inscricao.programaSlug}`} className="font-semibold text-texto hover:underline">
+                    <Link
+                      href={`/inscricoes/${inscricao.id}`}
+                      className="font-semibold text-texto hover:underline"
+                    >
                       {inscricao.programa}
                     </Link>
                     <EtiquetaStatus rotulo={status.rotulo} tom={status.tom} />
@@ -178,6 +190,10 @@ export default async function PaginaFamilia({ params }: { params: Promise<{ id: 
                 </article>
               );
             })}
+
+            <div className="mt-4 border-t border-borda pt-4">
+              <InscreverEmPrograma familiaId={familia.id} programas={abertos} />
+            </div>
           </section>
 
           <section className="rounded-lg border border-borda bg-surface p-6">

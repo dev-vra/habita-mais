@@ -47,6 +47,114 @@ export interface ResumoPainel {
 export class FilaQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Detalhe operacional da inscrição: a tela onde o atendente trabalha o caso. */
+  async inscricao(inscricaoId: string) {
+    const inscricao = await this.prisma.tx.inscricaoFila.findFirst({
+      where: { id: inscricaoId, deletedAt: null },
+      include: {
+        programa: { select: { id: true, nome: true, slug: true, situacao: true } },
+        familia: {
+          select: {
+            id: true,
+            codigo: true,
+            responsavel: { select: { nome: true } },
+            fichas: { where: { vigente: true }, take: 1, select: { validaAte: true } },
+          },
+        },
+        snapshots: {
+          where: { vigente: true },
+          take: 1,
+          include: { versaoCriterio: { select: { versao: true } } },
+        },
+        pendencias: { orderBy: { prazoAte: 'asc' } },
+        convocacoes: { orderBy: { emitidaEm: 'desc' } },
+        recursos: { orderBy: { apresentadoEm: 'desc' } },
+      },
+    });
+    if (!inscricao) throw new NotFoundException('Inscrição não encontrada.');
+
+    const snapshot = inscricao.snapshots[0];
+
+    return {
+      id: inscricao.id,
+      protocolo: inscricao.protocolo,
+      situacao: inscricao.situacao,
+      motivoSituacao: inscricao.motivoSituacao,
+      inscritaEm: inscricao.inscritaEm.toISOString(),
+      programa: inscricao.programa,
+      familia: {
+        id: inscricao.familia.id,
+        codigo: inscricao.familia.codigo,
+        responsavel: inscricao.familia.responsavel.nome,
+        fichaValidaAte: inscricao.familia.fichas[0]?.validaAte.toISOString() ?? null,
+      },
+      pontuacao: snapshot
+        ? {
+            total: Number(snapshot.total),
+            totalMaximo: Number(snapshot.totalMaximo),
+            versaoCriterio: snapshot.versaoCriterio.versao,
+            calculadaEm: snapshot.calculadoEm.toISOString(),
+            itens: snapshot.itens,
+          }
+        : null,
+      pendencias: inscricao.pendencias.map((pendencia) => ({
+        id: pendencia.id,
+        tipo: pendencia.tipo,
+        descricao: pendencia.descricao,
+        prazoAte: pendencia.prazoAte.toISOString(),
+        situacao: pendencia.situacao,
+        vencida: pendencia.situacao === 'ABERTA' && pendencia.prazoAte < new Date(),
+      })),
+      convocacoes: inscricao.convocacoes.map((convocacao) => ({
+        id: convocacao.id,
+        numeroOficio: convocacao.numeroOficio,
+        emitidaEm: convocacao.emitidaEm.toISOString(),
+        prazoComparecimentoAte: convocacao.prazoComparecimentoAte.toISOString(),
+        foraDeOrdem: convocacao.foraDeOrdem,
+        motivoExcecao: convocacao.motivoExcecao,
+        desfecho: convocacao.desfecho,
+      })),
+      recursos: inscricao.recursos.map((recurso) => ({
+        id: recurso.id,
+        protocolo: recurso.protocolo,
+        apresentadoEm: recurso.apresentadoEm.toISOString(),
+        prazoRespostaAte: recurso.prazoRespostaAte.toISOString(),
+        decisao: recurso.decisao,
+      })),
+    };
+  }
+
+  /** Pendências abertas do município — a fila de trabalho do balcão. */
+  async pendenciasAbertas() {
+    const pendencias = await this.prisma.tx.pendencia.findMany({
+      where: { situacao: { in: ['ABERTA', 'VENCIDA'] } },
+      orderBy: { prazoAte: 'asc' },
+      take: 100,
+      include: {
+        inscricao: {
+          select: {
+            id: true,
+            protocolo: true,
+            familia: { select: { responsavel: { select: { nome: true } } } },
+            programa: { select: { nome: true } },
+          },
+        },
+      },
+    });
+
+    return pendencias.map((pendencia) => ({
+      id: pendencia.id,
+      tipo: pendencia.tipo,
+      descricao: pendencia.descricao,
+      prazoAte: pendencia.prazoAte.toISOString(),
+      vencida: pendencia.prazoAte < new Date(),
+      inscricaoId: pendencia.inscricao.id,
+      protocolo: pendencia.inscricao.protocolo,
+      responsavel: pendencia.inscricao.familia.responsavel.nome,
+      programa: pendencia.inscricao.programa.nome,
+    }));
+  }
+
   /** Resumo do painel: os números que o gestor pergunta na segunda-feira (Identidade §5). */
   async resumo(): Promise<ResumoPainel> {
     const [familias, aptas, aguardandoConvocacao, foraDeOrdem, programas] = await Promise.all([

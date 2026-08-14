@@ -56,6 +56,29 @@ export class InterporRecursoDto {
   prazoRespostaAte!: Date;
 }
 
+export class AbrirPendenciaDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Informe o tipo do documento pendente.' })
+  tipo!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Descreva o que falta — é o que a família vai ler.' })
+  descricao!: string;
+
+  @Type(() => Date)
+  @IsDate({ message: 'Informe o prazo de entrega.' })
+  prazoAte!: Date;
+}
+
+export class ResolverPendenciaDto {
+  @IsIn(['RESOLVIDA', 'DISPENSADA'])
+  desfecho!: 'RESOLVIDA' | 'DISPENSADA';
+
+  @IsOptional()
+  @IsString()
+  arquivoKey?: string;
+}
+
 export class DecidirRecursoDto {
   @IsIn(['DEFERIDO', 'INDEFERIDO', 'PARCIALMENTE_DEFERIDO'])
   decisao!: 'DEFERIDO' | 'INDEFERIDO' | 'PARCIALMENTE_DEFERIDO';

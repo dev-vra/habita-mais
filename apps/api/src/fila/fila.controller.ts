@@ -5,18 +5,21 @@ import { RequerCapacidade } from '../auth/capacidade.decorator';
 import type { AuthUser } from '../auth/jwt.strategy';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConvocarFamiliaUseCase } from './application/convocar-familia.use-case';
+import { PendenciasUseCase } from './application/pendencias.use-case';
 import { InscreverFamiliaUseCase } from './application/inscrever-familia.use-case';
 import { PublicarRankingUseCase } from './application/publicar-ranking.use-case';
 import { RecalcularPontuacaoUseCase } from './application/recalcular-pontuacao.use-case';
 import { RecursosUseCase } from './application/recursos.use-case';
 import { RegistrarDesfechoUseCase } from './application/registrar-desfecho.use-case';
 import {
+  AbrirPendenciaDto,
   ConvocarDto,
   DecidirRecursoDto,
   DesfechoConvocacaoDto,
   InscreverFamiliaDto,
   InterporRecursoDto,
   PublicarRankingDto,
+  ResolverPendenciaDto,
 } from './dto/fila.dto';
 import { FilaQueryService } from './infra/fila.query-service';
 
@@ -33,11 +36,38 @@ export class FilaController {
     private readonly convocar: ConvocarFamiliaUseCase,
     private readonly desfecho: RegistrarDesfechoUseCase,
     private readonly recursos: RecursosUseCase,
+    private readonly pendencias: PendenciasUseCase,
   ) {}
 
   @Get('painel')
   painel() {
     return this.consulta.resumo();
+  }
+
+  @Get('inscricoes/:inscricaoId')
+  inscricao(@Param('inscricaoId') inscricaoId: string) {
+    return this.consulta.inscricao(inscricaoId);
+  }
+
+  @Get('pendencias')
+  pendenciasAbertas() {
+    return this.consulta.pendenciasAbertas();
+  }
+
+  @RequerCapacidade('VALIDAR_DOCUMENTACAO')
+  @Post('inscricoes/:inscricaoId/pendencias')
+  abrirPendencia(@Param('inscricaoId') inscricaoId: string, @Body() dto: AbrirPendenciaDto) {
+    return this.pendencias.abrir({ inscricaoId, ...dto });
+  }
+
+  @RequerCapacidade('VALIDAR_DOCUMENTACAO')
+  @HttpCode(HttpStatus.OK)
+  @Post('pendencias/:pendenciaId/resolver')
+  resolverPendencia(
+    @Param('pendenciaId') pendenciaId: string,
+    @Body() dto: ResolverPendenciaDto,
+  ) {
+    return this.pendencias.resolver(pendenciaId, dto.desfecho, dto.arquivoKey);
   }
 
   /** Aceita id ou slug do programa. */

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
 import { apiFetch } from '@/lib/api/server';
 import {
@@ -102,7 +103,12 @@ export default async function PaginaFila({ params }: { params: Promise<{ program
                     {String(linha.posicao).padStart(3, '0')}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-semibold text-texto">{linha.responsavel}</span>
+                    <Link
+                      href={`/inscricoes/${linha.inscricaoId}`}
+                      className="font-semibold text-texto hover:underline"
+                    >
+                      {linha.responsavel}
+                    </Link>
                     <span className="tabular block text-xs text-texto-suave">{linha.protocolo}</span>
                   </td>
                   <td className="px-4 py-3 text-texto-suave">

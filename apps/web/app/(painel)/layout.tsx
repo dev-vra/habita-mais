@@ -57,6 +57,7 @@ export default async function LayoutPainel({ children }: { children: React.React
                 rotulo="Aguardam convocação"
                 contador={resumo.aguardandoConvocacao}
               />
+              <ItemNavegacao href="/pendencias" rotulo="Pendências" />
             </ul>
           </div>
         </nav>
