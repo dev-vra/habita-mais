@@ -23,6 +23,7 @@ export default async function LayoutPainel({ children }: { children: React.React
   const resumo = await apiFetch<ResumoNavegacao>('/painel');
   // O menu reflete a capacidade: mostrar o que o usuário não pode abrir só produz 403 na cara dele.
   const podeAdministrar = sessao.capacidades.includes('GERIR_USUARIOS');
+  const podeAuditar = sessao.capacidades.includes('LER_AUDITORIA');
 
   return (
     <div className="flex min-h-screen">
@@ -60,6 +61,7 @@ export default async function LayoutPainel({ children }: { children: React.React
                 contador={resumo.aguardandoConvocacao}
               />
               <ItemNavegacao href="/pendencias" rotulo="Pendências" />
+              {podeAuditar && <ItemNavegacao href="/auditoria" rotulo="Trilha de auditoria" />}
             </ul>
           </div>
 
