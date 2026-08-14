@@ -6,8 +6,22 @@ import { AcessoMunicipeDto, LoginDto, RefreshDto, TrocarSenhaDto } from './dto/a
 import type { AuthUser } from './jwt.strategy';
 import { Public } from './public.decorator';
 
-/** Teto apertado nas rotas de credencial — o global de 120/min é largo demais para login. */
-const LIMITE_TENTATIVAS = { default: { limit: 10, ttl: 60_000 } };
+/**
+ * Teto de tentativas de credencial. Apertado no login, onde brute force importa — e onde o
+ * lockout por conta já é a defesa principal.
+ */
+const LIMITE_TENTATIVAS = { default: { limit: 20, ttl: 60_000 } };
+
+/**
+ * Renovação de sessão é outra história: acontece a cada 15 minutos por usuário ativo, e numa
+ * prefeitura todo mundo sai pelo mesmo IP. Com teto baixo, um município inteiro se desloga sozinho
+ * no meio do expediente — foi o que aconteceu em teste, com 10/min.
+ *
+ * O refresh não é adivinhável (id + segredo de 32 bytes) e tem rotação: quem apresenta um token
+ * revogado leva 401 na primeira tentativa. O limite aqui é contra abuso grosseiro, não contra
+ * adivinhação.
+ */
+const LIMITE_RENOVACAO = { default: { limit: 120, ttl: 60_000 } };
 
 @Controller('auth')
 export class AuthController {
@@ -31,7 +45,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle(LIMITE_TENTATIVAS)
+  @Throttle(LIMITE_RENOVACAO)
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
   refresh(@Body() dto: RefreshDto) {

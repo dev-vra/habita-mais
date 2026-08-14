@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoHabita } from '@/components/brand/logo';
 import { BuscaGlobal } from '@/components/domain/busca-global';
-import { apiFetch } from '@/lib/api/server';
+import { ApiError, apiFetch } from '@/lib/api/server';
 import { sessaoAtual } from '@/lib/auth/session';
 import { sair } from '@/app/actions/auth';
 
@@ -45,9 +45,18 @@ export default async function LayoutPainel({ children }: { children: React.React
     sessao.capacidades.includes('ENCAMINHAR_SETOR') ||
     sessao.capacidades.includes('RESPONDER_ENCAMINHAMENTO');
 
-  const resumo = podeHabitacao
-    ? await apiFetch<ResumoNavegacao>('/painel')
-    : { familias: 0, aptas: 0, aguardandoConvocacao: 0, programas: [] };
+  let resumo: ResumoNavegacao = { familias: 0, aptas: 0, aguardandoConvocacao: 0, programas: [] };
+
+  if (podeHabitacao) {
+    try {
+      resumo = await apiFetch<ResumoNavegacao>('/painel');
+    } catch (erro) {
+      // Só 401 é sessão morta. Tratar 403 como expiração mandava para o login quem apenas não
+      // tinha a capacidade — e o servidor via tela de login sem entender por quê.
+      if (erro instanceof ApiError && erro.status === 401) redirect('/entrar?sessao=expirada');
+      throw erro;
+    }
+  }
 
   return (
     <div className="flex min-h-screen">

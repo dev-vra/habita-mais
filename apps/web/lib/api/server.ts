@@ -47,6 +47,9 @@ export async function apiFetch<T = unknown>(caminho: string, init?: RequestInit)
   const token = (await cookies()).get(COOKIE_ACCESS)?.value;
   let resposta = await chamar(token);
 
+  // 401 numa navegação normal quase sempre é access expirado. A renovação é compartilhada entre as
+  // chamadas paralelas da mesma página (ver `renovarAcesso`), então repetir aqui é barato e não
+  // dispara uma segunda rotação de refresh.
   if (resposta.status === 401) {
     const novo = await renovarAcesso();
     if (novo) resposta = await chamar(novo);

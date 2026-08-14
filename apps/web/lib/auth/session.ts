@@ -75,14 +75,41 @@ export async function limparSessao(): Promise<void> {
 }
 
 /**
- * Renova o access token pelo refresh guardado. Chamado quando a API responde 401 numa navegação:
- * o access dura 15 minutos, e uma aba aberta além disso travaria sem esta renovação.
+ * Renovações em andamento, por refresh token.
+ *
+ * Duas coisas aconteciam quando o access expirava com a página aberta: várias chamadas do BFF
+ * batiam 401 juntas e cada uma tentava renovar — e como o refresh tem rotação, a primeira revogava
+ * o token e as demais falhavam, derrubando a sessão. Compartilhar a renovação em curso resolve a
+ * corrida.
+ *
+ * O caminho normal, porém, é o proxy: ele renova ANTES de a página renderizar e grava os cookies,
+ * o que Server Component não pode fazer. Esta função é a rede de segurança para Route Handler e
+ * Server Action — ali gravar é permitido, e o token novo persiste.
+ */
+const renovacoesEmCurso = new Map<string, Promise<string | null>>();
+
+/**
+ * Renova o access token pelo refresh guardado. O par novo é gravado quando o contexto permite;
+ * em Server Component, o token volta apenas para a chamada em andamento — o proxy persiste na
+ * próxima navegação.
  */
 export async function renovarAcesso(): Promise<string | null> {
   const jar = await cookies();
   const refresh = jar.get(COOKIE_REFRESH)?.value;
   if (!refresh) return null;
 
+  const emCurso = renovacoesEmCurso.get(refresh);
+  if (emCurso) return emCurso;
+
+  const renovacao = executarRenovacao(refresh).finally(() => {
+    renovacoesEmCurso.delete(refresh);
+  });
+  renovacoesEmCurso.set(refresh, renovacao);
+
+  return renovacao;
+}
+
+async function executarRenovacao(refresh: string): Promise<string | null> {
   const resposta = await fetch(`${BASE}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -92,6 +119,11 @@ export async function renovarAcesso(): Promise<string | null> {
   if (!resposta.ok) return null;
 
   const par = (await resposta.json()) as { accessToken: string; refreshToken: string };
-  await gravarSessao(par);
+  try {
+    await gravarSessao(par);
+  } catch {
+    // Server Component não grava cookie. Não é erro: o token vale para esta chamada, e o proxy
+    // persiste o par na próxima navegação.
+  }
   return par.accessToken;
 }

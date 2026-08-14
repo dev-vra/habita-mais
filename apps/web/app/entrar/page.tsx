@@ -8,7 +8,12 @@ import { FormularioEntrada } from './formulario-entrada';
  * A frase do painel não vende software, vende defesa: o que o gestor de Habitação teme não é
  * perder planilha, é não conseguir justificar a fila.
  */
-export default function PaginaEntrar() {
+export default async function PaginaEntrar({
+  searchParams,
+}: {
+  searchParams: Promise<{ sessao?: string }>;
+}) {
+  const { sessao } = await searchParams;
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
       <section className="hidden flex-col justify-between bg-institucional p-12 text-surface lg:flex">
@@ -43,6 +48,12 @@ export default function PaginaEntrar() {
             Gestão Habitacional de Interesse Social
           </h2>
           <p className="mt-1 text-sm text-texto-suave">Acesso do servidor municipal.</p>
+
+          {sessao === 'expirada' && (
+            <p className="mt-4 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-text">
+              Sua sessão expirou por inatividade. Entre de novo para continuar de onde parou.
+            </p>
+          )}
 
           <FormularioEntrada />
 
