@@ -1,4 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import {
+  COOKIE_ACCESS,
+  COOKIE_REFRESH,
+  DURACAO_REFRESH_SEGUNDOS,
+  OPCOES_COOKIE_BASE,
+  cookieSeguro,
+} from './lib/auth/cookie-seguro';
 
 /**
  * Porteiro das rotas de servidor (no Next 16 o antigo `middleware` chama-se `proxy`).
@@ -10,23 +17,14 @@ import { NextResponse, type NextRequest } from 'next/server';
  * apareceu: sessão viva, tela de login.
  *
  * O payload é lido aqui mesmo, sem importar lib/auth/session: o proxy roda separado do código de
- * render e não deve depender de módulos que tocam `next/headers`.
+ * render e não deve depender de módulos que tocam `next/headers`. `cookie-seguro` é a exceção
+ * segura — não importa nada do Next, só decide um booleano.
  */
-const COOKIE_ACCESS = 'hb_at';
-const COOKIE_REFRESH = 'hb_rt';
+
 const ROTA_ENTRADA = '/entrar';
 const ROTA_TROCA_SENHA = '/trocar-senha';
 
 const API = process.env.API_URL ?? 'http://localhost:3334/api/v1';
-
-const OPCOES_COOKIE = {
-  httpOnly: true,
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
-  path: '/',
-};
-
-const DURACAO_REFRESH_SEGUNDOS = 7 * 24 * 60 * 60;
 /** Renova um pouco antes de vencer: evita expirar no meio de uma navegação. */
 const MARGEM_RENOVACAO_MS = 30_000;
 
@@ -141,12 +139,18 @@ export async function proxy(req: NextRequest) {
 
   if (parRenovado) {
     const expiraEm = payload?.exp ? new Date(payload.exp * 1000) : undefined;
+    // O protocolo vem do proxy reverso quando existe; senão, do próprio endereço pedido.
+    const opcoes = {
+      ...OPCOES_COOKIE_BASE,
+      secure: cookieSeguro(req.headers.get('x-forwarded-proto') ?? req.nextUrl.protocol),
+    };
+
     resposta.cookies.set(COOKIE_ACCESS, parRenovado.accessToken, {
-      ...OPCOES_COOKIE,
+      ...opcoes,
       expires: expiraEm,
     });
     resposta.cookies.set(COOKIE_REFRESH, parRenovado.refreshToken, {
-      ...OPCOES_COOKIE,
+      ...opcoes,
       maxAge: DURACAO_REFRESH_SEGUNDOS,
     });
   }

@@ -1,18 +1,25 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+import {
+  COOKIE_ACCESS,
+  COOKIE_REFRESH,
+  DURACAO_REFRESH_SEGUNDOS,
+  OPCOES_COOKIE_BASE,
+  cookieSeguro,
+} from './cookie-seguro';
 
-export const COOKIE_ACCESS = 'hb_at';
-export const COOKIE_REFRESH = 'hb_rt';
+export { COOKIE_ACCESS, COOKIE_REFRESH };
 
 const BASE = process.env.API_URL ?? 'http://localhost:3334/api/v1';
 
-const OPCOES_COMUNS = {
-  httpOnly: true,
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
-  path: '/',
-};
-
-const DURACAO_REFRESH_SEGUNDOS = 7 * 24 * 60 * 60;
+/**
+ * Protocolo de quem chamou. Atrás de proxy reverso vem em `x-forwarded-proto`; sem proxy, o
+ * navegador não conta o esquema, e aí só resta o padrão http — que é justamente o caso do acesso
+ * pela rede local.
+ */
+async function protocoloDaRequisicao(): Promise<string> {
+  const cabecalhos = await headers();
+  return cabecalhos.get('x-forwarded-proto') ?? 'http';
+}
 
 export interface SessaoUsuario {
   userId: string;
@@ -61,11 +68,10 @@ export async function gravarSessao(par: {
   const payload = lerPayload(par.accessToken);
   const expiraEm = payload?.exp ? new Date(payload.exp * 1000) : undefined;
 
-  jar.set(COOKIE_ACCESS, par.accessToken, { ...OPCOES_COMUNS, expires: expiraEm });
-  jar.set(COOKIE_REFRESH, par.refreshToken, {
-    ...OPCOES_COMUNS,
-    maxAge: DURACAO_REFRESH_SEGUNDOS,
-  });
+  const opcoes = { ...OPCOES_COOKIE_BASE, secure: cookieSeguro(await protocoloDaRequisicao()) };
+
+  jar.set(COOKIE_ACCESS, par.accessToken, { ...opcoes, expires: expiraEm });
+  jar.set(COOKIE_REFRESH, par.refreshToken, { ...opcoes, maxAge: DURACAO_REFRESH_SEGUNDOS });
 }
 
 export async function limparSessao(): Promise<void> {
