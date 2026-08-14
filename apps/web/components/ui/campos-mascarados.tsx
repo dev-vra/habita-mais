@@ -113,9 +113,8 @@ export function CampoCpf({
     return () => {
       cancelado = true;
     };
-    // onEncontrado fora das dependências de propósito: recriar a função no pai não deve
-    // disparar outra consulta paga.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // `onEncontrado` fica fora das dependências de propósito: recriar a função no componente pai
+    // não deve disparar outra consulta — ela é paga e auditada.
   }, [digitos, completo, valido]);
 
   return (
@@ -179,7 +178,7 @@ export function CampoCep({
     return () => {
       cancelado = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Mesma razão do CPF: só o CEP digitado dispara a consulta.
   }, [digitos]);
 
   return (
