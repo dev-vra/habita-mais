@@ -1,3 +1,4 @@
+import { CampoArquivo } from '@/components/ui/campo-arquivo';
 import {
   CampoData,
   CampoMarcador,
@@ -63,10 +64,11 @@ export function CamposFicha() {
           <CampoMarcador nome="temIdoso" rotulo="Idoso no domicílio" />
           <CampoMarcador nome="situacaoRisco" rotulo="Situação de risco (exige laudo)" />
         </div>
-        <CampoTexto
+        <CampoArquivo
           nome="laudoRiscoKey"
           rotulo="Laudo da Defesa Civil"
-          ajuda="Identificação do laudo anexado. Sem laudo, o critério de risco não pontua."
+          categoria="laudos"
+          ajuda="Sem o laudo anexado, o critério de risco não pontua — é evidência de terceiro, não marcação do servidor."
         />
       </fieldset>
 

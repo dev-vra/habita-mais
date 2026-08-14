@@ -10,5 +10,7 @@ allowBuilds:
   argon2: true
   esbuild: true
   prisma: true
+  # Usa o Chrome do sistema (PUPPETEER_EXECUTABLE_PATH); não baixa o próprio.
+  puppeteer: false
   sharp: true
   unrs-resolver: true

@@ -1,8 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { CapacidadesService } from '../auth/capacidades.service';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { RequerCapacidade } from '../auth/capacidade.decorator';
 import type { AuthUser } from '../auth/jwt.strategy';
+import { OficioService } from '../pdf/oficio.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConvocarFamiliaUseCase } from './application/convocar-familia.use-case';
 import { PendenciasUseCase } from './application/pendencias.use-case';
@@ -37,6 +39,7 @@ export class FilaController {
     private readonly desfecho: RegistrarDesfechoUseCase,
     private readonly recursos: RecursosUseCase,
     private readonly pendencias: PendenciasUseCase,
+    private readonly oficios: OficioService,
   ) {}
 
   @Get('painel')
@@ -134,6 +137,16 @@ export class FilaController {
       foraDeOrdem,
       motivoExcecao: dto.motivoExcecao,
     });
+  }
+
+  /** Ofício em PDF: o ato que a família recebe, arquivado no storage na primeira emissão. */
+  @RequerCapacidade('EMITIR_CONVOCACAO')
+  @Get('convocacoes/:convocacaoId/oficio')
+  async oficio(@Param('convocacaoId') convocacaoId: string, @Res() res: Response) {
+    const { pdf, nome } = await this.oficios.convocacao(convocacaoId);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${nome}"`);
+    res.send(pdf);
   }
 
   @RequerCapacidade('DECLARAR_CONTEMPLACAO')

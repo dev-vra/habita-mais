@@ -121,7 +121,14 @@ export default async function PaginaInscricao({ params }: { params: Promise<{ id
                 {inscricao.convocacoes.map((convocacao) => (
                   <li key={convocacao.id} className="rounded-md bg-background p-3">
                     <p className="tabular font-semibold text-texto">
-                      {convocacao.numeroOficio}
+                      <a
+                        href={`/api/oficios/${convocacao.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:underline"
+                      >
+                        {convocacao.numeroOficio}
+                      </a>
                       {convocacao.foraDeOrdem && (
                         <span className="ml-2 rounded-full bg-warning/20 px-2 py-0.5 text-xs text-warning-text">
                           fora de ordem
