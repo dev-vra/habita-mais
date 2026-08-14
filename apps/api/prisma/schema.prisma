@@ -1,0 +1,816 @@
+// Schema Prisma — Habita+ (fonte de verdade do modelo).
+//
+// Fronteira dura com o Regulariza+ (spec §2): NENHUMA chave estrangeira atravessa. O que existe
+// é ConsultaExterna — o registro de que perguntamos algo à API do irmão, e o que ele respondeu.
+//
+// Toda tabela de domínio carrega tenantId, carimbo de auditoria e exclusão lógica. RLS entra por
+// SQL cru na migration (Prisma não gera policy), com FORCE ROW LEVEL SECURITY e papel de runtime
+// sem BYPASSRLS — a dívida conhecida do irmão, corrigida de saída.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: a URL de conexão fica em prisma.config.ts (CLI/migrate); o PrismaClient recebe um
+// driver adapter (@prisma/adapter-pg). PostGIS é habilitado por SQL cru na migration inicial.
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────── Plataforma ─────────────────────────
+
+enum EsferaUsuario {
+  PLATAFORMA
+  TENANT
+  MUNICIPE
+}
+
+enum PerfilTenant {
+  ADMINISTRADOR
+  GESTOR_HABITACAO
+  TECNICO_SOCIAL
+  ATENDENTE
+  FISCAL_OBRAS
+  ANALISTA_MUTUARIO
+  JURIDICO
+  FISCAL_AUDITOR
+}
+
+enum StatusUsuario {
+  ATIVO
+  BLOQUEADO
+  INATIVO
+}
+
+enum ActorType {
+  TENANT
+  PLATFORM
+  SYSTEM
+  MUNICIPE
+}
+
+enum AuditOperation {
+  INSERT
+  UPDATE
+  DELETE
+  READ
+}
+
+enum SerieProtocolo {
+  HAB
+  AUX
+  MUT
+  REA
+  FIS
+}
+
+enum PapelSignatario {
+  PREFEITO
+  VICE_PREFEITO
+  SECRETARIO
+  DIRETOR_HABITACAO
+  PROCURADOR
+  OUTRO
+}
+
+/// Prefeitura. Unidade de isolamento: todo dado de domínio pendura aqui, e a RLS escopa por ela.
+model Tenant {
+  id         String  @id @default(cuid())
+  nome       String
+  cnpj       String  @unique @db.VarChar(14)
+  municipio  String
+  uf         String  @db.Char(2)
+  timezone   String  @default("America/Cuiaba")
+  brasaoKey  String?
+  /// Parâmetros do município: salário mínimo de referência, prazos, textos de ofício.
+  parametros Json    @default("{}")
+  ativo      Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  usuarios    Usuario[]
+  signatarios Signatario[]
+  familias    Familia[]
+  pessoas     Pessoa[]
+  programas   ProgramaHabitacional[]
+
+  @@index([ativo])
+  @@map("tenant")
+}
+
+model Usuario {
+  id                 String        @id @default(cuid())
+  /// Nulo apenas na esfera PLATAFORMA — quem cria prefeitura não pertence a nenhuma.
+  tenantId           String?
+  esfera             EsferaUsuario @default(TENANT)
+  perfil             PerfilTenant?
+  nome               String
+  email              String
+  cpf                String?       @db.Char(11)
+  senhaHash          String
+  status             StatusUsuario @default(ATIVO)
+  trocarSenhaNoLogin Boolean       @default(true)
+  ultimoAcessoEm     DateTime?
+  /// Lockout automático anti brute-force — distinto do bloqueio manual do administrador.
+  tentativasFalhas   Int           @default(0)
+  bloqueadoAte       DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant        Tenant?             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  capacidades   UsuarioCapacidade[]
+  refreshTokens RefreshToken[]
+
+  @@unique([email])
+  @@index([tenantId, status])
+  @@map("usuario")
+}
+
+/// Concessão ou revogação explícita de capacidade (spec §5). Ação sensível não vem do cargo:
+/// sem uma linha aqui, o guard nega. Revogação vence concessão.
+model UsuarioCapacidade {
+  id         String  @id @default(cuid())
+  tenantId   String
+  usuarioId  String
+  capacidade String
+  concedida  Boolean @default(true)
+  /// Por que esta prefeitura entregou (ou tirou) esta ação deste servidor.
+  motivo     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, capacidade])
+  @@index([tenantId])
+  @@map("usuario_capacidade")
+}
+
+/// Refresh token com rotação: o valor apresentado é `id.segredo`, e só o hash do segredo fica
+/// gravado. Existe apenas para servidor — o munícipe entra com protocolo + CPF a cada sessão, e
+/// não carrega credencial de longa duração ligada ao próprio CPF.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  usuarioId String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("refresh_token")
+}
+
+/// Quem assina ofício de convocação, termo e declaração.
+model Signatario {
+  id       String          @id @default(cuid())
+  tenantId String
+  nome     String
+  papel    PapelSignatario
+  cargo    String
+  cpf      String?         @db.Char(11)
+  ativo    Boolean         @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, ativo])
+  @@map("signatario")
+}
+
+/// Trilha append-only: sem UPDATE e sem DELETE nas policies. Diff já chega mascarado.
+model AuditLog {
+  id        String         @id @default(cuid())
+  tenantId  String?
+  actorType ActorType
+  actorId   String?
+  operation AuditOperation
+  entity    String
+  entityId  String?
+  diff      Json?
+  ip        String?
+  createdAt DateTime       @default(now())
+
+  @@index([tenantId, entity, entityId])
+  @@index([tenantId, createdAt])
+  @@index([actorId])
+  @@map("audit_log")
+}
+
+/// Cada leitura feita na API do Regulariza+ (spec §7): o evento é auditável dos dois lados, e é
+/// o que sustenta a checagem de duplicidade de benefício sem copiar banco.
+model ConsultaExterna {
+  id            String   @id @default(cuid())
+  tenantId      String
+  /// CPF consultado, guardado inteiro: a consulta precisa ser reproduzível numa auditoria.
+  cpf           String   @db.Char(11)
+  familiaId     String?
+  finalidade    String
+  encontrou     Boolean
+  /// Resumo da resposta (processo, fase, data da ficha). Nunca a ficha inteira do irmão.
+  resposta      Json?
+  consultadoPor String
+  createdAt     DateTime @default(now())
+
+  familia Familia? @relation(fields: [familiaId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, cpf])
+  @@index([tenantId, createdAt])
+  @@map("consulta_externa")
+}
+
+/// Sequencial do protocolo público por tenant, série e ano.
+model ContadorProtocolo {
+  id       String         @id @default(cuid())
+  tenantId String
+  serie    SerieProtocolo
+  ano      Int
+  ultimo   Int            @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, serie, ano])
+  @@map("contador_protocolo")
+}
+
+// ───────────────────────── Famílias e ficha social ─────────────────────────
+
+enum Sexo {
+  FEMININO
+  MASCULINO
+  NAO_INFORMADO
+}
+
+enum Parentesco {
+  RESPONSAVEL
+  CONJUGE
+  FILHO
+  ENTEADO
+  PAI_MAE
+  AVO
+  NETO
+  IRMAO
+  OUTRO_PARENTE
+  NAO_PARENTE
+}
+
+enum TipoMoradia {
+  PROPRIA_QUITADA
+  PROPRIA_FINANCIADA
+  ALUGADA
+  CEDIDA
+  OCUPACAO
+  ABRIGO
+  SITUACAO_RUA
+  OUTRO
+}
+
+enum TipoConstrucao {
+  ALVENARIA
+  MADEIRA
+  MISTA
+  IMPROVISADO
+  OUTRO
+}
+
+enum Saneamento {
+  REDE_PUBLICA
+  FOSSA_SEPTICA
+  FOSSA_RUDIMENTAR
+  CEU_ABERTO
+  OUTRO
+}
+
+/// De onde veio o conteúdo da ficha. REURB carimba origem e data — pré-preenchimento nunca vira
+/// dado nativo sem rastro (spec §6.4, §8).
+enum OrigemFicha {
+  PROPRIA
+  REURB
+}
+
+enum SituacaoFamilia {
+  ATIVA
+  INATIVA
+  TRANSFERIDA
+}
+
+model Pessoa {
+  id          String    @id @default(cuid())
+  tenantId    String
+  cpf         String    @db.Char(11)
+  nome        String
+  nascimento  DateTime? @db.Date
+  sexo        Sexo      @default(NAO_INFORMADO)
+  nis         String?   @db.VarChar(11)
+  telefone    String?
+  email       String?
+  deficiencia Boolean   @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant             Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  membros            MembroFamiliar[]
+  familiasResponsavel Familia[]      @relation("ResponsavelFamiliar")
+
+  @@unique([tenantId, cpf])
+  @@index([tenantId, nome])
+  @@map("pessoa")
+}
+
+/// Unidade de atendimento do produto — não é a pessoa (spec §4). É o grupo que entra na fila.
+model Familia {
+  id            String          @id @default(cuid())
+  tenantId      String
+  codigo        String
+  responsavelId String
+  situacao      SituacaoFamilia @default(ATIVA)
+  observacao    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  responsavel  Pessoa            @relation("ResponsavelFamiliar", fields: [responsavelId], references: [id], onDelete: Restrict)
+  membros      MembroFamiliar[]
+  fichas       FichaSocial[]
+  visitas      VisitaDomiciliar[]
+  inscricoes   InscricaoFila[]
+  consentimentos ConsentimentoDado[]
+  consultas    ConsultaExterna[]
+
+  @@unique([tenantId, codigo])
+  @@index([tenantId, situacao])
+  @@map("familia")
+}
+
+model MembroFamiliar {
+  id         String     @id @default(cuid())
+  tenantId   String
+  familiaId  String
+  pessoaId   String
+  parentesco Parentesco
+  /// Contribui para a renda familiar declarada.
+  contribuiRenda Boolean @default(false)
+  entrouEm   DateTime   @default(now())
+  saiuEm     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  familia Familia @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+  pessoa  Pessoa  @relation(fields: [pessoaId], references: [id], onDelete: Restrict)
+
+  @@unique([familiaId, pessoaId])
+  @@index([tenantId])
+  @@map("membro_familiar")
+}
+
+/// Ficha social com validade. Nova apuração cria nova ficha — a anterior não é sobrescrita,
+/// porque snapshot de pontuação antigo precisa continuar explicável.
+model FichaSocial {
+  id        String @id @default(cuid())
+  tenantId  String
+  familiaId String
+
+  rendaFamiliar     Decimal @db.Decimal(14, 2)
+  rendaPerCapita    Decimal @db.Decimal(14, 2)
+  fonteRendaPrincipal String?
+  /// NIS/CadÚnico digitado no balcão: sem validação na base federal, é dado não verificado —
+  /// a interface precisa dizer isso, e o roadmap prevê a consulta oficial (spec §8).
+  nis               String?  @db.VarChar(11)
+  nisVerificado     Boolean  @default(false)
+  beneficioAtivo    String?
+
+  mulherChefeFamilia     Boolean @default(false)
+  temPessoaComDeficiencia Boolean @default(false)
+  temIdoso               Boolean @default(false)
+  quantidadeMenores      Int     @default(0)
+  situacaoRisco          Boolean @default(false)
+  /// Laudo da Defesa Civil que fundamenta a situação de risco. Sem ele o critério de risco não
+  /// pontua (spec §6.3): risco não é campo que o servidor marca, é evidência de terceiro. Na
+  /// fase 3 vira relação com LaudoRisco; aqui é o anexo, que já sustenta a mesma regra.
+  laudoRiscoKey          String?
+  laudoRiscoEmitidoEm    DateTime?
+
+  tipoMoradia        TipoMoradia
+  tipoConstrucao     TipoConstrucao
+  saneamento         Saneamento
+  moradiaInadequada  Boolean  @default(false)
+  possuiOutroImovel  Boolean  @default(false)
+  mesesResidenciaMunicipio Int  @default(0)
+
+  origem              OrigemFicha @default(PROPRIA)
+  /// Processo do Regulariza+ que originou o pré-preenchimento, se houve.
+  origemProcessoExterno String?
+  origemConsultadaEm  DateTime?
+
+  apuradaEm DateTime
+  validaAte DateTime
+  vigente   Boolean  @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  familia Familia @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, familiaId, vigente])
+  @@index([tenantId, validaAte])
+  @@map("ficha_social")
+}
+
+model VisitaDomiciliar {
+  id        String   @id @default(cuid())
+  tenantId  String
+  familiaId String
+  visitadaEm DateTime
+  parecer   String
+  /// Ponto da visita (SRID 4326). Geometria entra por SQL cru — ver migration de PostGIS.
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+  fotos     Json     @default("[]")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  familia Familia @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, familiaId])
+  @@map("visita_domiciliar")
+}
+
+/// Consentimento registrado antes de qualquer pré-preenchimento vindo do Regulariza+ (spec §8).
+/// Finalidade distinta sob a LGPD exige base legal própria — o aceite fica gravado, com o texto
+/// exato que a família leu na tela.
+model ConsentimentoDado {
+  id            String   @id @default(cuid())
+  tenantId      String
+  familiaId     String
+  finalidade    String
+  textoVersao   String
+  concedidoPor  String
+  /// Nome de quem assinou no balcão (o responsável familiar), para prova do aceite.
+  assinadoPor   String
+  concedidoEm   DateTime @default(now())
+  revogadoEm    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  familia Familia @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, familiaId])
+  @@map("consentimento_dado")
+}
+
+// ───────────────────────── Fila de programas ─────────────────────────
+
+enum SituacaoPrograma {
+  RASCUNHO
+  INSCRICOES_ABERTAS
+  INSCRICOES_ENCERRADAS
+  EM_EXECUCAO
+  ENCERRADO
+}
+
+enum SituacaoVersaoCriterio {
+  RASCUNHO
+  PUBLICADA
+  SUBSTITUIDA
+}
+
+enum SituacaoInscricao {
+  EM_ANALISE
+  PENDENTE
+  APTA
+  EM_RECURSO
+  CONVOCADA
+  CONTEMPLADA
+  INDEFERIDA
+  INELEGIVEL
+  DESISTENTE
+  CANCELADA
+}
+
+enum MotivoCalculo {
+  INSCRICAO
+  ATUALIZACAO_FICHA
+  RECALCULO_LOTE
+  RECURSO
+  RECADASTRAMENTO
+}
+
+enum DesfechoConvocacao {
+  COMPARECEU
+  NAO_COMPARECEU
+  RECUSOU
+  INELEGIVEL
+}
+
+enum DecisaoRecurso {
+  DEFERIDO
+  INDEFERIDO
+  PARCIALMENTE_DEFERIDO
+}
+
+enum SituacaoPendencia {
+  ABERTA
+  RESOLVIDA
+  DISPENSADA
+  VENCIDA
+}
+
+model ProgramaHabitacional {
+  id             String           @id @default(cuid())
+  tenantId       String
+  nome           String
+  slug           String
+  fonteRecurso   String
+  vagas          Int
+  inscricaoInicio DateTime
+  inscricaoFim   DateTime
+  regulamentoKey String?
+  situacao       SituacaoPrograma @default(RASCUNHO)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  versoes    VersaoCriterio[]
+  inscricoes InscricaoFila[]
+  rankings   RankingPublicacao[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, situacao])
+  @@map("programa_habitacional")
+}
+
+/// Conjunto de critérios de um programa. Enquanto RASCUNHO, `definicoes` é editável; publicada,
+/// vira imutável — mudar peso exige nova versão (spec §8). O snapshot aponta para a versão que
+/// valia, e é por isso que recalcular não reescreve o passado.
+model VersaoCriterio {
+  id          String                 @id @default(cuid())
+  tenantId    String
+  programaId  String
+  versao      Int
+  situacao    SituacaoVersaoCriterio @default(RASCUNHO)
+  /// Array de DefinicaoCriterio (contrato em @habita/shared/habitacao).
+  definicoes  Json
+  publicadoEm DateTime?
+  publicadoPor String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  programa  ProgramaHabitacional @relation(fields: [programaId], references: [id], onDelete: Cascade)
+  snapshots PontuacaoSnapshot[]
+  rankings  RankingPublicacao[]
+
+  @@unique([programaId, versao])
+  @@index([tenantId, programaId, situacao])
+  @@map("versao_criterio")
+}
+
+model InscricaoFila {
+  id         String            @id @default(cuid())
+  tenantId   String
+  programaId String
+  familiaId  String
+  protocolo  String
+  situacao   SituacaoInscricao @default(EM_ANALISE)
+  inscritaEm DateTime          @default(now())
+  /// Motivo do último desfecho negativo (recusa, inelegibilidade, cancelamento) — obrigatório
+  /// no caso de uso que o registra, para que a fila nunca perca alguém em silêncio.
+  motivoSituacao String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  programa    ProgramaHabitacional @relation(fields: [programaId], references: [id], onDelete: Restrict)
+  familia     Familia              @relation(fields: [familiaId], references: [id], onDelete: Restrict)
+  snapshots   PontuacaoSnapshot[]
+  convocacoes Convocacao[]
+  recursos    Recurso[]
+  pendencias  Pendencia[]
+  itensRanking RankingItem[]
+
+  @@unique([tenantId, protocolo])
+  @@unique([programaId, familiaId])
+  @@index([tenantId, programaId, situacao])
+  @@map("inscricao_fila")
+}
+
+/// Nota congelada. Tabela própria — e não coluna em InscricaoFila — porque recalcular não pode
+/// apagar o que valia antes (spec §7).
+model PontuacaoSnapshot {
+  id               String        @id @default(cuid())
+  tenantId         String
+  inscricaoId      String
+  versaoCriterioId String
+  total            Decimal       @db.Decimal(6, 1)
+  totalMaximo      Decimal       @db.Decimal(6, 1)
+  /// Itens do cálculo (código, pontos, peso, base, observação) — a nota explicada linha a linha.
+  itens            Json
+  /// Fatos usados no cálculo, congelados: a ficha muda, o snapshot não.
+  fatos            Json
+  motivo           MotivoCalculo
+  vigente          Boolean       @default(true)
+  calculadoEm      DateTime      @default(now())
+  calculadoPor     String
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  inscricao      InscricaoFila  @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  versaoCriterio VersaoCriterio @relation(fields: [versaoCriterioId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, inscricaoId, vigente])
+  @@index([tenantId, calculadoEm])
+  @@map("pontuacao_snapshot")
+}
+
+/// Ranking publicado: o ato formal que abre prazo de recurso. Congelado em itens próprios para
+/// que a lista de hoje continue existindo depois do próximo recálculo.
+model RankingPublicacao {
+  id               String   @id @default(cuid())
+  tenantId         String
+  programaId       String
+  versaoCriterioId String
+  publicadoEm      DateTime @default(now())
+  publicadoPor     String
+  prazoRecursoAte  DateTime
+  pdfKey           String?
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  programa       ProgramaHabitacional @relation(fields: [programaId], references: [id], onDelete: Cascade)
+  versaoCriterio VersaoCriterio       @relation(fields: [versaoCriterioId], references: [id], onDelete: Restrict)
+  itens          RankingItem[]
+
+  @@index([tenantId, programaId, publicadoEm])
+  @@map("ranking_publicacao")
+}
+
+/// Linha do ranking público. Identifica pelo protocolo, nunca por nome ou CPF: numa cidade
+/// pequena, nome e nota juntos revelam a condição social de vizinhos identificáveis (spec §8).
+model RankingItem {
+  id            String  @id @default(cuid())
+  tenantId      String
+  publicacaoId  String
+  inscricaoId   String
+  posicao       Int
+  protocolo     String
+  pontuacao     Decimal @db.Decimal(6, 1)
+
+  createdAt DateTime @default(now())
+
+  publicacao RankingPublicacao @relation(fields: [publicacaoId], references: [id], onDelete: Cascade)
+  inscricao  InscricaoFila     @relation(fields: [inscricaoId], references: [id], onDelete: Restrict)
+
+  @@unique([publicacaoId, inscricaoId])
+  @@unique([publicacaoId, posicao])
+  @@index([tenantId, publicacaoId])
+  @@map("ranking_item")
+}
+
+/// Convocação. `foraDeOrdem` é a exceção auditada da §9: só entra com capacidade concedida,
+/// motivo obrigatório e publicidade junto ao ranking — e aparece num contador no painel do
+/// gestor, que é o que faz a própria prefeitura controlar a porta que abriu.
+model Convocacao {
+  id              String              @id @default(cuid())
+  tenantId        String
+  inscricaoId     String
+  numeroOficio    String
+  emitidaEm       DateTime            @default(now())
+  emitidaPor      String
+  prazoComparecimentoAte DateTime
+  oficioKey       String?
+
+  foraDeOrdem     Boolean             @default(false)
+  motivoExcecao   String?
+  autorizadaPor   String?
+
+  desfecho        DesfechoConvocacao?
+  desfechoEm      DateTime?
+  desfechoPor     String?
+  motivoDesfecho  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  inscricao InscricaoFila @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, numeroOficio])
+  @@index([tenantId, inscricaoId])
+  @@index([tenantId, foraDeOrdem])
+  @@map("convocacao")
+}
+
+/// Recurso como entidade de primeira classe (spec §8): sem canal formal de contestação, o
+/// indeferimento é vício de devido processo — e o caminho mais curto para a Justiça.
+model Recurso {
+  id             String          @id @default(cuid())
+  tenantId       String
+  inscricaoId    String
+  protocolo      String
+  motivo         String
+  apresentadoEm  DateTime        @default(now())
+  /// Quem protocolou: a própria família pela central, ou o servidor no balcão.
+  apresentadoPor String
+  prazoRespostaAte DateTime
+  decisao        DecisaoRecurso?
+  fundamentacao  String?
+  decididoEm     DateTime?
+  decididoPor    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  inscricao InscricaoFila @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, inscricaoId])
+  @@index([tenantId, prazoRespostaAte])
+  @@map("recurso")
+}
+
+/// Pendência documental com prazo. Enquanto aberta, a inscrição fica suspensa da fila.
+model Pendencia {
+  id          String            @id @default(cuid())
+  tenantId    String
+  inscricaoId String
+  tipo        String
+  descricao   String
+  prazoAte    DateTime
+  situacao    SituacaoPendencia @default(ABERTA)
+  resolvidaEm DateTime?
+  resolvidaPor String?
+  arquivoKey  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  inscricao InscricaoFila @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, inscricaoId, situacao])
+  @@index([tenantId, prazoAte])
+  @@map("pendencia")
+}

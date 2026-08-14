@@ -1,0 +1,38 @@
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import type { Request } from 'express';
+import { Observable, from, lastValueFrom } from 'rxjs';
+import type { AuthUser } from '../auth/jwt.strategy';
+import { PrismaService } from '../prisma/prisma.service';
+
+/**
+ * Abre a transação com contexto (SET LOCAL) a cada requisição autenticada, fixando o escopo da
+ * RLS. Rota pública segue sem contexto — e, sem contexto, nenhuma policy libera nada.
+ */
+@Injectable()
+export class TenantContextInterceptor implements NestInterceptor {
+  constructor(private readonly prisma: PrismaService) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const req = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
+    const user = req.user;
+    if (!user) {
+      return next.handle();
+    }
+
+    return from(
+      this.prisma.runWithContext(
+        {
+          tenantId: user.tenantId ?? undefined,
+          userId: user.userId,
+          userNome: user.nome,
+          perfil: user.perfil,
+          capacidades: user.capacidades,
+          isPlatform: user.esfera === 'PLATAFORMA',
+          familiaId: user.esfera === 'MUNICIPE' ? user.familiaId : undefined,
+          ip: req.ip,
+        },
+        () => lastValueFrom(next.handle()),
+      ),
+    );
+  }
+}
