@@ -8,12 +8,31 @@ import {
 
 const AGORA = new Date('2026-08-14T12:00:00.000Z');
 
-function exigencia(sobrescrita: Partial<ExigenciaComDocumento> = {}): ExigenciaComDocumento {
+type DocumentoConferido = NonNullable<ExigenciaComDocumento['documento']>;
+
+/**
+ * Dados do arquivo não entram em nenhuma regra de conferência — só existem para o visualizador
+ * abrir o papel. Ficam aqui como padrão para o teste falar do que importa: prazo e situação.
+ */
+const ARQUIVO = {
+  arquivoKey: 'tenant/documentos/comprovante.pdf',
+  nomeArquivo: 'comprovante.pdf',
+  mimeType: 'application/pdf',
+} as const;
+
+function exigencia(
+  sobrescrita: Omit<Partial<ExigenciaComDocumento>, 'documento'> & {
+    documento?: Partial<DocumentoConferido> & Pick<DocumentoConferido, 'id' | 'protocolo' | 'situacao'>;
+  } = {},
+): ExigenciaComDocumento {
+  const { documento, ...resto } = sobrescrita;
+
   return {
     tipoCodigo: 'COMPROVANTE_RENDA',
     tipoNome: 'Comprovante de renda',
     obrigatorio: true,
-    ...sobrescrita,
+    ...resto,
+    documento: documento ? { ...ARQUIVO, ...documento } : undefined,
   };
 }
 

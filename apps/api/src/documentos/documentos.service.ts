@@ -314,6 +314,7 @@ export class DocumentosService {
             protocolo: item.documento.protocolo,
             nomeArquivo: item.documento.nomeArquivo,
             arquivoKey: item.documento.arquivoKey,
+            mimeType: item.documento.mimeType,
             situacao: item.documento.situacao,
             validoAte: item.documento.validoAte?.toISOString() ?? null,
           }
@@ -386,6 +387,9 @@ function paraDominio(documento: {
   situacao: SituacaoDocumento;
   validoAte: Date | null;
   motivoRecusa: string | null;
+  arquivoKey: string;
+  nomeArquivo: string;
+  mimeType: string;
 }): habitacao.ExigenciaComDocumento['documento'] {
   return {
     id: documento.id,
@@ -393,5 +397,8 @@ function paraDominio(documento: {
     situacao: documento.situacao as 'RECEBIDO' | 'CONFERIDO' | 'RECUSADO' | 'SUBSTITUIDO',
     validoAte: documento.validoAte?.toISOString(),
     motivoRecusa: documento.motivoRecusa ?? undefined,
+    arquivoKey: documento.arquivoKey,
+    nomeArquivo: documento.nomeArquivo,
+    mimeType: documento.mimeType,
   };
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { conferirDocumento, juntarDocumento } from '@/app/actions/documentos';
 import { Aviso } from '@/components/ui/formulario';
+import { VisualizadorDocumento } from '@/components/ui/visualizador-documento';
 
 export interface ItemDocumental {
   tipoCodigo: string;
@@ -19,6 +20,9 @@ export interface ItemDocumental {
     situacao: string;
     validoAte?: string;
     motivoRecusa?: string;
+    arquivoKey: string;
+    nomeArquivo: string;
+    mimeType: string;
   };
 }
 
@@ -66,8 +70,14 @@ export function PainelDocumental({
 }) {
   const [erro, setErro] = useState<string>();
   const [recusando, setRecusando] = useState<string>();
+  const [abertoEm, setAbertoEm] = useState<number>();
   const [pendente, iniciar] = useTransition();
   const router = useRouter();
+
+  // Só o que tem papel anexado entra na navegação do visualizador — assim o servidor percorre a
+  // documentação inteira sem voltar à lista a cada peça.
+  const anexados = useMemo(() => itens.filter((item) => item.documento), [itens]);
+  const emFoco = abertoEm === undefined ? undefined : anexados[abertoEm];
 
   const rodar = (acao: () => Promise<{ erro?: string }>) =>
     iniciar(async () => {
@@ -153,7 +163,13 @@ export function PainelDocumental({
                   )}
                   {item.documento && (
                     <p className="tabular mt-0.5 text-xs text-texto-suave">
-                      {item.documento.protocolo}
+                      <button
+                        type="button"
+                        onClick={() => setAbertoEm(anexados.indexOf(item))}
+                        className="font-semibold text-primary underline-offset-2 hover:underline"
+                      >
+                        {item.documento.protocolo}
+                      </button>
                       {item.documento.validoAte &&
                         ` · válido até ${new Date(item.documento.validoAte).toLocaleDateString('pt-BR')}`}
                     </p>
@@ -216,6 +232,15 @@ export function PainelDocumental({
 
               {podeConferir && item.estado === 'RECEBIDO' && item.documentoId && (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {/* Abrir vem antes de aceitar: conferir sem olhar o papel é o erro que a
+                      conferência existe para impedir. */}
+                  <button
+                    type="button"
+                    onClick={() => setAbertoEm(anexados.indexOf(item))}
+                    className="rounded-md border border-borda px-3 py-1 text-xs font-semibold text-institucional"
+                  >
+                    Abrir documento
+                  </button>
                   <button
                     type="button"
                     disabled={pendente}
@@ -279,6 +304,50 @@ export function PainelDocumental({
           Nenhuma exigência definida. Configure a lista no programa.
         </p>
       )}
+
+      <VisualizadorDocumento
+        aberto={emFoco !== undefined}
+        aoFechar={() => setAbertoEm(undefined)}
+        arquivo={
+          emFoco?.documento
+            ? {
+                arquivoKey: emFoco.documento.arquivoKey,
+                nome: emFoco.documento.nomeArquivo,
+                mimeType: emFoco.documento.mimeType,
+              }
+            : null
+        }
+        titulo={
+          emFoco && abertoEm !== undefined ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <button
+                type="button"
+                aria-label="Documento anterior"
+                disabled={abertoEm === 0}
+                onClick={() => setAbertoEm(abertoEm - 1)}
+                className="shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold text-texto-suave hover:bg-background disabled:opacity-30"
+              >
+                Anterior
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-texto">{emFoco.tipoNome}</p>
+                <p className="tabular truncate text-xs text-texto-suave">
+                  {emFoco.documento?.protocolo} · documento {abertoEm + 1} de {anexados.length}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Próximo documento"
+                disabled={abertoEm >= anexados.length - 1}
+                onClick={() => setAbertoEm(abertoEm + 1)}
+                className="shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold text-texto-suave hover:bg-background disabled:opacity-30"
+              >
+                Próximo
+              </button>
+            </div>
+          ) : undefined
+        }
+      />
     </section>
   );
 }

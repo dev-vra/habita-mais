@@ -23,6 +23,10 @@ export interface ExigenciaComDocumento {
     situacao: 'RECEBIDO' | 'CONFERIDO' | 'RECUSADO' | 'SUBSTITUIDO';
     validoAte?: string;
     motivoRecusa?: string;
+    /** Onde o arquivo está — o suficiente para o visualizador abrir pelo BFF. */
+    arquivoKey: string;
+    nomeArquivo: string;
+    mimeType: string;
   };
 }
 

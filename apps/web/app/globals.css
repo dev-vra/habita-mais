@@ -48,6 +48,24 @@
 
   --font-sans: 'Rawline', 'Raleway', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Raleway', 'Rawline', ui-sans-serif, system-ui, sans-serif;
+
+  /* Entrada do painel lateral de documento. Curta de propósito: o servidor abre e fecha dezenas
+     de documentos numa conferência, e animação longa vira espera. */
+  --animate-entrada-lateral: entrada-lateral 180ms ease-out;
+  --animate-surgir: surgir 150ms ease-out;
+}
+
+@keyframes entrada-lateral {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+  }
 }
 
 @layer base {
