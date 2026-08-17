@@ -20,7 +20,8 @@ export type SerieProtocoloDominio =
   | 'EMP'
   | 'MED'
   | 'UNI'
-  | 'VIS';
+  | 'VIS'
+  | 'RET';
 
 /** Registrar é parte do ato, não efeito colateral opcional. */
 export interface TrilhaAuditoria {

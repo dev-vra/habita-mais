@@ -22,6 +22,8 @@ export const SERIES_PROTOCOLO = {
   UNI: 'Unidade habitacional',
   /// Visita de acompanhamento pós-entrega.
   VIS: 'Visita de acompanhamento',
+  /// Processo de retomada de unidade.
+  RET: 'Processo de retomada',
 } as const;
 
 export type SerieProtocolo = keyof typeof SERIES_PROTOCOLO;
@@ -29,7 +31,7 @@ export type SerieProtocolo = keyof typeof SERIES_PROTOCOLO;
 const DIGITOS_SEQUENCIAL = 5;
 
 const PADRAO_PROTOCOLO =
-  /^(HAB|AUX|MUT|REA|FIS|OFC|REC|FAM|ENC|DOC|PIL|CNV|EMP|MED|UNI|VIS)-(\d{4})\/(\d{5})$/;
+  /^(HAB|AUX|MUT|REA|FIS|OFC|REC|FAM|ENC|DOC|PIL|CNV|EMP|MED|UNI|VIS|RET)-(\d{4})\/(\d{5})$/;
 
 export interface ProtocoloPartes {
   serie: SerieProtocolo;

@@ -84,6 +84,8 @@ enum SerieProtocolo {
   UNI
   /// Visita de acompanhamento pós-entrega.
   VIS
+  /// Processo de retomada de unidade.
+  RET
 }
 
 /// Tipo do setor — o município nomeia como quiser, mas a integração precisa saber o papel.
@@ -1678,6 +1680,7 @@ model UnidadeHabitacional {
   familia          Familia?                @relation(fields: [familiaId], references: [id], onDelete: Restrict)
   acompanhamentos  AcompanhamentoUnidade[]
   ocorrencias      OcorrenciaUnidade[]
+  casosRetomada    CasoRetomada[]
 
   @@unique([tenantId, protocolo])
   @@unique([empreendimentoId, identificacao])
@@ -1857,9 +1860,127 @@ model OcorrenciaUnidade {
 
   unidade        UnidadeHabitacional    @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
   acompanhamento AcompanhamentoUnidade? @relation(fields: [acompanhamentoId], references: [id], onDelete: SetNull)
+  casos          CasoRetomada[]
 
   @@unique([tenantId, protocolo])
   @@index([tenantId, unidadeId, situacao])
   @@index([tenantId, situacao, prazoRegularizacaoAte])
   @@map("ocorrencia_unidade")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Retomada de unidade (spec §10.5). O ato mais grave do sistema.
+//
+// A modelagem existe para impedir atalho: notificação com forma e comprovante, prazo de defesa,
+// registro da defesa (ou da revelia), e decisão que só nasce fundamentada. É o contraditório do
+// art. 5º LV da Constituição, na forma da Lei 9.784/99 — sem isso, a retomada cai no primeiro
+// exame judicial e a prefeitura perde a casa e o processo.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum FaseRetomada {
+  ABERTO
+  NOTIFICADO
+  EM_DEFESA
+  EM_ANALISE
+  DECIDIDO
+  ENCERRADO
+}
+
+enum FormaNotificacao {
+  PESSOAL
+  AR_CORREIO
+  EDITAL
+}
+
+enum DecisaoRetomada {
+  REGULARIZACAO
+  ACORDO
+  RESCISAO
+  ARQUIVAMENTO
+}
+
+/// Processo administrativo de retomada. Nasce de uma ocorrência apurada e notificada — nunca do
+/// nada, e nunca de uma denúncia solta.
+model CasoRetomada {
+  id           String       @id @default(cuid())
+  tenantId     String
+  unidadeId    String
+  ocorrenciaId String?
+  protocolo    String
+  fase         FaseRetomada @default(ABERTO)
+
+  /// Base legal invocada: cláusula do contrato, artigo da lei municipal, condição do edital.
+  /// Texto livre porque cada município tem a sua — mas obrigatório, porque decisão sem fundamento
+  /// não se sustenta.
+  fundamentacaoLegal String
+  descricao          String
+  abertoEm           DateTime
+
+  notificadoEm        DateTime?
+  formaNotificacao    FormaNotificacao?
+  /// Comprovante da ciência: AR digitalizado, termo assinado ou publicação do edital.
+  comprovanteKey      String?
+  /// Tentativas pessoais ou por AR que não encontraram a família. É o que autoriza o edital.
+  tentativasFrustradas Int              @default(0)
+  prazoDefesaAte      DateTime?
+
+  defesaApresentadaEm DateTime?
+  defesaTeor          String?
+  defesaArquivoKey    String?
+  /// Quem apresentou: o titular, um familiar, um advogado. Importa para a validade do ato.
+  defesaApresentadaPor String?
+
+  decisao            DecisaoRetomada?
+  decididoEm         DateTime?
+  decididoPor        String?
+  /// Por que se decidiu assim, enfrentando o que a defesa alegou. É a peça que o juiz lê.
+  fundamentacaoDecisao String?
+
+  /// Encaminhamento ao Jurídico para a retomada de fato.
+  encaminhamentoId String?
+  /// Pilha documental do caso — o que o Jurídico recebe junto.
+  pilhaId          String?
+
+  encerradoEm     DateTime?
+  motivoEncerramento String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  unidade    UnidadeHabitacional @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  ocorrencia OcorrenciaUnidade?  @relation(fields: [ocorrenciaId], references: [id], onDelete: SetNull)
+  atos       AtoDoCaso[]
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, unidadeId, fase])
+  @@index([tenantId, fase, prazoDefesaAte])
+  @@map("caso_retomada")
+}
+
+/// Cada movimento do caso, em ordem. A trilha de auditoria já registra tudo, mas ela é do sistema;
+/// esta é a linha do tempo que o processo mostra à família e ao juiz, em português.
+model AtoDoCaso {
+  id       String   @id @default(cuid())
+  tenantId String
+  casoId   String
+  ordem    Int
+  ocorridoEm DateTime
+  titulo   String
+  detalhe  String?
+  /// Quem praticou o ato — servidor, família, ou o próprio sistema em ato de prazo.
+  autor    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  caso CasoRetomada @relation(fields: [casoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, casoId, ordem])
+  @@map("ato_do_caso")
 }

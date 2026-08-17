@@ -99,6 +99,7 @@ export default async function LayoutPainel({ children }: { children: React.React
                   rotulo="Pós-entrega"
                   contador={resumo.visitasVencidas}
                 />
+                <ItemNavegacao href="/retomada" rotulo="Retomada" />
               </Grupo>
 
               <Grupo titulo="Gestão">

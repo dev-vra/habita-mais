@@ -371,6 +371,28 @@ export const SITUACAO_OCORRENCIA_USO = {
   ENCAMINHADA_JURIDICO: 'No Jurídico',
 } as const;
 
+export const FASE_RETOMADA = {
+  ABERTO: 'Aberto',
+  NOTIFICADO: 'Notificado',
+  EM_DEFESA: 'Defesa apresentada',
+  EM_ANALISE: 'Em análise',
+  DECIDIDO: 'Decidido',
+  ENCERRADO: 'Encerrado',
+} as const;
+
+export const FORMA_NOTIFICACAO = {
+  PESSOAL: 'Pessoalmente',
+  AR_CORREIO: 'AR pelos Correios',
+  EDITAL: 'Por edital',
+} as const;
+
+export const DECISAO_RETOMADA = {
+  REGULARIZACAO: 'Regularização',
+  ACORDO: 'Acordo',
+  RESCISAO: 'Rescisão',
+  ARQUIVAMENTO: 'Arquivamento',
+} as const;
+
 export const rotuloSexo = rotulador(SEXO);
 export const rotuloEstadoCivil = rotulador(ESTADO_CIVIL);
 export const rotuloRegimeBens = rotulador(REGIME_BENS);
@@ -412,6 +434,10 @@ export const rotuloTipoOcorrencia = rotulador(TIPO_OCORRENCIA_USO);
 export const rotuloGravidade = rotulador(GRAVIDADE_OCORRENCIA);
 export const rotuloOrigemOcorrencia = rotulador(ORIGEM_OCORRENCIA);
 export const rotuloSituacaoOcorrencia = rotulador(SITUACAO_OCORRENCIA_USO);
+export const rotuloFaseRetomada = rotulador(FASE_RETOMADA);
+export const rotuloFormaNotificacao = rotulador(FORMA_NOTIFICACAO);
+export const rotuloDecisaoRetomada = rotulador(DECISAO_RETOMADA);
+
 
 
 

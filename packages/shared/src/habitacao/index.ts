@@ -11,3 +11,4 @@ export * from './diagnostico.js';
 export * from './documental.js';
 export * from './producao.js';
 export * from './pos-entrega.js';
+export * from './retomada.js';

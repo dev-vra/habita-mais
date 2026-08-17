@@ -15,7 +15,7 @@ export function CampoArquivo({
 }: {
   nome: string;
   rotulo: string;
-  categoria: 'laudos' | 'visitas' | 'pendencias' | 'regulamentos';
+  categoria: 'laudos' | 'visitas' | 'pendencias' | 'regulamentos' | 'oficios';
   ajuda?: string;
 }) {
   const [chave, setChave] = useState('');

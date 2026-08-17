@@ -28,6 +28,7 @@ import { PdfModule } from './pdf/pdf.module';
 import { PosEntregaModule } from './pos-entrega/pos-entrega.module';
 import { ProducaoModule } from './producao/producao.module';
 import { ProgramasModule } from './programas/programas.module';
+import { RetomadaModule } from './retomada/retomada.module';
 import { SetoresModule } from './setores/setores.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -72,6 +73,7 @@ import { StorageModule } from './storage/storage.module';
     PosEntregaModule,
     ProducaoModule,
     ProgramasModule,
+    RetomadaModule,
     SetoresModule,
     StorageModule,
   ],
