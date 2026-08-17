@@ -75,9 +75,10 @@ export default async function PaginaUnidadeAcompanhamento({
   params: Promise<{ unidadeId: string }>;
 }) {
   const { unidadeId } = await params;
-  const [historico, sessao] = await Promise.all([
+  const [historico, sessao, assistente] = await Promise.all([
     apiFetch<Historico>(`/pos-entrega/unidades/${unidadeId}`),
     sessaoAtual(),
+    apiFetch<{ disponivel: boolean }>('/assistente/estado'),
   ]);
 
   const caminho = `/acompanhamento/${unidadeId}`;
@@ -152,6 +153,9 @@ export default async function PaginaUnidadeAcompanhamento({
             caminho={caminho}
             tecnicoPadrao={sessao?.nome ?? ''}
             primeiraVisita={historico.visitas.length === 0}
+            unidade={historico.unidade.identificacao}
+            familia={historico.unidade.familia?.responsavel ?? 'não informada'}
+            assistenteDisponivel={assistente.disponivel}
           />
         </section>
       )}

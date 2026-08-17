@@ -1984,3 +1984,62 @@ model AtoDoCaso {
   @@index([tenantId, casoId, ordem])
   @@map("ato_do_caso")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Assistente de IA (spec §12).
+//
+// A regra é uma só: a IA propõe, a pessoa assina, e o sistema registra quem assinou. Este modelo
+// é a parte do "registra": guarda o que saiu do produto (já mascarado), o que o modelo devolveu, e
+// o que a pessoa fez com aquilo. Sem esse registro, um parecer social gerado por máquina seria
+// indistinguível de um escrito à mão — e a diferença importa para quem lê o processo depois.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UsoIA {
+  RASCUNHO_PARECER_VISITA
+  RASCUNHO_PARECER_SOCIAL
+  RASCUNHO_FUNDAMENTACAO_RECURSO
+  RESUMO_ENCAMINHAMENTO
+  EXTRACAO_DOCUMENTO
+}
+
+enum DesfechoSugestao {
+  PROPOSTA
+  ACEITA
+  EDITADA
+  REJEITADA
+}
+
+model SugestaoIA {
+  id       String @id @default(cuid())
+  tenantId String
+  uso      UsoIA
+
+  /// A que o rascunho se refere — família, visita, recurso, encaminhamento, documento.
+  entidade   String
+  entidadeId String
+
+  /// O que efetivamente saiu do produto, depois da máscara. É o que a LGPD pergunta.
+  entradaEnviada String
+  /// O que o modelo devolveu, sem edição.
+  respostaBruta  String
+  modelo         String
+
+  desfecho DesfechoSugestao @default(PROPOSTA)
+  /// Texto que a pessoa salvou de fato. Diferente da resposta bruta quando ela editou.
+  textoFinal String?
+  decididoEm DateTime?
+
+  /// Quem pediu e quem respondeu pelo resultado. Mesmo servidor, quase sempre — mas o registro
+  /// não presume.
+  solicitadoPor String
+  decididoPor   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  @@index([tenantId, uso, createdAt])
+  @@index([tenantId, entidade, entidadeId])
+  @@map("sugestao_ia")
+}

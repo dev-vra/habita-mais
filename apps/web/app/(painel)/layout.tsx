@@ -125,6 +125,7 @@ export default async function LayoutPainel({ children }: { children: React.React
                 <>
                   <ItemNavegacao href="/administracao/setores" rotulo="Setores" />
                   <ItemNavegacao href="/administracao/parametros" rotulo="Parâmetros" />
+                  <ItemNavegacao href="/administracao/assistente" rotulo="Assistente de IA" />
                 </>
               )}
             </Grupo>

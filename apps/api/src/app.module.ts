@@ -8,6 +8,7 @@ import type { Request } from 'express';
 import { LoggerModule } from 'nestjs-pino';
 import { AdministracaoModule } from './administracao/administracao.module';
 import { AuditModule } from './audit/audit.module';
+import { AssistenteModule } from './assistente/assistente.module';
 import { AuthModule } from './auth/auth.module';
 import { CapacidadeGuard } from './auth/capacidade.guard';
 import { EsferaGuard } from './auth/esfera.guard';
@@ -63,6 +64,7 @@ import { StorageModule } from './storage/storage.module';
     CommonModule,
     AuthModule,
     AdministracaoModule,
+    AssistenteModule,
     DocumentosModule,
     FamiliasModule,
     FilaModule,

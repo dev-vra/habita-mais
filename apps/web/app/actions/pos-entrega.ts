@@ -82,3 +82,40 @@ export async function moverOcorrencia(
     caminho,
   );
 }
+
+export async function rascunharParecerVisita(dados: {
+  acompanhamentoId: string;
+  unidade: string;
+  familia: string;
+  residenciaConfirmada: boolean;
+  quemReside?: string;
+  moradoresEncontrados?: number;
+  eixos: EixoAvaliado[];
+  anotacoes?: string;
+}): Promise<Resultado<{ sugestaoId: string; texto: string; modelo: string }>> {
+  return executar(() =>
+    apiFetch<{ sugestaoId: string; texto: string; modelo: string }>(
+      '/assistente/parecer-visita',
+      { method: 'POST', body: JSON.stringify(dados) },
+    ),
+  );
+}
+
+/**
+ * Fecha o ciclo do rascunho: o que a pessoa fez com o texto proposto.
+ *
+ * Sem esta metade, o registro de que a máquina escreveu algo não serve nem para auditoria nem para
+ * saber se o assistente ajuda de fato.
+ */
+export async function registrarDesfechoSugestao(
+  sugestaoId: string,
+  desfecho: 'ACEITA' | 'EDITADA' | 'REJEITADA',
+  textoFinal?: string,
+): Promise<Resultado> {
+  return executar(() =>
+    apiFetch(`/assistente/sugestoes/${sugestaoId}/desfecho`, {
+      method: 'POST',
+      body: JSON.stringify({ desfecho, textoFinal }),
+    }),
+  );
+}

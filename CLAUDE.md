@@ -42,6 +42,10 @@ cobre só o que muda a forma de trabalhar aqui dentro.
 - **Salário mínimo** é parâmetro por prefeitura (`Tenant.parametros.salarioMinimo`).
 - **Tipografia**: caderno de identidade §3 (Rawline/Raleway), não a serifada da spec §11.
 
+8. **IA propõe, pessoa assina.** Uso novo de IA entra em `packages/shared/src/habitacao/assistente.ts`
+   (lista fechada), passa pela máscara antes de sair e grava `SugestaoIA` com o desfecho. Pontuação,
+   fila, contemplação, benefício e retomada continuam determinísticas — sem exceção.
+
 ## Pendências conhecidas
 
 - Fontes Rawline/Raleway não estão embarcadas; a interface cai no fallback do sistema. Mesma dívida

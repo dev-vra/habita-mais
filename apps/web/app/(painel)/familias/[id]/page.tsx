@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
 import { EncaminharFamilia } from '@/components/domain/encaminhar-familia';
+import { PainelConferencia, type ConferenciaFicha } from '@/components/domain/painel-conferencia';
 import { PainelDiagnostico, type ItemDiagnostico } from '@/components/domain/painel-diagnostico';
 import { InscreverEmPrograma } from '@/components/domain/inscrever-em-programa';
 import { apiFetch } from '@/lib/api/server';
@@ -49,10 +50,11 @@ interface Familia360 {
  */
 export default async function PaginaFamilia({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [familia, programas, setores] = await Promise.all([
+  const [familia, programas, setores, conferencia] = await Promise.all([
     apiFetch<Familia360>(`/familias/${id}`),
     apiFetch<{ id: string; nome: string; situacao: string }[]>('/programas'),
     apiFetch<{ id: string; nome: string; sigla: string; tipo: string; ativo: boolean }[]>('/setores'),
+    apiFetch<ConferenciaFicha>(`/assistente/conferencia/${id}`),
   ]);
   const { ficha } = familia;
   const jaInscrita = new Set(familia.inscricoes.map((inscricao) => inscricao.programa));
@@ -103,6 +105,10 @@ export default async function PaginaFamilia({ params }: { params: Promise<{ id: 
             SEM_PONTUACAO: familia.inscricoes[0] ? `/inscricoes/${familia.inscricoes[0].id}` : '/familias',
           }}
         />
+      </div>
+
+      <div className="mt-6">
+        <PainelConferencia conferencia={conferencia} hrefFicha={`/familias/${familia.id}/ficha`} />
       </div>
 
       {ficha?.vencida && (

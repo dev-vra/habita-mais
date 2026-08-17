@@ -12,3 +12,5 @@ export * from './documental.js';
 export * from './producao.js';
 export * from './pos-entrega.js';
 export * from './retomada.js';
+export * from './inconsistencias.js';
+export * from './assistente.js';
