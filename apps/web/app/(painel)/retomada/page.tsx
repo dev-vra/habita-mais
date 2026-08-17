@@ -1,7 +1,14 @@
-import Link from 'next/link';
+import { Gavel } from 'lucide-react';
 import { habitacao } from '@habita/shared';
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
+import { BarraFiltros } from '@/components/ui/barra-filtros';
+import { CartaoKpi, GradeKpi } from '@/components/ui/cartao-kpi';
+import { EstadoVazio } from '@/components/ui/estado-vazio';
+import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
+import { CelulaPrincipal, Tabela } from '@/components/ui/tabela';
 import { apiFetch } from '@/lib/api/server';
 import { data } from '@/lib/formato';
+import type { TomStatus } from '@/lib/status';
 
 interface CasoLista {
   id: string;
@@ -28,14 +35,28 @@ interface CasoLista {
   impedimentos: string[];
 }
 
-const TOM_FASE: Record<habitacao.FaseRetomada, string> = {
-  ABERTO: 'bg-background text-texto-suave',
-  NOTIFICADO: 'bg-institucional/10 text-institucional',
-  EM_DEFESA: 'bg-warning/15 text-warning-text',
-  EM_ANALISE: 'bg-warning/15 text-warning-text',
-  DECIDIDO: 'bg-success/10 text-success',
-  ENCERRADO: 'bg-background text-texto-suave',
+const TOM_FASE: Record<habitacao.FaseRetomada, TomStatus> = {
+  ABERTO: 'neutro',
+  NOTIFICADO: 'institucional',
+  EM_DEFESA: 'atencao',
+  EM_ANALISE: 'atencao',
+  DECIDIDO: 'sucesso',
+  ENCERRADO: 'neutro',
 };
+
+const CHIPS = [
+  { valor: '', rotulo: 'Todos' },
+  { valor: 'NOTIFICADO', rotulo: 'Notificado' },
+  { valor: 'EM_DEFESA', rotulo: 'Em defesa' },
+  { valor: 'DECIDIDO', rotulo: 'Decidido' },
+];
+
+const COLUNAS = [
+  { chave: 'caso', rotulo: 'Caso' },
+  { chave: 'unidade', rotulo: 'Unidade' },
+  { chave: 'situacao', rotulo: 'Situação', largura: 'minmax(0,140px)' },
+  { chave: 'etapa', rotulo: 'Etapa desde', largura: 'minmax(130px,auto)', direita: true },
+];
 
 /**
  * Processos de retomada.
@@ -46,137 +67,146 @@ const TOM_FASE: Record<habitacao.FaseRetomada, string> = {
 export default async function PaginaRetomada({
   searchParams,
 }: {
-  searchParams: Promise<{ encerrados?: string }>;
+  searchParams: Promise<{ encerrados?: string; situacao?: string; busca?: string }>;
 }) {
-  const { encerrados } = await searchParams;
+  const { encerrados, situacao, busca } = await searchParams;
   const mostrarEncerrados = encerrados === 'true';
 
   const casos = await apiFetch<CasoLista[]>(
     `/retomada/casos${mostrarEncerrados ? '?encerrados=true' : ''}`,
   );
 
+  const filtrados = casos
+    .filter((caso) => !situacao || caso.fase === situacao)
+    .filter((caso) =>
+      !busca
+        ? true
+        : `${caso.protocolo} ${caso.unidade.identificacao} ${caso.unidade.familia?.responsavel ?? ''} ${caso.descricao}`
+            .toLowerCase()
+            .includes(busca.toLowerCase()),
+    );
+
+  const emDefesa = casos.filter((caso) => caso.fase === 'EM_DEFESA').length;
+  const aDecidir = casos.filter((caso) => caso.podeDecidir).length;
+
   return (
-    <div className="mx-auto max-w-6xl">
-      <p className="text-sm text-texto-suave">Início › Retomada</p>
-      <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-institucional">
-            Processos de retomada
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-texto-suave">
-            O ato mais grave do sistema. Nenhuma decisão sai sem notificação válida, prazo de defesa
-            cumprido e fundamentação — é o contraditório do art. 5º LV da Constituição.
-          </p>
+    <>
+      <CabecalhoTela
+        trilha={[{ rotulo: 'Início', href: '/painel' }, { rotulo: 'Retomada' }]}
+        titulo="Processos de retomada"
+        subtitulo="O ato mais grave do sistema. Nenhuma decisão sai sem notificação válida, prazo de defesa cumprido e fundamentação — é o contraditório do art. 5º LV da Constituição."
+      />
+
+      <CorpoTela>
+        <GradeKpi>
+          <CartaoKpi rotulo="Em andamento" valor={casos.length} nota="processos abertos" indice={0} />
+          <CartaoKpi
+            rotulo="Em prazo de defesa"
+            valor={emDefesa}
+            nota="decidir agora anula o processo"
+            alerta={emDefesa > 0}
+            indice={1}
+          />
+          <CartaoKpi
+            rotulo="Prontos para decisão"
+            valor={aDecidir}
+            nota="contraditório cumprido"
+            proporcao={casos.length > 0 ? aDecidir / casos.length : 0}
+            indice={2}
+          />
+        </GradeKpi>
+
+        <div className="mt-7">
+          <BarraFiltros
+            placeholder="Buscar por protocolo, unidade ou mutuário"
+            chips={CHIPS}
+            acessorio={
+              <a
+                href={mostrarEncerrados ? '/retomada' : '/retomada?encerrados=true'}
+                className="flex h-9 items-center rounded-md border border-borda bg-surface px-3.5 text-[12.5px] font-bold text-institucional transition hover:bg-background"
+              >
+                {mostrarEncerrados ? 'Ver só em andamento' : 'Incluir encerrados'}
+              </a>
+            }
+          />
         </div>
-        <Link
-          href={mostrarEncerrados ? '/retomada' : '/retomada?encerrados=true'}
-          className="text-sm font-semibold text-primary hover:underline"
-        >
-          {mostrarEncerrados ? 'Ver só os em andamento' : 'Incluir encerrados'}
-        </Link>
-      </div>
 
-      {casos.length === 0 ? (
-        <p className="mt-8 rounded-lg border border-dashed border-borda bg-surface p-8 text-center text-sm text-texto-suave">
-          Nenhum processo de retomada. Eles nascem de uma ocorrência apurada e notificada, na página
-          da unidade — nunca do nada.
-        </p>
-      ) : (
-        <ul className="mt-6 space-y-3">
-          {casos.map((caso) => (
-            <li key={caso.id} className="rounded-lg border border-borda bg-surface p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <Link
-                    href={`/retomada/${caso.id}`}
-                    className="font-display text-lg font-bold text-institucional hover:underline"
-                  >
-                    {caso.protocolo}
-                  </Link>
-                  <p className="text-sm text-texto">
-                    {caso.unidade.empreendimento.nome} · unidade {caso.unidade.identificacao}
+        <div className="mt-3.5">
+          <Tabela
+            rotulo="Processos de retomada"
+            colunas={COLUNAS}
+            linhas={filtrados.map((caso) => ({
+              id: caso.id,
+              href: `/retomada/${caso.id}`,
+              celulas: [
+                <CelulaPrincipal
+                  key="caso"
+                  titulo={caso.protocolo}
+                  apoio={
+                    caso.ocorrencia
+                      ? `${caso.descricao} · origem ${caso.ocorrencia.protocolo}`
+                      : caso.descricao
+                  }
+                  href={`/retomada/${caso.id}`}
+                />,
+                <span key="unidade" className="block truncate text-[13px] text-texto-suave">
+                  {caso.unidade.identificacao}
+                  <span className="block truncate text-[11.5px]">
+                    {caso.unidade.empreendimento.nome}
                     {caso.unidade.familia && ` · ${caso.unidade.familia.responsavel}`}
-                  </p>
-                  <p className="mt-1 text-sm text-texto-suave">{caso.descricao}</p>
-                  {caso.ocorrencia && (
-                    <p className="tabular mt-1 text-xs text-texto-suave">
-                      Origem: {caso.ocorrencia.protocolo} ·{' '}
-                      {habitacao.rotuloTipoOcorrencia(caso.ocorrencia.tipo)}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${TOM_FASE[caso.fase]}`}
-                  >
-                    {habitacao.rotuloFaseRetomada(caso.fase)}
                   </span>
-                  {caso.decisao && (
-                    <span className="text-xs font-semibold text-texto-suave">
-                      {habitacao.rotuloDecisaoRetomada(caso.decisao)}
-                    </span>
-                  )}
+                </span>,
+                <span key="situacao">
+                  <EtiquetaStatus
+                    rotulo={habitacao.rotuloFaseRetomada(caso.fase)}
+                    tom={TOM_FASE[caso.fase]}
+                  />
                   {caso.revelia && (
-                    <span className="text-xs font-semibold text-warning-text">
+                    <span className="mt-1 block text-[11px] font-semibold text-warning-text">
                       Revelia registrada
                     </span>
                   )}
-                </div>
-              </div>
+                </span>,
+                <span key="etapa" className="tabular text-[13px] text-texto-suave">
+                  {data(caso.notificadoEm ?? caso.abertoEm)}
+                  {caso.prazoDefesaAte && caso.diasParaDefesa !== null && caso.diasParaDefesa >= 0 && (
+                    <span className="block text-[11.5px] font-semibold text-warning-text">
+                      defesa até {data(caso.prazoDefesaAte)}
+                    </span>
+                  )}
+                </span>,
+              ],
+            }))}
+            vazio={
+              <EstadoVazio
+                icone={<Gavel size={20} strokeWidth={1.7} />}
+                titulo="Nenhum processo de retomada"
+                descricao="Eles nascem de uma ocorrência apurada e notificada, na página da unidade — nunca do nada."
+              />
+            }
+          />
+        </div>
 
-              <dl className="tabular mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-texto-suave">
-                <div>
-                  <dt className="inline font-semibold">Aberto: </dt>
-                  <dd className="inline">{data(caso.abertoEm)}</dd>
-                </div>
-                {caso.notificadoEm && (
-                  <div>
-                    <dt className="inline font-semibold">Notificado: </dt>
-                    <dd className="inline">
-                      {data(caso.notificadoEm)}
-                      {caso.formaNotificacao &&
-                        ` (${habitacao.rotuloFormaNotificacao(caso.formaNotificacao)})`}
-                    </dd>
-                  </div>
-                )}
-                {caso.prazoDefesaAte && (
-                  <div
-                    className={
-                      caso.diasParaDefesa !== null && caso.diasParaDefesa >= 0
-                        ? 'font-semibold text-warning-text'
-                        : undefined
-                    }
-                  >
-                    <dt className="inline font-semibold">Defesa até: </dt>
-                    <dd className="inline">
-                      {data(caso.prazoDefesaAte)}
-                      {caso.diasParaDefesa !== null &&
-                        caso.diasParaDefesa >= 0 &&
-                        ` — faltam ${caso.diasParaDefesa} dia(s)`}
-                    </dd>
-                  </div>
-                )}
-                {caso.defesaApresentadaEm && (
-                  <div>
-                    <dt className="inline font-semibold">Defesa em: </dt>
-                    <dd className="inline">{data(caso.defesaApresentadaEm)}</dd>
-                  </div>
-                )}
-              </dl>
-
-              {caso.fase !== 'ENCERRADO' && caso.impedimentos.length > 0 && (
-                <p className="mt-3 rounded-md bg-background px-3 py-2 text-xs text-texto-suave">
-                  <strong>Próximo passo:</strong>{' '}
-                  {habitacao.MOTIVOS_IMPEDIMENTO[
-                    caso.impedimentos[0] as keyof typeof habitacao.MOTIVOS_IMPEDIMENTO
-                  ] ?? 'Aguardando andamento.'}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+        {filtrados.some((caso) => caso.fase !== 'ENCERRADO' && caso.impedimentos.length > 0) && (
+          <section className="mt-6">
+            <h2 className="font-display text-[15.5px] font-bold text-institucional">Próximo passo</h2>
+            <ul className="mt-3 divide-y divide-borda overflow-hidden rounded-lg border border-borda bg-surface">
+              {filtrados
+                .filter((caso) => caso.fase !== 'ENCERRADO' && caso.impedimentos.length > 0)
+                .map((caso) => (
+                  <li key={caso.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                    <span className="tabular text-[13px] font-semibold text-texto">{caso.protocolo}</span>
+                    <span className="text-[12.5px] text-texto-suave">
+                      {habitacao.MOTIVOS_IMPEDIMENTO[
+                        caso.impedimentos[0] as keyof typeof habitacao.MOTIVOS_IMPEDIMENTO
+                      ] ?? 'Aguardando andamento.'}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        )}
+      </CorpoTela>
+    </>
   );
 }

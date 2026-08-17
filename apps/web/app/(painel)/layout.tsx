@@ -1,10 +1,9 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { LogoHabita } from '@/components/brand/logo';
-import { BuscaGlobal } from '@/components/domain/busca-global';
+import { MenuLateral, type GrupoMenu } from '@/components/domain/menu-lateral';
+import type { Atalho } from '@/components/domain/busca-global';
+import { ProvedorToast } from '@/components/ui/toast';
 import { ApiError, apiFetch } from '@/lib/api/server';
 import { sessaoAtual } from '@/lib/auth/session';
-import { sair } from '@/app/actions/auth';
 
 interface ResumoNavegacao {
   familias: number;
@@ -34,6 +33,10 @@ const PERFIS: Record<string, string> = {
  * O menu mostra só o que o usuário pode abrir: oferecer link que devolve 403 faz o servidor
  * descobrir a própria permissão por tentativa e erro. As filas aparecem nomeadas, uma por programa
  * — "Fila" genérico não diz de qual programa se trata, e é sempre de um programa que se fala.
+ *
+ * O layout monta o modelo de navegação; o desenho (acordeão, recolher, gaveta no celular) é do
+ * `MenuLateral`. A paleta de comandos recebe esses mesmos itens, para não existir atalho que abra
+ * uma tela que a capacidade nega.
  */
 export default async function LayoutPainel({ children }: { children: React.ReactNode }) {
   const sessao = await sessaoAtual();
@@ -61,138 +64,125 @@ export default async function LayoutPainel({ children }: { children: React.React
     }
   }
 
-  return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto bg-institucional px-5 py-6 text-surface lg:flex">
-        <LogoHabita tamanho={34} escuro />
+  const grupos: GrupoMenu[] = [];
 
-        {podeHabitacao && (
-          <div className="mt-5">
-            <BuscaGlobal />
-          </div>
-        )}
+  if (podeHabitacao) {
+    grupos.push(
+      {
+        chave: 'atendimento',
+        rotulo: 'Atendimento',
+        icone: 'atendimento',
+        itens: [
+          { rotulo: 'Painel', href: '/painel' },
+          { rotulo: 'Famílias', href: '/familias', contador: resumo.familias },
+          { rotulo: 'Pendências', href: '/pendencias' },
+        ],
+      },
+      {
+        chave: 'filas',
+        rotulo: 'Filas',
+        icone: 'filas',
+        itens: [
+          ...resumo.programas.map((programa) => ({
+            rotulo: programa.nome,
+            href: `/fila/${programa.slug}`,
+            contador: resumo.aptas,
+          })),
+          { rotulo: 'Programas e critérios', href: '/programas' },
+        ],
+      },
+      {
+        chave: 'producao',
+        rotulo: 'Produção',
+        icone: 'producao',
+        itens: [
+          { rotulo: 'Empreendimentos e obras', href: '/producao' },
+          { rotulo: 'Pós-entrega', href: '/acompanhamento', contador: resumo.visitasVencidas },
+          { rotulo: 'Retomada', href: '/retomada' },
+        ],
+      },
+    );
 
-        <nav className="mt-8 space-y-6 text-sm">
-          {podeHabitacao && (
-            <>
-              <Grupo titulo="Atendimento">
-                <ItemNavegacao href="/painel" rotulo="Painel" />
-                <ItemNavegacao href="/familias" rotulo="Famílias" contador={resumo.familias} />
-                <ItemNavegacao href="/pendencias" rotulo="Pendências" />
-              </Grupo>
+    if (podeVerFinanceiro) {
+      grupos.push({
+        chave: 'mutuarios',
+        rotulo: 'Mutuários',
+        icone: 'mutuarios',
+        itens: [{ rotulo: 'Contratos e carnês', href: '/contratos' }],
+      });
+    }
 
-              <Grupo titulo="Filas">
-                {resumo.programas.map((programa) => (
-                  <ItemNavegacao
-                    key={programa.id}
-                    href={`/fila/${programa.slug}`}
-                    rotulo={programa.nome}
-                    contador={resumo.aptas}
-                  />
-                ))}
-                <ItemNavegacao href="/programas" rotulo="Programas e critérios" />
-              </Grupo>
+    grupos.push({
+      chave: 'gestao',
+      rotulo: 'Gestão',
+      icone: 'gestao',
+      itens: [
+        { rotulo: 'Indicadores', href: '/indicadores' },
+        ...(podeEncaminhar ? [{ rotulo: 'Encaminhamentos', href: '/encaminhamentos' }] : []),
+        ...(podeAuditar ? [{ rotulo: 'Trilha de auditoria', href: '/auditoria' }] : []),
+      ],
+    });
+  }
 
-              <Grupo titulo="Produção">
-                <ItemNavegacao href="/producao" rotulo="Empreendimentos e obras" />
-                <ItemNavegacao
-                  href="/acompanhamento"
-                  rotulo="Pós-entrega"
-                  contador={resumo.visitasVencidas}
-                />
-                <ItemNavegacao href="/retomada" rotulo="Retomada" />
-              </Grupo>
+  if (!podeHabitacao && podeEncaminhar) {
+    grupos.push({
+      chave: 'setor',
+      rotulo: 'Meu setor',
+      icone: 'setor',
+      itens: [{ rotulo: 'Encaminhamentos recebidos', href: '/encaminhamentos' }],
+    });
+  }
 
-              {podeVerFinanceiro && (
-                <Grupo titulo="Mutuários">
-                  <ItemNavegacao href="/contratos" rotulo="Contratos e carnês" />
-                </Grupo>
-              )}
+  if (podeAdministrar || podeParametros) {
+    grupos.push({
+      chave: 'administracao',
+      rotulo: 'Administração',
+      icone: 'administracao',
+      itens: [
+        ...(podeAdministrar ? [{ rotulo: 'Usuários', href: '/administracao/usuarios' }] : []),
+        ...(podeParametros
+          ? [
+              { rotulo: 'Setores', href: '/administracao/setores' },
+              { rotulo: 'Parâmetros', href: '/administracao/parametros' },
+              { rotulo: 'Assistente de IA', href: '/administracao/assistente' },
+            ]
+          : []),
+      ],
+    });
+  }
 
-              <Grupo titulo="Gestão">
-                <ItemNavegacao href="/indicadores" rotulo="Indicadores" />
-                {podeEncaminhar && (
-                  <ItemNavegacao href="/encaminhamentos" rotulo="Encaminhamentos" />
-                )}
-                {podeAuditar && <ItemNavegacao href="/auditoria" rotulo="Trilha de auditoria" />}
-              </Grupo>
-            </>
-          )}
-
-          {!podeHabitacao && podeEncaminhar && (
-            <Grupo titulo="Meu setor">
-              <ItemNavegacao href="/encaminhamentos" rotulo="Encaminhamentos recebidos" />
-            </Grupo>
-          )}
-
-          {(podeAdministrar || podeParametros) && (
-            <Grupo titulo="Administração">
-              {podeAdministrar && <ItemNavegacao href="/administracao/usuarios" rotulo="Usuários" />}
-              {podeParametros && (
-                <>
-                  <ItemNavegacao href="/administracao/setores" rotulo="Setores" />
-                  <ItemNavegacao href="/administracao/parametros" rotulo="Parâmetros" />
-                  <ItemNavegacao href="/administracao/assistente" rotulo="Assistente de IA" />
-                </>
-              )}
-            </Grupo>
-          )}
-        </nav>
-
-        <div className="mt-auto border-t border-surface/15 pt-4">
-          <p className="text-sm font-semibold">{sessao.nome}</p>
-          <p className="text-xs text-institucional-claro">
-            {sessao.perfil ? (PERFIS[sessao.perfil] ?? sessao.perfil) : 'Servidor'}
-          </p>
-          <form action={sair} className="mt-3">
-            <button
-              type="submit"
-              className="text-xs font-semibold text-surface/80 underline underline-offset-4 hover:text-surface"
-            >
-              Sair
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      <main className="flex-1 px-6 py-8 lg:px-10">{children}</main>
-    </div>
+  const atalhos: Atalho[] = grupos.flatMap((grupo) =>
+    grupo.itens.map((item) => ({
+      tipo: grupo.chave === 'filas' && item.href.startsWith('/fila/') ? 'Fila' : 'Tela',
+      rotulo: item.rotulo,
+      apoio: grupo.rotulo,
+      href: item.href,
+    })),
   );
-}
 
-function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="px-2 text-xs font-bold uppercase tracking-wider text-institucional-claro">
-        {titulo}
-      </p>
-      <ul className="mt-2 space-y-0.5">{children}</ul>
-    </div>
-  );
-}
+  if (podeHabitacao) {
+    atalhos.push({
+      tipo: 'Ação',
+      rotulo: 'Cadastrar família',
+      apoio: 'Atendimento',
+      href: '/familias/nova',
+    });
+  }
 
-function ItemNavegacao({
-  href,
-  rotulo,
-  contador,
-}: {
-  href: string;
-  rotulo: string;
-  contador?: number;
-}) {
   return (
-    <li>
-      <Link
-        href={href}
-        className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 transition hover:bg-surface/10"
-      >
-        <span className="truncate">{rotulo}</span>
-        {contador !== undefined && (
-          <span className="tabular shrink-0 text-xs text-institucional-claro">
-            {contador.toLocaleString('pt-BR')}
-          </span>
-        )}
-      </Link>
-    </li>
+    <ProvedorToast>
+      <div className="flex min-h-screen flex-col lg:flex-row">
+        <MenuLateral
+          grupos={grupos}
+          atalhos={atalhos}
+          usuario={{
+            nome: sessao.nome,
+            perfil: sessao.perfil ? (PERFIS[sessao.perfil] ?? sessao.perfil) : 'Servidor',
+          }}
+        />
+
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
+    </ProvedorToast>
   );
 }

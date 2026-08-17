@@ -17,8 +17,19 @@ export class FamiliasController {
 
   @RequerCapacidade('ACESSAR_HABITACAO')
   @Get()
-  listar(@Query('busca') busca?: string, @Query('pagina') pagina?: string) {
-    return this.consulta.listar(busca, Number(pagina ?? 1));
+  listar(
+    @Query('busca') busca?: string,
+    @Query('pagina') pagina?: string,
+    @Query('situacao') situacao?: string,
+  ) {
+    return this.consulta.listar(busca, Number(pagina ?? 1), situacao);
+  }
+
+  // Antes de `:familiaId`, senão "resumo" é lido como id de família.
+  @RequerCapacidade('ACESSAR_HABITACAO')
+  @Get('resumo')
+  resumo() {
+    return this.consulta.resumoLista();
   }
 
   @RequerCapacidade('ACESSAR_HABITACAO')

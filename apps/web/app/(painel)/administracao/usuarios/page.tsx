@@ -1,3 +1,4 @@
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
 import { apiFetch } from '@/lib/api/server';
 import { GestaoUsuarios } from './gestao-usuarios';
 
@@ -16,18 +17,20 @@ export default async function PaginaUsuarios() {
   const usuarios = await apiFetch<Usuario[]>('/administracao/usuarios');
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <p className="text-sm text-texto-suave">Início › Administração › Usuários</p>
-      <h1 className="mt-1 font-display text-3xl font-extrabold text-institucional">
-        Usuários e capacidades
-      </h1>
-      <p className="mt-1 text-texto-suave">
-        O perfil dá as ações do dia a dia. As quatro ações sensíveis — recalcular em lote, convocar
-        fora de ordem, cortar auxílio e transferir titularidade — só existem com concessão
-        explícita, nominal e justificada.
-      </p>
+    <>
+      <CabecalhoTela
+        trilha={[
+          { rotulo: 'Início', href: '/painel' },
+          { rotulo: 'Administração' },
+          { rotulo: 'Usuários' },
+        ]}
+        titulo="Usuários e capacidades"
+        subtitulo="O perfil dá as ações do dia a dia. As quatro ações sensíveis — recalcular em lote, convocar fora de ordem, cortar auxílio e transferir titularidade — só existem com concessão explícita, nominal e justificada."
+      />
 
-      <GestaoUsuarios usuarios={usuarios} />
-    </div>
+      <CorpoTela className="max-w-5xl">
+        <GestaoUsuarios usuarios={usuarios} />
+      </CorpoTela>
+    </>
   );
 }

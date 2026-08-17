@@ -14,13 +14,32 @@ import { CampoData, CampoMarcador, CampoNumero, CampoSelecao, CampoTexto } from 
  * servidor, a partir de renda ÷ pessoas. O número que decide a fila nunca pode depender de conta
  * feita à mão no balcão — aqui ele é conferência, não entrada.
  */
-export function CamposFicha() {
-  const [renda, setRenda] = useState(0);
-  const [pessoas, setPessoas] = useState(1);
+export function CamposFicha({
+  salarioMinimo,
+  pessoasControladas,
+  menoresSugeridos,
+  aoMudarRenda,
+}: {
+  /** Parâmetro da prefeitura. Sem ele a faixa cai num valor de referência só para não travar. */
+  salarioMinimo?: number | null;
+  /** Quando o cadastro em etapas já conta as pessoas, o número vem de lá — não se digita duas vezes. */
+  pessoasControladas?: number;
+  /** Sugestão vinda da composição; continua editável, porque a idade pode não ter sido informada. */
+  menoresSugeridos?: number;
+  aoMudarRenda?: (valor: number) => void;
+} = {}) {
+  const [renda, definirRenda] = useState(0);
+  const [pessoasLocais, setPessoas] = useState(1);
   const [temRisco, setTemRisco] = useState(false);
 
+  const pessoas = pessoasControladas ?? pessoasLocais;
+  const setRenda = (valor: number) => {
+    definirRenda(valor);
+    aoMudarRenda?.(valor);
+  };
+
   const perCapita = pessoas > 0 ? renda / pessoas : 0;
-  const salarioReferencia = 1600;
+  const salarioReferencia = salarioMinimo ?? 1600;
   const faixa =
     perCapita <= salarioReferencia / 4
       ? { texto: 'até ¼ do salário mínimo — extrema pobreza', tom: 'text-danger' }
@@ -41,16 +60,28 @@ export function CamposFicha() {
             <label htmlFor="quantidadePessoas" className="block text-sm font-semibold text-texto">
               Pessoas no grupo
             </label>
-            <input
-              id="quantidadePessoas"
-              name="quantidadePessoas"
-              type="number"
-              min={1}
-              defaultValue={1}
-              required
-              onChange={(e) => setPessoas(Number(e.target.value) || 1)}
-              className="tabular mt-1.5 w-full rounded-md border border-borda bg-surface px-3 py-2.5 text-base outline-none focus:border-institucional focus:ring-2 focus:ring-institucional/30"
-            />
+            {pessoasControladas === undefined ? (
+              <input
+                id="quantidadePessoas"
+                name="quantidadePessoas"
+                type="number"
+                min={1}
+                defaultValue={1}
+                required
+                onChange={(e) => setPessoas(Number(e.target.value) || 1)}
+                className="tabular mt-1.5 w-full rounded-md border border-borda bg-surface px-3 py-2.5 text-base outline-none focus:border-institucional focus:ring-2 focus:ring-institucional/30"
+              />
+            ) : (
+              <>
+                <p className="tabular mt-1.5 rounded-md bg-background px-3 py-2.5 text-base font-bold text-institucional">
+                  {pessoas}
+                </p>
+                <p className="mt-1.5 text-xs text-texto-suave">
+                  Contado na etapa de composição — o responsável mais quem mora com ele.
+                </p>
+                <input type="hidden" name="quantidadePessoas" value={pessoas} />
+              </>
+            )}
           </div>
           <div>
             <p className="text-sm font-semibold text-texto">Renda per capita</p>
@@ -62,7 +93,13 @@ export function CamposFicha() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-4">
-          <CampoNumero nome="quantidadeMenores" rotulo="Menores de 18" min={0} valorInicial={0} />
+          <CampoNumero
+            key={`menores-${menoresSugeridos ?? 0}`}
+            nome="quantidadeMenores"
+            rotulo="Menores de 18"
+            min={0}
+            valorInicial={menoresSugeridos ?? 0}
+          />
           <CampoSelecao
             nome="fonteRenda"
             rotulo="Fonte da renda"

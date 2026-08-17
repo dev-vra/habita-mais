@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BarrasHorizontais, Cartao, Destaque, Distribuicao, type Fatia } from '@/components/dataviz/graficos';
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
 import { apiFetch } from '@/lib/api/server';
 import { formatarReais } from '@/lib/status';
 import { ArvoreCarteira, type ProgramaArvore } from './arvore-carteira';
@@ -46,17 +47,15 @@ export default async function PaginaIndicadores() {
   const riscoSemLaudo = risco.declarado - risco.comLaudo;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <p className="text-sm text-texto-suave">Início › Indicadores</p>
-      <h1 className="mt-1 font-display text-3xl font-extrabold text-institucional">
-        Indicadores sociais
-      </h1>
-      <p className="mt-1 text-texto-suave">
-        Apurado sobre as fichas vigentes. Salário mínimo de referência:{' '}
-        {formatarReais(resumo.salarioMinimo)}.
-      </p>
+    <>
+      <CabecalhoTela
+        trilha={[{ rotulo: 'Início', href: '/painel' }, { rotulo: 'Indicadores' }]}
+        titulo="Indicadores sociais"
+        subtitulo={`Apurado sobre as fichas vigentes · salário mínimo de referência ${formatarReais(resumo.salarioMinimo)}.`}
+      />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <CorpoTela>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Destaque rotulo="Famílias com ficha" valor={resumo.familias.toLocaleString('pt-BR')} nota={`${resumo.pessoas} pessoas · ${resumo.menores} menores`} />
         <Destaque
           rotulo="Em extrema pobreza"
@@ -155,6 +154,7 @@ export default async function PaginaIndicadores() {
         </Link>
         .
       </p>
-    </div>
+      </CorpoTela>
+    </>
   );
 }

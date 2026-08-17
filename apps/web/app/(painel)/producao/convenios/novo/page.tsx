@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
 import { FormularioConvenio } from './formulario-convenio';
 
 /**
@@ -9,21 +9,20 @@ import { FormularioConvenio } from './formulario-convenio';
  */
 export default function PaginaNovoConvenio() {
   return (
-    <div className="mx-auto max-w-3xl">
-      <p className="text-sm text-texto-suave">
-        <Link href="/producao" className="hover:underline">
-          Produção
-        </Link>{' '}
-        › Novo convênio
-      </p>
-      <h1 className="mt-1 font-display text-3xl font-extrabold text-institucional">
-        Registrar convênio
-      </h1>
-      <p className="mt-1 text-sm text-texto-suave">
-        De onde vem o recurso do empreendimento — repasse, contrapartida e prazo.
-      </p>
+    <>
+      <CabecalhoTela
+        trilha={[
+          { rotulo: 'Início', href: '/painel' },
+          { rotulo: 'Produção', href: '/producao' },
+          { rotulo: 'Novo convênio' },
+        ]}
+        titulo="Registrar convênio"
+        subtitulo="De onde vem o recurso do empreendimento — repasse, contrapartida e prazo."
+      />
 
-      <FormularioConvenio />
-    </div>
+      <CorpoTela className="max-w-3xl">
+        <FormularioConvenio />
+      </CorpoTela>
+    </>
   );
 }

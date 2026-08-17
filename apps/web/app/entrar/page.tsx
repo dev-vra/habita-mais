@@ -1,9 +1,13 @@
 import { LogoHabita } from '@/components/brand/logo';
+import { Aviso } from '@/components/ui/formulario';
 import { FormularioEntrada } from './formulario-entrada';
 
 /**
- * Mesma arquitetura do Regulariza+: painel de promessa à esquerda, formulário à direita. Abaixo
- * de 1024 px o painel some — quem cadastra em campo entra pelo celular.
+ * Entrada do servidor: formulário à esquerda, contexto à direita.
+ *
+ * O painel de promessa deixou de ser um bloco escuro de página inteira — ele competia com o campo
+ * de senha, que é a única coisa que se faz aqui. Abaixo de 1024 px o painel some: quem cadastra em
+ * campo entra pelo celular.
  *
  * A frase do painel não vende software, vende defesa: o que o gestor de Habitação teme não é
  * perder planilha, é não conseguir justificar a fila.
@@ -14,54 +18,78 @@ export default async function PaginaEntrar({
   searchParams: Promise<{ sessao?: string }>;
 }) {
   const { sessao } = await searchParams;
+
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <section className="hidden flex-col justify-between bg-institucional p-12 text-surface lg:flex">
-        <LogoHabita tamanho={44} escuro />
-
-        <div className="max-w-xl">
-          <h1 className="font-display text-4xl font-extrabold leading-tight">
-            Cada família, uma vez só
-          </h1>
-          <p className="mt-3 text-xl text-institucional-claro">
-            A fila da casa própria, com nome, nota e data.
-          </p>
-          <p className="mt-6 text-base leading-relaxed text-surface/85">
-            Critério publicado antes da inscrição, pontuação congelada no cálculo e cada convocação
-            com ofício. É assim que a prefeitura consegue explicar a escolha — inclusive anos depois.
-          </p>
-        </div>
-
-        <p className="max-w-lg text-sm leading-relaxed text-surface/70">
-          Ambiente protegido. Dados tratados conforme a LGPD (Lei 13.709/2018); todo acesso e
-          alteração são registrados e auditados, com rastreabilidade por usuário.
-        </p>
-      </section>
-
+    <main className="grid min-h-screen bg-surface lg:[grid-template-columns:repeat(2,minmax(390px,1fr))]">
       <section className="flex flex-col justify-center px-6 py-12 sm:px-12">
         <div className="mx-auto w-full max-w-md">
-          <div className="lg:hidden">
-            <LogoHabita tamanho={40} />
-          </div>
+          <LogoHabita tamanho={32} />
 
-          <h2 className="mt-8 font-display text-2xl font-bold text-institucional">
+          <h1 className="mt-8 font-display text-[26px] font-extrabold leading-tight tracking-[-0.02em] text-institucional">
             Gestão Habitacional de Interesse Social
-          </h2>
-          <p className="mt-1 text-sm text-texto-suave">Acesso do servidor municipal.</p>
+          </h1>
+          <p className="mt-2 text-[13px] leading-relaxed text-texto-suave">
+            Acesso restrito a servidores do município. Todo acesso fica na trilha de auditoria, com
+            nome, data e endereço de origem.
+          </p>
 
           {sessao === 'expirada' && (
-            <p className="mt-4 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-text">
-              Sua sessão expirou por inatividade. Entre de novo para continuar de onde parou.
-            </p>
+            <div className="mt-5">
+              <Aviso tom="warning">
+                Sua sessão expirou por inatividade. Entre de novo para continuar de onde parou.
+              </Aviso>
+            </div>
           )}
 
           <FormularioEntrada />
 
-          <p className="mt-10 text-xs text-texto-suave">
-            Padrão Digital de Governo · acesso auditado
+          <p className="mt-10 text-[11.5px] text-texto-suave">
+            Padrão Digital de Governo · dados tratados conforme a LGPD (Lei 13.709/2018).
           </p>
         </div>
       </section>
+
+      <section className="hidden flex-col overflow-hidden lg:flex">
+        {/* Foto sem filtro por cima — o rosto da família é o que vende, não o texto. */}
+        <div className="relative flex-1 overflow-hidden">
+          <img
+            src="/assets/familia-habita.jpg"
+            alt="Família sorridente em frente à casa própria, segurando o certificado de conquista do Habita+"
+            className="absolute inset-0 size-full object-cover object-[center_20%]"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-institucional-escuro to-transparent" />
+        </div>
+
+        <div className="animate-subir bg-institucional-escuro px-12 py-8">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-surface/60">
+            O que este sistema garante
+          </p>
+
+          <ul className="mt-4 grid grid-cols-3 gap-5">
+            <ItemGarantia
+              titulo="Critério publicado antes da inscrição"
+              texto="A regra da fila é versionada e publicada. Quem se inscreve sabe por qual régua vai ser medido."
+            />
+            <ItemGarantia
+              titulo="Pontuação congelada no cálculo"
+              texto="O snapshot guarda os fatos e a versão de critério. Recalcular depois não reordena quem já foi convocada."
+            />
+            <ItemGarantia
+              titulo="Cada convocação com ofício"
+              texto="Convocar fora de ordem exige motivo escrito, que vai nominal para a trilha e é publicado junto ao ranking."
+            />
+          </ul>
+        </div>
+      </section>
     </main>
+  );
+}
+
+function ItemGarantia({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <li>
+      <p className="text-[13px] font-bold text-surface">{titulo}</p>
+      <p className="mt-1 text-[12px] leading-relaxed text-surface/70">{texto}</p>
+    </li>
   );
 }

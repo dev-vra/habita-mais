@@ -13,6 +13,14 @@ export interface LinhaDaFila {
   situacao: string;
   calculadaEm: string | null;
   versaoCriterio: number | null;
+  /** Os dois critérios que mais somaram, em texto. A nota sozinha não explica a posição. */
+  criterioQuePesou: string | null;
+}
+
+interface ItemSnapshot {
+  rotulo: string;
+  pontos: number;
+  peso: number;
 }
 
 export interface ProgramaResumo {
@@ -27,6 +35,9 @@ export interface FilaDoPrograma {
   programa: ProgramaResumo;
   versaoVigente: number | null;
   convocacoesForaDeOrdem: number;
+  /** Quando o ranking vigente foi publicado — é o ato que abre prazo de recurso. */
+  rankingPublicadoEm: string | null;
+  prazoRecursoAte: string | null;
   linhas: LinhaDaFila[];
 }
 
@@ -230,6 +241,7 @@ export class FilaQueryService {
         situacao: inscricao?.situacao ?? '',
         calculadaEm: snapshot?.calculadoEm.toISOString() ?? null,
         versaoCriterio: snapshot?.versaoCriterio.versao ?? null,
+        criterioQuePesou: criterioQuePesou(snapshot?.itens),
       };
     });
 
@@ -243,11 +255,35 @@ export class FilaQueryService {
       where: { foraDeOrdem: true, inscricao: { programaId } },
     });
 
+    const ranking = await this.prisma.tx.rankingPublicacao.findFirst({
+      where: { programaId },
+      orderBy: { publicadoEm: 'desc' },
+      select: { publicadoEm: true, prazoRecursoAte: true },
+    });
+
     return {
       programa,
       versaoVigente: versao?.versao ?? null,
       convocacoesForaDeOrdem,
+      rankingPublicadoEm: ranking?.publicadoEm.toISOString() ?? null,
+      prazoRecursoAte: ranking?.prazoRecursoAte.toISOString() ?? null,
       linhas,
     };
   }
+}
+
+/**
+ * "PcD na família + 14 anos de fila" em vez de "38,5 pontos". A nota é o resultado; o que a
+ * família e o servidor precisam ler é o que a produziu — e é isso que se defende em recurso.
+ */
+function criterioQuePesou(itens: unknown): string | null {
+  if (!Array.isArray(itens)) return null;
+
+  const relevantes = (itens as ItemSnapshot[])
+    .filter((item) => item?.rotulo && Number(item.pontos) > 0)
+    .sort((a, b) => Number(b.pontos) * Number(b.peso) - Number(a.pontos) * Number(a.peso))
+    .slice(0, 2)
+    .map((item) => item.rotulo);
+
+  return relevantes.length > 0 ? relevantes.join(' + ') : null;
 }

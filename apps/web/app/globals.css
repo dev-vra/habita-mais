@@ -53,6 +53,12 @@
      de documentos numa conferência, e animação longa vira espera. */
   --animate-entrada-lateral: entrada-lateral 180ms ease-out;
   --animate-surgir: surgir 150ms ease-out;
+  /* Entrada de cartão e seção: 8px de subida com fade. O stagger entre cartões de KPI é o que
+     dá a leitura de "a tela montou", sem virar espera. */
+  --animate-subir: subir 320ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  /* Barra de progresso e conector de stepper: cresce da esquerda, porque o dado cresce. */
+  --animate-crescer: crescer 700ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  --animate-brilho: brilho 1.25s linear infinite;
 }
 
 @keyframes entrada-lateral {
@@ -68,6 +74,25 @@
   }
 }
 
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes crescer {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes brilho {
+  to {
+    background-position: 200% 0;
+  }
+}
+
 @layer base {
   body {
     background-color: var(--color-background);
@@ -79,6 +104,40 @@
   h2,
   h3 {
     font-family: var(--font-display);
+  }
+
+  /* Barra de rolagem fina: a casca tem navegação e tabela rolando ao mesmo tempo, e a barra
+     grossa do sistema desenha duas divisórias escuras onde o layout já tem borda. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-borda) 88%, black) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--color-borda) 88%, black);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+
+  /* Quem pediu menos movimento não quer skeleton pulsando nem cartão subindo — só o conteúdo. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 

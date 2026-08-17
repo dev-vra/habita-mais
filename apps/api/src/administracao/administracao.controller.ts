@@ -95,7 +95,9 @@ export class AdministracaoController {
     return this.usuarios.limparCapacidade(usuarioId, capacidade);
   }
 
-  @RequerCapacidade('GERIR_PARAMETROS')
+  // Quem cadastra família também lê: o enquadramento por faixa de renda é calculado sobre o
+  // salário mínimo do município, e o balcão precisa do número para conferir na hora.
+  @RequerCapacidade('GERIR_PARAMETROS', 'ACESSAR_HABITACAO')
   @Get('parametros')
   parametros() {
     return this.configuracao.parametros();

@@ -1,3 +1,4 @@
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
 import { apiFetch } from '@/lib/api/server';
 
 interface EstadoAssistente {
@@ -18,17 +19,18 @@ export default async function PaginaAssistente() {
   const estado = await apiFetch<EstadoAssistente>('/assistente/estado');
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <p className="text-sm text-texto-suave">Início › Administração › Assistente</p>
-      <h1 className="mt-1 font-display text-3xl font-extrabold text-institucional">
-        Assistente de IA
-      </h1>
-      <p className="mt-1 max-w-2xl text-sm text-texto-suave">
-        A regra é uma só: a IA propõe, a pessoa assina, e o sistema registra quem assinou. Toda
-        sugestão fica guardada com o que foi enviado, o que voltou e o que o servidor fez com o
-        texto.
-      </p>
+    <>
+      <CabecalhoTela
+        trilha={[
+          { rotulo: 'Início', href: '/painel' },
+          { rotulo: 'Administração' },
+          { rotulo: 'Assistente de IA' },
+        ]}
+        titulo="Assistente de IA"
+        subtitulo="A regra é uma só: a IA propõe, a pessoa assina, e o sistema registra quem assinou. Toda sugestão fica guardada com o que foi enviado, o que voltou e o que o servidor fez com o texto."
+      />
 
+      <CorpoTela className="max-w-4xl">
       <div
         className={`mt-6 rounded-lg border p-4 ${
           estado.disponivel ? 'border-success/40 bg-success/5' : 'border-borda bg-background'
@@ -95,6 +97,7 @@ export default async function PaginaAssistente() {
           IA: é comparação de números, feita no próprio sistema, com o mesmo resultado sempre.
         </p>
       </section>
-    </div>
+      </CorpoTela>
+    </>
   );
 }

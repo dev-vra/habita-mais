@@ -64,7 +64,12 @@ export function CampoCpf({
   obrigatorio,
   valorInicial = '',
   onEncontrado,
-}: BaseProps & { onEncontrado?: (dados: DadosCpf) => void }) {
+  onCompleto,
+}: BaseProps & {
+  onEncontrado?: (dados: DadosCpf) => void;
+  /** Chamado quando o CPF fica válido — é o gancho de quem retoma rascunho salvo por CPF. */
+  onCompleto?: (cpf: string) => void;
+}) {
   const [valor, setValor] = useState(br.maskCpf(valorInicial));
   const [estado, setEstado] = useState<{ tom: 'erro' | 'ok' | 'aviso'; texto: string }>();
   const [consultando, setConsultando] = useState(false);
@@ -83,9 +88,11 @@ export function CampoCpf({
       return;
     }
 
+    onCompleto?.(digitos);
+
     let cancelado = false;
     setConsultando(true);
-    setEstado({ tom: 'aviso', texto: 'Consultando a Receita…' });
+    setEstado({ tom: 'aviso', texto: 'CPF válido — consultando a Receita…' });
 
     fetch(`/api/integracoes/cpf/${digitos}`)
       .then((r) => r.json() as Promise<{ encontrado: boolean; motivo?: string; dados?: DadosCpf }>)
@@ -113,8 +120,8 @@ export function CampoCpf({
     return () => {
       cancelado = true;
     };
-    // `onEncontrado` fica fora das dependências de propósito: recriar a função no componente pai
-    // não deve disparar outra consulta — ela é paga e auditada.
+    // `onEncontrado` e `onCompleto` ficam fora das dependências de propósito: recriar a função no
+    // componente pai não deve disparar outra consulta — ela é paga e auditada.
   }, [digitos, completo, valido]);
 
   return (

@@ -1,9 +1,21 @@
 import Link from 'next/link';
 import { habitacao } from '@habita/shared';
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
+import { EtiquetaStatus } from '@/components/ui/etiqueta-status';
 import { PainelCaso } from '@/components/domain/painel-caso';
 import { apiFetch } from '@/lib/api/server';
 import { sessaoAtual } from '@/lib/auth/session';
 import { data } from '@/lib/formato';
+import type { TomStatus } from '@/lib/status';
+
+const TOM_FASE: Record<habitacao.FaseRetomada, TomStatus> = {
+  ABERTO: 'neutro',
+  NOTIFICADO: 'institucional',
+  EM_DEFESA: 'atencao',
+  EM_ANALISE: 'atencao',
+  DECIDIDO: 'sucesso',
+  ENCERRADO: 'neutro',
+};
 
 export interface AtoDoCaso {
   id: string;
@@ -83,121 +95,113 @@ export default async function PaginaCaso({ params }: { params: Promise<{ casoId:
   const podeRegistrarDefesa = sessao?.capacidades.includes('ACESSAR_HABITACAO') ?? false;
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <p className="text-sm text-texto-suave">
-        <Link href="/retomada" className="hover:underline">
-          Retomada
-        </Link>{' '}
-        › {caso.protocolo}
-      </p>
-
-      <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-institucional">
-            {caso.protocolo}
-          </h1>
-          <p className="mt-1 text-sm text-texto">
+    <>
+      <CabecalhoTela
+        trilha={[
+          { rotulo: 'Início', href: '/painel' },
+          { rotulo: 'Retomada', href: '/retomada' },
+          { rotulo: caso.protocolo },
+        ]}
+        titulo={caso.protocolo}
+        subtitulo={
+          <span className="tabular">
             <Link
               href={`/acompanhamento/${caso.unidade.id}`}
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold hover:underline"
             >
               Unidade {caso.unidade.identificacao}
-            </Link>
-            <span className="text-texto-suave">
-              {' '}
-              · {caso.unidade.empreendimento.nome} · {caso.unidade.endereco}
-            </span>
-          </p>
-          {caso.unidade.familia && (
-            <p className="tabular mt-0.5 text-sm text-texto-suave">
-              {caso.unidade.familia.responsavel} · {caso.unidade.familia.codigo} · unidade entregue
-              em {data(caso.unidade.entregueEm)}
+            </Link>{' '}
+            · {caso.unidade.empreendimento.nome} · {caso.unidade.endereco}
+            {caso.unidade.familia &&
+              ` · ${caso.unidade.familia.responsavel} · ${caso.unidade.familia.codigo} · unidade entregue em ${data(caso.unidade.entregueEm)}`}
+          </span>
+        }
+      />
+
+      <CorpoTela className="max-w-5xl">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <EtiquetaStatus
+            rotulo={habitacao.rotuloFaseRetomada(caso.fase)}
+            tom={TOM_FASE[caso.fase]}
+          />
+          {caso.avaliacao.revelia && (
+            <span className="text-xs font-semibold text-warning-text">Revelia registrada</span>
+          )}
+        </div>
+
+        <section className="mt-6 rounded-lg border border-borda bg-surface p-5">
+          <h2 className="text-sm font-bold text-texto">Fundamento e objeto</h2>
+          <p className="mt-2 text-sm text-texto">{caso.fundamentacaoLegal}</p>
+          <p className="mt-2 text-sm text-texto-suave">{caso.descricao}</p>
+
+          {caso.ocorrencia && (
+            <p className="tabular mt-3 text-xs text-texto-suave">
+              Origem:{' '}
+              <Link
+                href={`/acompanhamento/${caso.unidade.id}`}
+                className="font-semibold text-primary hover:underline"
+              >
+                {caso.ocorrencia.protocolo}
+              </Link>{' '}
+              · {habitacao.rotuloTipoOcorrencia(caso.ocorrencia.tipo)} ·{' '}
+              {habitacao.rotuloGravidade(caso.ocorrencia.gravidade)}
             </p>
           )}
-        </div>
+        </section>
 
-        <div className="text-right">
-          <span className="rounded-full bg-background px-3 py-1.5 text-sm font-semibold text-texto-suave">
-            {habitacao.rotuloFaseRetomada(caso.fase)}
-          </span>
-          {caso.avaliacao.revelia && (
-            <p className="mt-1 text-xs font-semibold text-warning-text">Revelia registrada</p>
-          )}
-        </div>
-      </div>
+        <section className="mt-6">
+          <PainelCaso
+            caso={caso}
+            caminho={caminho}
+            podeInstruir={podeInstruir}
+            podeDecidir={podeDecidir}
+            podeRegistrarDefesa={podeRegistrarDefesa}
+          />
+        </section>
 
-      <section className="mt-6 rounded-lg border border-borda bg-surface p-5">
-        <h2 className="text-sm font-bold text-texto">Fundamento e objeto</h2>
-        <p className="mt-2 text-sm text-texto">{caso.fundamentacaoLegal}</p>
-        <p className="mt-2 text-sm text-texto-suave">{caso.descricao}</p>
-
-        {caso.ocorrencia && (
-          <p className="tabular mt-3 text-xs text-texto-suave">
-            Origem:{' '}
-            <Link
-              href={`/acompanhamento/${caso.unidade.id}`}
-              className="font-semibold text-primary hover:underline"
-            >
-              {caso.ocorrencia.protocolo}
-            </Link>{' '}
-            · {habitacao.rotuloTipoOcorrencia(caso.ocorrencia.tipo)} ·{' '}
-            {habitacao.rotuloGravidade(caso.ocorrencia.gravidade)}
-          </p>
-        )}
-      </section>
-
-      <section className="mt-6">
-        <PainelCaso
-          caso={caso}
-          caminho={caminho}
-          podeInstruir={podeInstruir}
-          podeDecidir={podeDecidir}
-          podeRegistrarDefesa={podeRegistrarDefesa}
-        />
-      </section>
-
-      <section className="mt-8">
-        <h2 className="font-display text-xl font-bold text-institucional">Linha do tempo</h2>
-        <ol className="mt-3 space-y-3">
-          {caso.atos.map((ato) => (
-            <li key={ato.id} className="flex gap-3">
-              <div className="flex flex-col items-center">
-                <span className="tabular grid size-7 shrink-0 place-items-center rounded-full bg-institucional text-xs font-bold text-surface">
-                  {ato.ordem}
-                </span>
-                <span aria-hidden className="mt-1 w-px flex-1 bg-borda" />
-              </div>
-              <div className="flex-1 pb-3">
-                <p className="text-sm font-semibold text-texto">{ato.titulo}</p>
-                <p className="tabular text-xs text-texto-suave">
-                  {data(ato.ocorridoEm)} · {ato.autor}
-                </p>
-                {ato.detalhe && (
-                  <p className="mt-1 whitespace-pre-line text-sm text-texto-suave">{ato.detalhe}</p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {caso.fase !== 'ENCERRADO' && (
-        <section className="mt-8 rounded-lg border border-borda bg-surface p-5">
-          <h2 className="text-sm font-bold text-texto">
-            O que o Jurídico precisa receber junto
-          </h2>
-          <p className="mt-1 text-xs text-texto-suave">
-            Falta de comprovante de notificação derruba a ação por vício de forma, não no mérito.
-          </p>
-          <ul className="mt-3 grid gap-1.5 text-sm text-texto-suave sm:grid-cols-2">
-            {caso.exigenciasPilha.map((exigencia) => (
-              <li key={exigencia} className="rounded-md border border-borda px-3 py-2 text-xs">
-                {exigencia.replaceAll('_', ' ').toLowerCase()}
+        <section className="mt-8">
+          <h2 className="font-display text-xl font-bold text-institucional">Linha do tempo</h2>
+          <ol className="mt-3 space-y-3">
+            {caso.atos.map((ato) => (
+              <li key={ato.id} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="tabular grid size-7 shrink-0 place-items-center rounded-full bg-institucional text-xs font-bold text-surface">
+                    {ato.ordem}
+                  </span>
+                  <span aria-hidden className="mt-1 w-px flex-1 bg-borda" />
+                </div>
+                <div className="flex-1 pb-3">
+                  <p className="text-sm font-semibold text-texto">{ato.titulo}</p>
+                  <p className="tabular text-xs text-texto-suave">
+                    {data(ato.ocorridoEm)} · {ato.autor}
+                  </p>
+                  {ato.detalhe && (
+                    <p className="mt-1 whitespace-pre-line text-sm text-texto-suave">
+                      {ato.detalhe}
+                    </p>
+                  )}
+                </div>
               </li>
             ))}
-          </ul>
+          </ol>
         </section>
-      )}
-    </div>
+
+        {caso.fase !== 'ENCERRADO' && (
+          <section className="mt-8 rounded-lg border border-borda bg-surface p-5">
+            <h2 className="text-sm font-bold text-texto">O que o Jurídico precisa receber junto</h2>
+            <p className="mt-1 text-xs text-texto-suave">
+              Falta de comprovante de notificação derruba a ação por vício de forma, não no mérito.
+            </p>
+            <ul className="mt-3 grid gap-1.5 text-sm text-texto-suave sm:grid-cols-2">
+              {caso.exigenciasPilha.map((exigencia) => (
+                <li key={exigencia} className="rounded-md border border-borda px-3 py-2 text-xs">
+                  {exigencia.replaceAll('_', ' ').toLowerCase()}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </CorpoTela>
+    </>
   );
 }

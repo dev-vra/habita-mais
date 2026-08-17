@@ -35,12 +35,13 @@ export function FormularioEntrada() {
         </p>
       </div>
 
-      <Botao tipo="submit" carregando={enviando}>
+      <Botao tipo="submit" carregando={enviando} className="h-[46px] py-0">
         Entrar
       </Botao>
 
-      <p className="text-sm text-texto-suave">
-        Esqueceu a senha? Falar com o administrador do município.
+      <p className="text-[12.5px] text-texto-suave">
+        Esqueceu a senha? Só o administrador do município redefine — é ele que responde por quem
+        tem acesso.
       </p>
     </form>
   );

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { AuditOperation } from '@prisma/client';
+import { AuditOperation, SituacaoInscricao } from '@prisma/client';
 import { br, habitacao } from '@habita/shared';
 import { AuditService } from '../../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -15,6 +15,34 @@ export interface ItemListaFamilias {
   rendaPerCapita: number | null;
   fichaValidaAte: string | null;
   inscricoes: number;
+  /** Situação da inscrição que mais pede ação — é por ela que a lista é recortada na tela. */
+  situacao: string | null;
+}
+
+/**
+ * Uma família pode ter inscrição em mais de um programa. A lista mostra uma linha por família, e a
+ * situação que aparece é a que exige alguma coisa de alguém primeiro: recurso corre prazo, pendência
+ * trava a fila, convocação tem data para comparecer.
+ */
+const PRECEDENCIA_SITUACAO: SituacaoInscricao[] = [
+  SituacaoInscricao.EM_RECURSO,
+  SituacaoInscricao.PENDENTE,
+  SituacaoInscricao.CONVOCADA,
+  SituacaoInscricao.APTA,
+  SituacaoInscricao.EM_ANALISE,
+  SituacaoInscricao.CONTEMPLADA,
+  SituacaoInscricao.INDEFERIDA,
+  SituacaoInscricao.INELEGIVEL,
+  SituacaoInscricao.DESISTENTE,
+  SituacaoInscricao.CANCELADA,
+];
+
+function situacaoValida(valor?: string): valor is SituacaoInscricao {
+  return !!valor && (PRECEDENCIA_SITUACAO as string[]).includes(valor);
+}
+
+function situacaoDominante(situacoes: SituacaoInscricao[]): string | null {
+  return PRECEDENCIA_SITUACAO.find((candidata) => situacoes.includes(candidata)) ?? null;
 }
 
 export interface EventoLinhaDoTempo {
@@ -75,20 +103,29 @@ export class FamiliasQueryService {
     private readonly audit: AuditService,
   ) {}
 
-  async listar(busca?: string, pagina = 1): Promise<{ itens: ItemListaFamilias[]; total: number }> {
+  async listar(
+    busca?: string,
+    pagina = 1,
+    situacao?: string,
+  ): Promise<{ itens: ItemListaFamilias[]; total: number }> {
     const termo = busca?.trim() ?? '';
     const digitos = br.onlyDigits(termo);
 
-    const where = termo
-      ? {
-          deletedAt: null,
-          OR: [
-            { codigo: { contains: termo, mode: 'insensitive' as const } },
-            { responsavel: { nome: { contains: termo, mode: 'insensitive' as const } } },
-            ...(digitos.length >= 3 ? [{ responsavel: { cpf: { contains: digitos } } }] : []),
-          ],
-        }
-      : { deletedAt: null };
+    const where = {
+      deletedAt: null,
+      ...(termo
+        ? {
+            OR: [
+              { codigo: { contains: termo, mode: 'insensitive' as const } },
+              { responsavel: { nome: { contains: termo, mode: 'insensitive' as const } } },
+              ...(digitos.length >= 3 ? [{ responsavel: { cpf: { contains: digitos } } }] : []),
+            ],
+          }
+        : {}),
+      // Recorte por situação é do lado do banco: filtrar a página já paginada devolveria "3 de 412"
+      // sem que as outras 409 tivessem sido olhadas.
+      ...(situacaoValida(situacao) ? { inscricoes: { some: { situacao } } } : {}),
+    };
 
     const [total, familias] = await Promise.all([
       this.prisma.tx.familia.count({ where }),
@@ -106,6 +143,7 @@ export class FamiliasQueryService {
             take: 1,
             select: { rendaPerCapita: true, quantidadePessoas: true, validaAte: true },
           },
+          inscricoes: { select: { situacao: true } },
           _count: { select: { inscricoes: true } },
         },
       }),
@@ -122,10 +160,43 @@ export class FamiliasQueryService {
         rendaPerCapita: ficha ? Number(ficha.rendaPerCapita) : null,
         fichaValidaAte: ficha?.validaAte.toISOString() ?? null,
         inscricoes: familia._count.inscricoes,
+        situacao: situacaoDominante(familia.inscricoes.map((inscricao) => inscricao.situacao)),
       };
     });
 
     return { itens, total };
+  }
+
+  /**
+   * Os três números do topo da lista. Ficha vencida vem antes de todos os outros porque é o que
+   * tira a família da fila no recadastramento — e ninguém descobre isso na hora do sorteio.
+   */
+  async resumoLista(): Promise<{ ativas: number; fichaVencida: number; prioridadeLegal: number }> {
+    const agora = new Date();
+
+    const [ativas, comFichaValida, prioridadeLegal] = await Promise.all([
+      this.prisma.tx.familia.count({ where: { deletedAt: null } }),
+      this.prisma.tx.familia.count({
+        where: { deletedAt: null, fichas: { some: { vigente: true, validaAte: { gte: agora } } } },
+      }),
+      this.prisma.tx.familia.count({
+        where: {
+          deletedAt: null,
+          fichas: {
+            some: {
+              vigente: true,
+              OR: [
+                { temPessoaComDeficiencia: true },
+                { temIdoso: true },
+                { situacaoRisco: true },
+              ],
+            },
+          },
+        },
+      }),
+    ]);
+
+    return { ativas, fichaVencida: ativas - comFichaValida, prioridadeLegal };
   }
 
   async visao360(familiaId: string): Promise<Familia360> {

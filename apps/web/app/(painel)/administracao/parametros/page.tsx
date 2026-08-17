@@ -1,3 +1,4 @@
+import { CabecalhoTela, CorpoTela } from '@/components/ui/cabecalho-tela';
 import { apiFetch } from '@/lib/api/server';
 import { FormularioParametros } from './formulario-parametros';
 
@@ -16,16 +17,23 @@ export default async function PaginaParametros() {
   ]);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <p className="text-sm text-texto-suave">Início › Administração › Parâmetros</p>
-      <h1 className="mt-1 font-display text-3xl font-extrabold text-institucional">
-        Parâmetros do município
-      </h1>
-
-      <FormularioParametros
-        salarioMinimo={parametros.salarioMinimo ?? null}
-        signatarios={signatarios}
+    <>
+      <CabecalhoTela
+        trilha={[
+          { rotulo: 'Início', href: '/painel' },
+          { rotulo: 'Administração' },
+          { rotulo: 'Parâmetros' },
+        ]}
+        titulo="Parâmetros do município"
+        subtitulo="O que muda de prefeitura para prefeitura e não pode virar constante no código."
       />
-    </div>
+
+      <CorpoTela className="max-w-3xl">
+        <FormularioParametros
+          salarioMinimo={parametros.salarioMinimo ?? null}
+          signatarios={signatarios}
+        />
+      </CorpoTela>
+    </>
   );
 }
