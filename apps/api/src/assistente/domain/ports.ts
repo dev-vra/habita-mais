@@ -11,6 +11,8 @@ export interface PedidoAoModelo {
   documento?: { midia: string; dados: string };
   /** Teto de tamanho da resposta. Parecer não é tese. */
   maximoTokens?: number;
+  /** Modelo específico para este pedido. Tarefa mecânica não precisa do modelo mais caro. */
+  modelo?: string;
 }
 
 export interface RespostaDoModelo {

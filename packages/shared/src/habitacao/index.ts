@@ -14,3 +14,5 @@ export * from './pos-entrega.js';
 export * from './retomada.js';
 export * from './inconsistencias.js';
 export * from './assistente.js';
+export * from './contratos.js';
+export * from './qualidade-documento.js';

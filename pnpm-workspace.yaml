@@ -13,4 +13,6 @@ allowBuilds:
   # Usa o Chrome do sistema (PUPPETEER_EXECUTABLE_PATH); não baixa o próprio.
   puppeteer: false
   sharp: true
+  # O OCR roda em WASM puro e funcionou sem o script de instalação — negado por padrão.
+  tesseract.js: false
   unrs-resolver: true

@@ -1,8 +1,10 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { Observable, from, lastValueFrom } from 'rxjs';
 import type { AuthUser } from '../auth/jwt.strategy';
 import { PrismaService } from '../prisma/prisma.service';
+import { TRANSACAO_LONGA } from './transacao-longa.decorator';
 
 /**
  * Abre a transação com contexto (SET LOCAL) a cada requisição autenticada, fixando o escopo da
@@ -10,7 +12,10 @@ import { PrismaService } from '../prisma/prisma.service';
  */
 @Injectable()
 export class TenantContextInterceptor implements NestInterceptor {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly reflector: Reflector,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
@@ -34,6 +39,15 @@ export class TenantContextInterceptor implements NestInterceptor {
           ip: req.ip,
         },
         () => lastValueFrom(next.handle()),
+        this.reflector.getAllAndOverride<number | undefined>(TRANSACAO_LONGA, [
+          context.getHandler(),
+          context.getClass(),
+        ])
+          ? { timeoutMs: this.reflector.getAllAndOverride<number>(TRANSACAO_LONGA, [
+              context.getHandler(),
+              context.getClass(),
+            ]) }
+          : undefined,
       ),
     );
   }

@@ -393,6 +393,59 @@ export const DECISAO_RETOMADA = {
   ARQUIVAMENTO: 'Arquivamento',
 } as const;
 
+export const SITUACAO_CONTRATO = {
+  EM_ELABORACAO: 'Em elaboração',
+  VIGENTE: 'Vigente',
+  SUSPENSO: 'Suspenso',
+  RENEGOCIADO: 'Renegociado',
+  QUITADO: 'Quitado',
+  RESCINDIDO: 'Rescindido',
+  TRANSFERIDO: 'Transferido',
+} as const;
+
+export const SITUACAO_PARCELA = {
+  ABERTA: 'Em aberto',
+  PAGA: 'Paga',
+  PAGA_PARCIAL: 'Paga em parte',
+  VENCIDA: 'Vencida',
+  RENEGOCIADA: 'Renegociada',
+  ISENTA: 'Isenta',
+  CANCELADA: 'Cancelada',
+} as const;
+
+export const INDICE_REAJUSTE = {
+  SEM_REAJUSTE: 'Sem reajuste',
+  INPC: 'INPC',
+  IPCA: 'IPCA',
+  TR: 'TR',
+  SALARIO_MINIMO: 'Salário mínimo',
+} as const;
+
+export const FORMA_PAGAMENTO = {
+  BOLETO: 'Boleto',
+  PIX: 'Pix',
+  DINHEIRO: 'Dinheiro',
+  TRANSFERENCIA: 'Transferência',
+  DESCONTO_FOLHA: 'Desconto em folha',
+  OUTRA: 'Outra',
+} as const;
+
+export const MOTIVO_TRANSFERENCIA = {
+  OBITO_TITULAR: 'Óbito do titular',
+  SEPARACAO_DIVORCIO: 'Separação ou divórcio',
+  ABANDONO_LAR: 'Abandono do lar',
+  DECISAO_JUDICIAL: 'Decisão judicial',
+  OUTRO: 'Outro',
+} as const;
+
+export const FASE_INADIMPLENCIA = {
+  EM_DIA: 'Em dia',
+  ATRASO_RECENTE: 'Atraso recente',
+  COBRANCA: 'Em cobrança',
+  NOTIFICACAO: 'A notificar',
+  PASSIVEL_RESCISAO: 'Passível de rescisão',
+} as const;
+
 export const rotuloSexo = rotulador(SEXO);
 export const rotuloEstadoCivil = rotulador(ESTADO_CIVIL);
 export const rotuloRegimeBens = rotulador(REGIME_BENS);
@@ -437,6 +490,13 @@ export const rotuloSituacaoOcorrencia = rotulador(SITUACAO_OCORRENCIA_USO);
 export const rotuloFaseRetomada = rotulador(FASE_RETOMADA);
 export const rotuloFormaNotificacao = rotulador(FORMA_NOTIFICACAO);
 export const rotuloDecisaoRetomada = rotulador(DECISAO_RETOMADA);
+export const rotuloSituacaoContrato = rotulador(SITUACAO_CONTRATO);
+export const rotuloSituacaoParcela = rotulador(SITUACAO_PARCELA);
+export const rotuloIndiceReajuste = rotulador(INDICE_REAJUSTE);
+export const rotuloFormaPagamento = rotulador(FORMA_PAGAMENTO);
+export const rotuloMotivoTransferencia = rotulador(MOTIVO_TRANSFERENCIA);
+export const rotuloFaseInadimplencia = rotulador(FASE_INADIMPLENCIA);
+
 
 
 

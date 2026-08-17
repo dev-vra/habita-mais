@@ -32,6 +32,14 @@ interface ContextoSugestao {
   conteudo: string;
   documento?: { midia: string; dados: string };
   maximoTokens?: number;
+  modelo?: string;
+  /**
+   * Extração de documento é a única exceção à máscara, e ela é lógica: o CPF impresso no papel é
+   * exatamente o que se está pedindo para ler. Mascarar devolveria "[CPF]" como valor extraído.
+   * A proteção, nesse caso, é outra — o OCR local resolve a maioria dos documentos sem que nada
+   * saia do produto, e só o que ele não lê chega ao modelo.
+   */
+  mascarar?: boolean;
 }
 
 @Injectable()
@@ -55,13 +63,17 @@ export class AssistenteUseCase {
   private async gerar(contexto: ContextoSugestao) {
     const ctx = getActiveContext();
     const ator = actorId();
-    const conteudoMascarado = habitacao.mascararParaEnvio(contexto.conteudo);
+    const conteudoMascarado =
+      contexto.mascarar === false
+        ? contexto.conteudo
+        : habitacao.mascararParaEnvio(contexto.conteudo);
 
     const resposta = await this.motor.gerar({
       papel: PAPEL,
       conteudo: conteudoMascarado,
       documento: contexto.documento,
       maximoTokens: contexto.maximoTokens,
+      modelo: contexto.modelo,
     });
 
     const sugestao = await this.prisma.tx.sugestaoIA.create({
@@ -181,10 +193,18 @@ Diga o que se pede e por quê. Não sugira o que o outro setor deve responder.`;
     documentoId: string;
     tipoDocumento: string;
     campos: string[];
-    midia: string;
-    dados: string;
+    /** Texto já lido pelo OCR local. Quando existe, o modelo estrutura sem ver a imagem. */
+    textoOcr?: string;
+    midia?: string;
+    dados?: string;
   }) {
-    const conteudo = `Leia o documento anexado (${entrada.tipoDocumento}) e extraia os campos abaixo.
+    const fonte = entrada.textoOcr
+      ? `Abaixo está o texto lido de um ${entrada.tipoDocumento} por leitor óptico. Ele pode conter erros de leitura.\n\n---\n${entrada.textoOcr}\n---\n`
+      : `Leia o documento anexado (${entrada.tipoDocumento}).`;
+
+    const conteudo = `${fonte}
+
+Extraia os campos abaixo.
 
 Campos: ${entrada.campos.join(', ')}
 
@@ -195,8 +215,13 @@ Responda APENAS um objeto JSON, sem texto em volta, no formato {"campo": "valor"
       entidade: 'Documento',
       entidadeId: entrada.documentoId,
       conteudo,
-      documento: { midia: entrada.midia, dados: entrada.dados },
+      documento:
+        entrada.midia && entrada.dados
+          ? { midia: entrada.midia, dados: entrada.dados }
+          : undefined,
       maximoTokens: 800,
+      modelo: 'barato',
+      mascarar: false,
     });
   }
 

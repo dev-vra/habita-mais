@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { habitacao } from '@habita/shared';
 import { RequerCapacidade } from '../auth/capacidade.decorator';
+import { TransacaoLonga } from '../context/transacao-longa.decorator';
 import { AssistenteUseCase } from './application/assistente.use-case';
 import {
   DesfechoDto,
@@ -44,18 +45,21 @@ export class AssistenteController {
     return this.conferencia.daFamilia(familiaId);
   }
 
+  @TransacaoLonga(60_000)
   @RequerCapacidade('ACOMPANHAR_POS_ENTREGA')
   @Post('parecer-visita')
   parecerVisita(@Body() dto: ParecerVisitaDto) {
     return this.assistente.rascunharParecerVisita(dto);
   }
 
+  @TransacaoLonga(60_000)
   @RequerCapacidade('ENCAMINHAR_SETOR')
   @Post('resumo-encaminhamento')
   resumoEncaminhamento(@Body() dto: ResumoEncaminhamentoDto) {
     return this.assistente.rascunharResumoEncaminhamento(dto);
   }
 
+  @TransacaoLonga(60_000)
   @RequerCapacidade('VALIDAR_DOCUMENTACAO')
   @Post('extrair-documento')
   extrair(@Body() dto: ExtrairDocumentoDto) {

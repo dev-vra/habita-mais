@@ -867,6 +867,7 @@ model Pessoa {
   tenant             Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   membros            MembroFamiliar[]
   familiasResponsavel Familia[]      @relation("ResponsavelFamiliar")
+  contratosTitular    ContratoMutuario[]
 
   @@unique([tenantId, cpf])
   @@index([tenantId, nome])
@@ -898,6 +899,7 @@ model Familia {
   consentimentos ConsentimentoDado[]
   consultas    ConsultaExterna[]
   unidades     UnidadeHabitacional[]
+  contratos    ContratoMutuario[]
 
   @@unique([tenantId, codigo])
   @@index([tenantId, situacao])
@@ -1681,6 +1683,7 @@ model UnidadeHabitacional {
   acompanhamentos  AcompanhamentoUnidade[]
   ocorrencias      OcorrenciaUnidade[]
   casosRetomada    CasoRetomada[]
+  contratos        ContratoMutuario[]
 
   @@unique([tenantId, protocolo])
   @@unique([empreendimentoId, identificacao])
@@ -2042,4 +2045,228 @@ model SugestaoIA {
   @@index([tenantId, uso, createdAt])
   @@index([tenantId, entidade, entidadeId])
   @@map("sugestao_ia")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Contratos de mutuário (spec §11): carnê, pagamento, renegociação e titularidade.
+//
+// Habitação de interesse social não é financiamento: parcela fixa, reajuste anual por índice, sem
+// juros compostos. O saldo é pequeno e a família é de baixa renda — modelar como financiamento
+// produziria um número que ela não deve e que a prefeitura não sabe explicar.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum SituacaoContrato {
+  EM_ELABORACAO
+  VIGENTE
+  SUSPENSO
+  RENEGOCIADO
+  QUITADO
+  RESCINDIDO
+  TRANSFERIDO
+}
+
+enum SituacaoParcela {
+  ABERTA
+  PAGA
+  PAGA_PARCIAL
+  VENCIDA
+  RENEGOCIADA
+  ISENTA
+  CANCELADA
+}
+
+enum IndiceReajuste {
+  SEM_REAJUSTE
+  INPC
+  IPCA
+  TR
+  SALARIO_MINIMO
+}
+
+enum FormaPagamento {
+  BOLETO
+  PIX
+  DINHEIRO
+  TRANSFERENCIA
+  DESCONTO_FOLHA
+  OUTRA
+}
+
+enum MotivoTransferencia {
+  OBITO_TITULAR
+  SEPARACAO_DIVORCIO
+  ABANDONO_LAR
+  DECISAO_JUDICIAL
+  OUTRO
+}
+
+/// Contrato entre a prefeitura e a família que recebeu a unidade.
+model ContratoMutuario {
+  id        String @id @default(cuid())
+  tenantId  String
+  protocolo String
+  unidadeId String
+  familiaId String
+  /// Pessoa titular. Muda por transferência, com processo — e o histórico fica.
+  titularId String
+
+  /// Valor da unidade, o que foi subsidiado e o que a família financia. Guardar os três é o que
+  /// permite responder "quanto o município investiu" sem refazer conta anos depois.
+  valorUnidade   Decimal @db.Decimal(14, 2)
+  valorSubsidio  Decimal @default(0) @db.Decimal(14, 2)
+  valorFinanciado Decimal @db.Decimal(14, 2)
+  valorEntrada   Decimal @default(0) @db.Decimal(14, 2)
+
+  quantidadeParcelas Int
+  valorParcela       Decimal        @db.Decimal(14, 2)
+  diaVencimento      Int            @default(10)
+  indiceReajuste     IndiceReajuste @default(SEM_REAJUSTE)
+  ultimoReajusteEm   DateTime?
+
+  assinadoEm      DateTime
+  primeiraCompetencia String
+  situacao        SituacaoContrato @default(EM_ELABORACAO)
+  /// Obrigatório ao suspender, rescindir ou encerrar fora do curso normal.
+  motivoSituacao  String?
+
+  /// Título de garantia de recebimento entregue à família.
+  tituloGarantiaKey String?
+  observacao        String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  unidade        UnidadeHabitacional        @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  familia        Familia                    @relation(fields: [familiaId], references: [id], onDelete: Restrict)
+  titular        Pessoa                     @relation(fields: [titularId], references: [id], onDelete: Restrict)
+  parcelas       ParcelaContrato[]
+  transferencias TransferenciaTitularidade[]
+  renegociacoes  RenegociacaoContrato[]
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, situacao])
+  @@index([tenantId, familiaId])
+  @@index([tenantId, unidadeId])
+  @@map("contrato_mutuario")
+}
+
+/// Uma parcela do carnê. O valor fica na parcela, e não no contrato, porque reajuste e
+/// renegociação mudam parcelas futuras sem reescrever as que já venceram.
+model ParcelaContrato {
+  id         String          @id @default(cuid())
+  tenantId   String
+  contratoId String
+  numero     Int
+  /// AAAA-MM. É por competência que a prefeitura fecha o mês.
+  competencia String
+  vencimento DateTime
+  valor      Decimal         @db.Decimal(14, 2)
+  /// Soma das baixas. Materializado para a lista de carnê não somar pagamento linha a linha.
+  valorPago  Decimal         @default(0) @db.Decimal(14, 2)
+  situacao   SituacaoParcela @default(ABERTA)
+  /// Justificativa de isenção ou cancelamento — nunca some sem motivo.
+  observacao String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  contrato   ContratoMutuario  @relation(fields: [contratoId], references: [id], onDelete: Cascade)
+  pagamentos PagamentoParcela[]
+
+  @@unique([contratoId, numero])
+  @@index([tenantId, contratoId, situacao])
+  @@index([tenantId, vencimento])
+  @@map("parcela_contrato")
+}
+
+/// Cada baixa. Existe como tabela própria, e não como campo na parcela, porque pagamento parcial
+/// é comum aqui — e porque estorno precisa deixar rastro em vez de apagar o que houve.
+model PagamentoParcela {
+  id        String         @id @default(cuid())
+  tenantId  String
+  parcelaId String
+  valor     Decimal        @db.Decimal(14, 2)
+  pagoEm    DateTime
+  forma     FormaPagamento @default(BOLETO)
+  comprovanteKey String?
+  /// Quem deu a baixa. Guardado como texto além do id: o servidor sai, o recibo fica.
+  baixadoPor String
+
+  /// Estorno não apaga: marca. A trilha mostra os dois atos, e a prestação de contas também.
+  estornadoEm  DateTime?
+  estornadoPor String?
+  motivoEstorno String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  parcela ParcelaContrato @relation(fields: [parcelaId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, parcelaId])
+  @@index([tenantId, pagoEm])
+  @@map("pagamento_parcela")
+}
+
+/// Renegociação: as parcelas velhas saem de cena e um carnê novo entra, com o saldo apurado.
+model RenegociacaoContrato {
+  id         String @id @default(cuid())
+  tenantId   String
+  contratoId String
+
+  saldoRenegociado   Decimal @db.Decimal(14, 2)
+  parcelasSubstituidas Int
+  novaQuantidade     Int
+  novoValorParcela   Decimal @db.Decimal(14, 2)
+  primeiraCompetencia String
+
+  motivo       String
+  autorizadaPor String
+  acordoKey    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  contrato ContratoMutuario @relation(fields: [contratoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, contratoId])
+  @@map("renegociacao_contrato")
+}
+
+/// Mudança de titular. Ação sensível (§5): exige concessão explícita, motivo e prova documental —
+/// é o caminho mais curto para a unidade acabar com quem a fila não escolheu.
+model TransferenciaTitularidade {
+  id         String              @id @default(cuid())
+  tenantId   String
+  contratoId String
+  motivo     MotivoTransferencia
+
+  deTitularId  String
+  paraTitularId String
+  /// Muda também o núcleo? Em óbito costuma continuar a mesma família; em separação, não.
+  deFamiliaId   String
+  paraFamiliaId String
+
+  fundamentacao String
+  autorizadaPor String
+  efetivadaEm   DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  contrato ContratoMutuario @relation(fields: [contratoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, contratoId])
+  @@map("transferencia_titularidade")
 }
