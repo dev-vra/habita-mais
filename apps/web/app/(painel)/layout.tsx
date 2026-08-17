@@ -43,6 +43,7 @@ export default async function LayoutPainel({ children }: { children: React.React
   const podeAdministrar = sessao.capacidades.includes('GERIR_USUARIOS');
   const podeParametros = sessao.capacidades.includes('GERIR_PARAMETROS');
   const podeAuditar = sessao.capacidades.includes('LER_AUDITORIA');
+  const podeVerFinanceiro = sessao.capacidades.includes('VER_DADO_FINANCEIRO');
   const podeEncaminhar =
     sessao.capacidades.includes('ENCAMINHAR_SETOR') ||
     sessao.capacidades.includes('RESPONDER_ENCAMINHAMENTO');
@@ -101,6 +102,12 @@ export default async function LayoutPainel({ children }: { children: React.React
                 />
                 <ItemNavegacao href="/retomada" rotulo="Retomada" />
               </Grupo>
+
+              {podeVerFinanceiro && (
+                <Grupo titulo="Mutuários">
+                  <ItemNavegacao href="/contratos" rotulo="Contratos e carnês" />
+                </Grupo>
+              )}
 
               <Grupo titulo="Gestão">
                 <ItemNavegacao href="/indicadores" rotulo="Indicadores" />
