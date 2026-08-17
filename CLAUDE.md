@@ -48,10 +48,16 @@ cobre só o que muda a forma de trabalhar aqui dentro.
 
 ## Pendências conhecidas
 
-- Fontes Rawline/Raleway não estão embarcadas; a interface cai no fallback do sistema. Mesma dívida
-  do Regulariza+ — embarcar em `public/fontes` com `@font-face`.
+- Fontes Rawline/Raleway não estão embarcadas; a interface cai no fallback do sistema. As duas são
+  SIL OFL: Raleway pelo Google Fonts, Rawline em
+  `cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/font/rawline-{peso}.woff2`.
 - Envio de documento pelo munícipe ainda não tem policy de escrita: a central hoje é leitura mais
-  interposição de recurso.
+  interposição de recurso. Pela mesma razão, a defesa no processo de retomada entra pelo balcão.
+- Reajuste anual das parcelas por índice existe na regra (`reajustarParcela`) e não tem ainda a
+  ação que aplica o índice ao carnê — é a próxima peça do módulo de mutuários.
+- A chamada ao modelo de IA roda dentro da transação do request, com teto estendido
+  (`@TransacaoLonga`). Funciona, mas segurar conexão do pool esperando rede externa não é bom
+  desenho: o certo é tirar a chamada do caminho transacional.
 - A validação pública de documento não consulta o banco de propósito — o QR carrega um payload
   assinado (HMAC). Consultar exigiria abrir policy pública em dado de família.
 - Não há job agendado: recadastramento e vencimento de pendência são ações confirmadas por
