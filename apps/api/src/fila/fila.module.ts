@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PosEntregaModule } from '../pos-entrega/pos-entrega.module';
 import { ConvocarFamiliaUseCase } from './application/convocar-familia.use-case';
 import { InscreverFamiliaUseCase } from './application/inscrever-familia.use-case';
 import { PendenciasUseCase } from './application/pendencias.use-case';
@@ -24,6 +25,7 @@ import { ProgramasPrismaRepository } from './infra/programas.prisma-repository';
 import { RecursosPrismaRepository } from './infra/recursos.prisma-repository';
 
 @Module({
+  imports: [PosEntregaModule],
   controllers: [FilaController],
   providers: [
     FilaQueryService,

@@ -10,6 +10,8 @@ interface ResumoNavegacao {
   familias: number;
   aptas: number;
   aguardandoConvocacao: number;
+  /** Visitas de acompanhamento vencidas — o contador que puxa o servidor para o pós-entrega. */
+  visitasVencidas?: number;
   programas: { id: string; nome: string; slug: string }[];
 }
 
@@ -92,6 +94,11 @@ export default async function LayoutPainel({ children }: { children: React.React
 
               <Grupo titulo="Produção">
                 <ItemNavegacao href="/producao" rotulo="Empreendimentos e obras" />
+                <ItemNavegacao
+                  href="/acompanhamento"
+                  rotulo="Pós-entrega"
+                  contador={resumo.visitasVencidas}
+                />
               </Grupo>
 
               <Grupo titulo="Gestão">

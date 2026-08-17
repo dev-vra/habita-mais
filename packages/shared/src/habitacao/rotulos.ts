@@ -306,6 +306,71 @@ export const SITUACAO_ETAPA = {
   ATRASADA: 'Atrasada',
 } as const;
 
+export const TIPO_ACOMPANHAMENTO = {
+  INICIAL: 'Primeira visita',
+  PERIODICA: 'Visita periódica',
+  EXTRAORDINARIA: 'Visita extraordinária',
+  APURACAO: 'Visita de apuração',
+} as const;
+
+export const EIXO_TRABALHO_SOCIAL = {
+  MOBILIZACAO_ORGANIZACAO: 'Mobilização e organização comunitária',
+  ACOMPANHAMENTO_GESTAO: 'Acompanhamento e gestão social',
+  EDUCACAO_AMBIENTAL_PATRIMONIAL: 'Educação ambiental e patrimonial',
+  DESENVOLVIMENTO_SOCIOECONOMICO: 'Desenvolvimento socioeconômico',
+} as const;
+
+export const SITUACAO_EIXO = {
+  ADEQUADA: 'Adequada',
+  ATENCAO: 'Requer atenção',
+  CRITICA: 'Crítica',
+  NAO_AVALIADA: 'Não avaliada',
+} as const;
+
+export const SITUACAO_ACOMPANHAMENTO = {
+  SEM_ACOMPANHAMENTO: 'Sem acompanhamento',
+  AGUARDANDO_PRIMEIRA: 'Aguardando primeira visita',
+  EM_DIA: 'Em dia',
+  VENCENDO: 'Vence em breve',
+  VENCIDA: 'Visita vencida',
+} as const;
+
+export const TIPO_OCORRENCIA_USO = {
+  CESSAO_TERCEIRO: 'Cessão a terceiro',
+  ALUGUEL: 'Aluguel da unidade',
+  VENDA_TRANSFERENCIA: 'Venda ou transferência',
+  ABANDONO: 'Abandono',
+  USO_COMERCIAL: 'Uso comercial',
+  OBRA_IRREGULAR: 'Obra irregular',
+  MUDANCA_COMPOSICAO: 'Mudança na composição familiar',
+  OBITO_TITULAR: 'Óbito do titular',
+  OUTRA: 'Outra',
+} as const;
+
+export const GRAVIDADE_OCORRENCIA = {
+  ADMINISTRATIVA: 'Administrativa',
+  LEVE: 'Leve',
+  GRAVE: 'Grave',
+  GRAVISSIMA: 'Gravíssima',
+} as const;
+
+export const ORIGEM_OCORRENCIA = {
+  VISITA: 'Constatada em visita',
+  DENUNCIA: 'Denúncia',
+  OFICIO: 'De ofício',
+  CRUZAMENTO_CADASTRAL: 'Cruzamento cadastral',
+  OUTRA: 'Outra',
+} as const;
+
+export const SITUACAO_OCORRENCIA_USO = {
+  ABERTA: 'Aberta',
+  EM_APURACAO: 'Em apuração',
+  NOTIFICADA: 'Notificada',
+  REGULARIZADA: 'Regularizada',
+  IMPROCEDENTE: 'Improcedente',
+  ENCAMINHADA_JURIDICO: 'No Jurídico',
+} as const;
+
 export const rotuloSexo = rotulador(SEXO);
 export const rotuloEstadoCivil = rotulador(ESTADO_CIVIL);
 export const rotuloRegimeBens = rotulador(REGIME_BENS);
@@ -339,6 +404,15 @@ export const rotuloSituacaoObra = rotulador(SITUACAO_OBRA);
 export const rotuloSituacaoMedicao = rotulador(SITUACAO_MEDICAO);
 export const rotuloSituacaoUnidade = rotulador(SITUACAO_UNIDADE);
 export const rotuloSituacaoEtapa = rotulador(SITUACAO_ETAPA);
+export const rotuloTipoAcompanhamento = rotulador(TIPO_ACOMPANHAMENTO);
+export const rotuloEixo = rotulador(EIXO_TRABALHO_SOCIAL);
+export const rotuloSituacaoEixo = rotulador(SITUACAO_EIXO);
+export const rotuloSituacaoAcompanhamento = rotulador(SITUACAO_ACOMPANHAMENTO);
+export const rotuloTipoOcorrencia = rotulador(TIPO_OCORRENCIA_USO);
+export const rotuloGravidade = rotulador(GRAVIDADE_OCORRENCIA);
+export const rotuloOrigemOcorrencia = rotulador(ORIGEM_OCORRENCIA);
+export const rotuloSituacaoOcorrencia = rotulador(SITUACAO_OCORRENCIA_USO);
+
 
 
 /** Converte o mapa em opções de `<select>`, na ordem em que foi declarado. */

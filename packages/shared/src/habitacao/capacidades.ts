@@ -77,6 +77,16 @@ export const CAPACIDADES = [
   'ENCAMINHAR_SETOR',
   'RESPONDER_ENCAMINHAMENTO',
   'EMITIR_LAUDO_RISCO',
+  // Pós-entrega
+  'ACOMPANHAR_POS_ENTREGA',
+  /**
+   * Decidir o rumo de uma ocorrência de uso: notificar, encerrar ou encaminhar ao Jurídico.
+   *
+   * Separada de REGISTRAR_OCORRENCIA de propósito — quem constata em campo não decide sozinho o
+   * que acontece com a moradia da família. É a mesma segregação que vale entre medir e aprovar
+   * medição.
+   */
+  'DECIDIR_OCORRENCIA',
   // Jurídico e fiscalização
   'EMITIR_PARECER_JURIDICO',
   'REGISTRAR_OCORRENCIA',
@@ -125,6 +135,7 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
     'CONSULTAR_REURB',
     'GERIR_CONVENIO',
     'GERIR_OBRA',
+    'DECIDIR_OCORRENCIA',
     'ENCAMINHAR_SETOR',
     'LER_AUDITORIA',
   ],
@@ -137,6 +148,8 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
     'CONSULTAR_REURB',
     'TRIAR_AUXILIO',
     'RENOVAR_AUXILIO',
+    'ACOMPANHAR_POS_ENTREGA',
+    'REGISTRAR_OCORRENCIA',
     'ENCAMINHAR_SETOR',
   ],
   ATENDENTE: [
@@ -148,7 +161,14 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
     'CONSULTAR_REURB',
     'ENCAMINHAR_SETOR',
   ],
-  FISCAL_OBRAS: ['ACESSAR_HABITACAO', 'GERIR_OBRA', 'REGISTRAR_MEDICAO', 'ENTREGAR_UNIDADE', 'RESPONDER_ENCAMINHAMENTO'],
+  FISCAL_OBRAS: [
+    'ACESSAR_HABITACAO',
+    'GERIR_OBRA',
+    'REGISTRAR_MEDICAO',
+    'ENTREGAR_UNIDADE',
+    'REGISTRAR_OCORRENCIA',
+    'RESPONDER_ENCAMINHAMENTO',
+  ],
   ANALISTA_MUTUARIO: [
     'ACESSAR_HABITACAO',
     'GERIR_CONTRATO',
@@ -159,6 +179,7 @@ const MATRIZ_PADRAO: Readonly<Record<PerfilTenant, readonly Capacidade[]>> = {
   JURIDICO: [
     'ACESSAR_HABITACAO',
     'EMITIR_PARECER_JURIDICO',
+    'DECIDIR_OCORRENCIA',
     'JULGAR_RECURSO',
     'VER_PARECER_SOCIAL',
     'RESPONDER_ENCAMINHAMENTO',

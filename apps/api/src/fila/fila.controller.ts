@@ -12,6 +12,7 @@ import {
 import type { Response } from 'express';
 import { CapacidadesService } from '../auth/capacidades.service';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { PosEntregaQueryService } from '../pos-entrega/infra/pos-entrega.query-service';
 import { RequerCapacidade } from '../auth/capacidade.decorator';
 import type { AuthUser } from '../auth/jwt.strategy';
 import { OficioService } from '../pdf/oficio.service';
@@ -55,12 +56,18 @@ export class FilaController {
     private readonly oficios: OficioService,
     private readonly decisoes: DecisoesQueryService,
     private readonly recadastramento: RecadastramentoUseCase,
+    private readonly posEntrega: PosEntregaQueryService,
   ) {}
 
   @RequerCapacidade('ACESSAR_HABITACAO')
   @Get('painel')
-  painel() {
-    return this.consulta.resumo();
+  async painel() {
+    const [resumo, agenda] = await Promise.all([
+      this.consulta.resumo(),
+      this.posEntrega.agenda(),
+    ]);
+
+    return { ...resumo, visitasVencidas: agenda.resumo.vencidas };
   }
 
   /** O que espera decisão hoje — a lista que abre o painel do gestor. */

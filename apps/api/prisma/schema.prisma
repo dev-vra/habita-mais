@@ -82,6 +82,8 @@ enum SerieProtocolo {
   EMP
   MED
   UNI
+  /// Visita de acompanhamento pós-entrega.
+  VIS
 }
 
 /// Tipo do setor — o município nomeia como quiser, mas a integração precisa saber o papel.
@@ -1671,13 +1673,193 @@ model UnidadeHabitacional {
   deletedAt DateTime?
   deletedBy String?
 
-  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  empreendimento Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Restrict)
-  familia        Familia?       @relation(fields: [familiaId], references: [id], onDelete: Restrict)
+  tenant           Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  empreendimento   Empreendimento          @relation(fields: [empreendimentoId], references: [id], onDelete: Restrict)
+  familia          Familia?                @relation(fields: [familiaId], references: [id], onDelete: Restrict)
+  acompanhamentos  AcompanhamentoUnidade[]
+  ocorrencias      OcorrenciaUnidade[]
 
   @@unique([tenantId, protocolo])
   @@unique([empreendimentoId, identificacao])
   @@index([tenantId, situacao])
   @@index([tenantId, familiaId])
   @@map("unidade_habitacional")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pós-entrega (spec §10.4): acompanhamento social e ocorrências de uso da unidade.
+//
+// Entregar a chave não encerra a responsabilidade da prefeitura — é o que o Trabalho Social
+// (Portaria MDR 464/2018) chama de acompanhamento, e o que o convênio cobra na prestação de
+// contas. Sem registro por unidade, o município não consegue provar que acompanhou.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoAcompanhamento {
+  INICIAL
+  PERIODICA
+  EXTRAORDINARIA
+  APURACAO
+}
+
+/// Eixos do Trabalho Social. Fixos por norma federal — o município escolhe as ações, não os eixos.
+enum EixoTrabalhoSocial {
+  MOBILIZACAO_ORGANIZACAO
+  ACOMPANHAMENTO_GESTAO
+  EDUCACAO_AMBIENTAL_PATRIMONIAL
+  DESENVOLVIMENTO_SOCIOECONOMICO
+}
+
+enum SituacaoEixo {
+  ADEQUADA
+  ATENCAO
+  CRITICA
+  NAO_AVALIADA
+}
+
+enum TipoOcorrenciaUso {
+  CESSAO_TERCEIRO
+  ALUGUEL
+  VENDA_TRANSFERENCIA
+  ABANDONO
+  USO_COMERCIAL
+  OBRA_IRREGULAR
+  MUDANCA_COMPOSICAO
+  OBITO_TITULAR
+  OUTRA
+}
+
+enum GravidadeOcorrencia {
+  ADMINISTRATIVA
+  LEVE
+  GRAVE
+  GRAVISSIMA
+}
+
+/// De onde veio o fato. Denúncia anônima não é prova — a origem fica registrada para que a
+/// decisão possa ser pesada depois, sabendo em que ela se apoiou.
+enum OrigemOcorrencia {
+  VISITA
+  DENUNCIA
+  OFICIO
+  CRUZAMENTO_CADASTRAL
+  OUTRA
+}
+
+enum SituacaoOcorrenciaUso {
+  ABERTA
+  EM_APURACAO
+  NOTIFICADA
+  REGULARIZADA
+  IMPROCEDENTE
+  ENCAMINHADA_JURIDICO
+}
+
+/// Visita de acompanhamento pós-entrega. Diferente de `VisitaDomiciliar`, que é do cadastro: esta
+/// é da UNIDADE, tem periodicidade obrigatória e responde pelos eixos do Trabalho Social.
+model AcompanhamentoUnidade {
+  id         String             @id @default(cuid())
+  tenantId   String
+  unidadeId  String
+  protocolo  String
+  visitadaEm DateTime
+  tipo       TipoAcompanhamento @default(PERIODICA)
+
+  /// Quem visitou. Guardado como texto além do id porque o servidor sai da prefeitura e o
+  /// relatório continua precisando dizer quem assinou.
+  tecnicoNome String
+  tecnicoId   String?
+
+  /// O titular foi encontrado morando na unidade? É a pergunta central do pós-entrega.
+  residenciaConfirmada Boolean
+  /// Quem foi encontrado, quando não é o titular. Livre de propósito — a realidade não cabe em enum.
+  quemReside           String?
+  moradoresEncontrados Int?
+
+  parecer   String
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+  fotos     Json     @default("[]")
+
+  /// Materializada no registro: a lista de unidades não pode recalcular prazo linha a linha.
+  proximaVisitaEm DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  unidade     UnidadeHabitacional  @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  eixos       EixoAcompanhamento[]
+  ocorrencias OcorrenciaUnidade[]
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, unidadeId, visitadaEm])
+  @@map("acompanhamento_unidade")
+}
+
+/// Avaliação de um eixo do Trabalho Social na visita. Tabela e não JSON porque a prestação de
+/// contas pergunta pelo eixo — "quantas famílias em situação crítica no eixo socioeconômico" é
+/// consulta, não relatório manual.
+model EixoAcompanhamento {
+  id               String             @id @default(cuid())
+  tenantId         String
+  acompanhamentoId String
+  eixo             EixoTrabalhoSocial
+  situacao         SituacaoEixo       @default(NAO_AVALIADA)
+  observacao       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String
+
+  acompanhamento AcompanhamentoUnidade @relation(fields: [acompanhamentoId], references: [id], onDelete: Cascade)
+
+  @@unique([acompanhamentoId, eixo])
+  @@index([tenantId, eixo, situacao])
+  @@map("eixo_acompanhamento")
+}
+
+/// Ocorrência de uso da unidade. É o caminho formal entre "alguém disse" e qualquer consequência:
+/// apuração, notificação com prazo, e só então encaminhamento jurídico (bloco 5).
+model OcorrenciaUnidade {
+  id        String                @id @default(cuid())
+  tenantId  String
+  unidadeId String
+  protocolo String
+  tipo      TipoOcorrenciaUso
+  gravidade GravidadeOcorrencia
+  origem    OrigemOcorrencia
+  situacao  SituacaoOcorrenciaUso @default(ABERTA)
+
+  descricao String
+  /// Visita que constatou o fato, quando a ocorrência nasceu de uma.
+  acompanhamentoId String?
+
+  constatadaEm         DateTime
+  notificadaEm         DateTime?
+  prazoRegularizacaoAte DateTime?
+  encerradaEm          DateTime?
+  /// Obrigatório ao encerrar. Ocorrência que some sem motivo é a que ninguém explica na auditoria.
+  motivoEncerramento   String?
+
+  /// Encaminhamento ao Jurídico, quando houve. Mantém a ponte com o fluxo entre setores.
+  encaminhamentoId String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String
+  updatedBy String
+  deletedAt DateTime?
+  deletedBy String?
+
+  unidade        UnidadeHabitacional    @relation(fields: [unidadeId], references: [id], onDelete: Restrict)
+  acompanhamento AcompanhamentoUnidade? @relation(fields: [acompanhamentoId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, protocolo])
+  @@index([tenantId, unidadeId, situacao])
+  @@index([tenantId, situacao, prazoRegularizacaoAte])
+  @@map("ocorrencia_unidade")
 }

@@ -25,6 +25,7 @@ import { IntegracoesModule } from './integracoes/integracoes.controller';
 import { MunicipeModule } from './municipe/municipe.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PdfModule } from './pdf/pdf.module';
+import { PosEntregaModule } from './pos-entrega/pos-entrega.module';
 import { ProducaoModule } from './producao/producao.module';
 import { ProgramasModule } from './programas/programas.module';
 import { SetoresModule } from './setores/setores.module';
@@ -68,6 +69,7 @@ import { StorageModule } from './storage/storage.module';
     IntegracoesModule,
     MunicipeModule,
     PdfModule,
+    PosEntregaModule,
     ProducaoModule,
     ProgramasModule,
     SetoresModule,
